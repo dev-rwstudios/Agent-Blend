@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  blend-ai:
+    build: .
+    container_name: blend-ai
+
+    volumes:
+      - ./:/app
+
+    ports:
+      - "9876:9876"
+
+    entrypoint: [ "/bin/bash", "-c", "Xvfb :99 -screen 0 1280x720x24 -ac +extension GLX +render -noreset & export DISPLAY=:99 && sleep 1 && blender --python /app/docker_start.py" ]

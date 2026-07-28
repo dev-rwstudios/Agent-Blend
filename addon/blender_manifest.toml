@@ -1,0 +1,27 @@
+schema_version = "1.0.0"
+
+id = "blend_ai"
+version = "1.2.1"
+name = "blend-ai"
+tagline = "MCP server integration for AI-assisted 3D workflows"
+maintainer = "dev-rwstudios <dev.rwstudios@gmail.com>"
+type = "add-on"
+
+website = "https://github.com/HoldMyBeer-gg/blend-ai"
+
+tags = ["Pipeline", "Development"]
+
+blender_version_min = "4.2.0"
+
+license = [
+  "SPDX:GPL-3.0-or-later",
+]
+
+copyright = [
+  "2026 jabberwock",
+  "2026 dev-rwstudios",
+]
+
+[permissions]
+network = "Local TCP server for the blend-ai MCP client"
+files = "Open and save .blend files, images, and renders"

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "blend-ai": {
+      "command": "uv",
+      "args": ["run", "--directory", "/path/to/blend-ai", "blend-ai"],
+      "env": {
+        "BLENDER_HOST": "127.0.0.1",
+        "BLENDER_PORT": "9876"
+      }
+    }
+  }
+}
