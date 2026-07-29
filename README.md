@@ -12,7 +12,7 @@ Agent-Blend connects AI assistants (like those running in Antigravity IDE, Claud
 
 **Key highlights:**
 
-- 🛠️ **164 tools** across 24 modules — modeling, mesh editing, materials, shader nodes, lighting, camera, animation, rendering, sculpting, UV mapping, physics, geometry nodes, rigging, curves, annotations, collections, file I/O, Bool Tool, viewport control, mesh quality analysis
+- 🛠️ **173 tools** across 24 modules — modeling, mesh editing, materials, shader nodes, lighting, camera, animation, rendering, sculpting, UV mapping, physics, geometry nodes, rigging, curves, annotations, collections, file I/O, Bool Tool, viewport control, mesh quality analysis
 - 🧠 **12 expert prompts** — built-in guidance on topology, real-world scale, lighting principles, PBR materials, character modeling, scene cleanup, and more
 - 📸 **Visual feedback loop** — fast OpenGL viewport screenshots with auto-critique prompts that guide the AI to verify its own work
 - 🔍 **Mesh quality analysis** — structured defect reports: non-manifold edges, loose vertices, zero-area faces, duplicate vertices, wire edges
@@ -23,7 +23,7 @@ Agent-Blend connects AI assistants (like those running in Antigravity IDE, Claud
 - 🚫 **Zero telemetry** — no tracking, no analytics, everything runs locally on `127.0.0.1`
 - 📦 **Zero-dependency addon** — the Blender addon uses only Python stdlib + `bpy`
 - 🧵 **Thread-safe** — background TCP server with queue-based main-thread execution
-- 🧪 **1190 tests** — comprehensive coverage across tools, handlers, validators, and prompts
+- 🧪 **1254 tests** — comprehensive coverage across tools, handlers, validators, and prompts
 
 ---
 
@@ -222,7 +222,7 @@ Agent-Blend includes 12 MCP prompts that guide the AI toward professional-qualit
 ## Tool Domains
 
 <details>
-<summary><strong>All 164 tools across 24 modules</strong></summary>
+<summary><strong>All 173 tools across 24 modules</strong></summary>
 
 | Domain | Tools | Highlights |
 |--------|-------|-----------|
@@ -305,7 +305,7 @@ AI Assistant <--stdio/MCP--> Agent-Blend server <--TCP socket--> Blender addon <
 
 - **Blender must be running** — the MCP server communicates with Blender over TCP. Blender must be open with the addon enabled and server started
 - **Single connection** — the addon accepts one client at a time; multiple AI assistants cannot control the same Blender instance simultaneously
-- **Selection is all-or-nothing** — most mesh editing tools operate on all geometry; fine-grained vertex/edge/face selection by index is not yet exposed (though `select_linked` is available)
+- **Most mesh editing tools still operate on all geometry** — `select_vertices_by_index`/`select_edges_by_index`/`select_faces_by_index` (plus named selection sets and grow/shrink/select-similar) let you build a precise selection, but existing operations like `inset_faces` or `dissolve_faces` still act on the whole mesh rather than consuming that selection
 - **Sculpt strokes cannot be simulated** — you can configure brushes, symmetry, dyntopo, and remeshing, but actual brush strokes are not yet exposed
 - **Node graphs require sequential calls** — shader and geometry node trees must be built one node/connection at a time
 - **No undo integration** — operations appear in Blender's undo history individually, but there's no MCP-level undo/redo or transaction grouping
@@ -322,7 +322,7 @@ AI Assistant <--stdio/MCP--> Agent-Blend server <--TCP socket--> Blender addon <
 # Install with dev dependencies
 uv pip install -e ".[dev]"
 
-# Run tests (1190 tests)
+# Run tests (1254 tests)
 uv run --extra dev pytest
 
 # Run tests with coverage
@@ -344,7 +344,7 @@ Agent-Blend/
 │   ├── server.py              # FastMCP entry point
 │   ├── connection.py          # TCP client to Blender (with busy-retry)
 │   ├── validators.py          # Input validation
-│   ├── tools/                 # 24 tool modules (164 tools)
+│   ├── tools/                 # 24 tool modules (173 tools)
 │   ├── resources/             # MCP resources (scene, objects, materials)
 │   └── prompts/               # 12 expert prompt templates
 ├── addon/                     # Blender addon (zero external deps)

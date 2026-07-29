@@ -2,7 +2,7 @@
   "mcpServers": {
     "blend-ai": {
       "command": "uv",
-      "args": ["run", "--directory", "/path/to/blend-ai", "blend-ai"],
+      "args": ["run", "--directory", "C:/Users/admin/Desktop/Angels-3d/Agent-Blend", "blend-ai"],
       "env": {
         "BLENDER_HOST": "127.0.0.1",
         "BLENDER_PORT": "9876"

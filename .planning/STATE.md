@@ -1,30 +1,34 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.2.0
-milestone_name: milestone
-status: Milestone Complete
-stopped_at: All 4 phases complete — milestone finished
-last_updated: "2026-03-24T04:10:00.000Z"
+milestone: v0.3.0
+milestone_name: scene-production-tools
+status: Phase In Progress
+stopped_at: Phase 5 researched and planned (2 plans) — ready for execution, not yet implemented
+last_updated: "2026-07-29T00:00:00.000Z"
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
+  total_phases: 8
+  completed_phases: 0
+  total_plans: 2
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-23)
+See: .planning/PROJECT.md (updated 2026-07-29)
 
 **Core value:** An LLM using this MCP should produce professional-quality 3D output without the user needing to know Blender — the MCP provides the expertise.
-**Current focus:** Phase 02 — expert-guidance-stability
+**Current focus:** Phase 05 — fine-grained-mesh-selection (researched and planned, execution not started)
+
+## Milestone History
+
+- **v0.2.0** (milestone 1) — Complete 2026-03-24. 4/4 phases, 11/11 plans. Blender 5.1 compatibility, expert guidance, visual feedback, security & new-tools. See ROADMAP.md "Milestone 1" section.
 
 ## Current Position
 
-Phase: ALL COMPLETE
-Plan: N/A — Milestone finished
+Phase: 05-fine-grained-mesh-selection
+Plan: 05-01-PLAN.md ready to execute (05-02 depends on it)
 
 ## Performance Metrics
 
@@ -71,10 +75,20 @@ Recent decisions affecting current work:
 - [Phase 02-expert-guidance-stability]: HDRI test assertion uses uppercase 'HDRI' in result.upper() — acronym must match case when using .upper() comparison
 - [Phase 02-expert-guidance-stability]: wire_edges excluded from non_manifold_edge_count — tracked as separate defect category
 - [Phase 02-expert-guidance-stability]: MAX_SAMPLE_INDICES=50 caps index lists to prevent oversized JSON responses
+- [Milestone 2 scoping]: Selection (Phase 5) and transactions (Phase 6) sequenced first — later phases (baking, scatter) depend on precise targeting and atomic undo
+- [Milestone 2 scoping]: Compositor (Phase 9) sequenced after render quality (Phase 8) — depth/DOF compositor effects consume the Z/mist pass and light groups Phase 8 introduces
+- [Milestone 2 scoping]: Texture painting scoped as fill/data-layer ops only — stroke-based painting excluded, same rationale as the existing sculpt-brush-stroke out-of-scope decision (no mouse/tablet input channel from TCP server)
+- [Phase 05 research]: Selection tools must use bmesh.from_edit_mesh() (live edit-mesh) and leave the object in EDIT mode after returning — the opposite of every other mesh_editing handler, which uses bmesh.new()/free() or forces select-all + mode_set(OBJECT). Required so the selection has any effect on a subsequent MCP call.
+- [Phase 05 research]: Teaching the 15 existing mesh_editing tools to respect an incoming selection (vs. forcing select-all) is deferred as new requirement SEL-06 (REQUIREMENTS.md v3) — kept out of Phase 5 to avoid touching 15 handlers in one phase
+- [Phase 05 research]: select_similar's exact enum values (MATERIAL/AREA/NORMAL etc.) are MEDIUM confidence — docs.blender.org blocked automated fetches during research; must verify against the actual Blender 5.1 install during Plan 05-02 Task 3 before finalizing SIMILAR_COMPARE_OPTIONS
+- [Phase 05 planning]: Selection sets stored as a single JSON string custom property on the mesh datablock (blend_ai_selection_sets), not nested Python dict/list ID properties — avoids Blender's IDPropertyGroup coercion quirks, stdlib-only (json)
 
 ### Pending Todos
 
-None yet.
+- Execute 05-01-PLAN.md (index-based selection: SEL-01/02/03) — Wave 1, no dependencies
+- Execute 05-02-PLAN.md (selection sets + grow/shrink/select-similar: SEL-04/05) — Wave 2, depends on 05-01
+- During 05-02 Task 3: verify SIMILAR_COMPARE_OPTIONS enum strings against the real Blender 5.1 install (05-RESEARCH.md Open Question 2 — MEDIUM confidence)
+- After 05-02 completes: remove README.md's "Selection is all-or-nothing" line from Known Limitations
 
 ### Quick Tasks Completed
 
@@ -94,7 +108,7 @@ None yet.
 
 ## Session Continuity
 
-Last activity: 2026-04-01 - Completed quick task 260401-1eu: Fix ollama_chat.py review issues (asyncio cached loop, JSON scanner, tag stripping, vision note)
-Last session: 2026-04-01T00:00:00.000Z
-Stopped at: Quick task 260401-1eu complete
-Resume file: None
+Last activity: 2026-07-29 - Researched and planned Phase 5 (Fine-Grained Mesh Selection & Selection Sets): 05-RESEARCH.md (bmesh live-edit-mesh selection pattern, JSON selection-set storage, select_similar enum caveat), 05-01-PLAN.md (SEL-01/02/03, 3 tasks), 05-02-PLAN.md (SEL-04/05, 3 tasks, depends on 05-01). Added deferred SEL-06 to REQUIREMENTS.md v3.
+Last session: 2026-07-29T00:00:00.000Z
+Stopped at: Phase 5 planned — ready to execute 05-01-PLAN.md
+Resume file: .planning/phases/05-fine-grained-mesh-selection/05-01-PLAN.md
