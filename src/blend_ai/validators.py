@@ -15,6 +15,10 @@ MAX_RENDER_RESOLUTION = 8192
 MAX_RENDER_SAMPLES = 10000
 MAX_ARRAY_COUNT = 1000
 MAX_PARTICLE_COUNT = 1000000
+MAX_INDEX_LIST_LENGTH = 10000
+
+# Valid comparison criteria for select_similar (conservative, cross-mode-safe subset)
+SIMILAR_COMPARE_OPTIONS = {"NORMAL", "MATERIAL", "AREA"}
 
 # Safe object name pattern - alphanumeric, underscores, hyphens, spaces, dots
 SAFE_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9_\-. ]+$")
@@ -105,6 +109,18 @@ def validate_vector(vec: list | tuple, size: int = 3, name: str = "vector") -> t
         if not isinstance(v, (int, float)):
             raise ValidationError(f"{name} component {i} must be a number")
     return tuple(vec)
+
+
+def validate_index_list(indices: list, name: str = "indices") -> list[int]:
+    """Validate a list of non-negative mesh element indices."""
+    if not isinstance(indices, (list, tuple)):
+        raise ValidationError(f"{name} must be a list of integers")
+    if len(indices) > MAX_INDEX_LIST_LENGTH:
+        raise ValidationError(f"{name} exceeds maximum length of {MAX_INDEX_LIST_LENGTH}")
+    for i in indices:
+        if not isinstance(i, int) or isinstance(i, bool) or i < 0:
+            raise ValidationError(f"{name} must contain only non-negative integers, got {i!r}")
+    return list(indices)
 
 
 def validate_enum(value: str, allowed: set[str], name: str = "value") -> str:

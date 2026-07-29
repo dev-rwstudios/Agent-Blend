@@ -9,7 +9,9 @@ from blend_ai.validators import (
     validate_color,
     validate_vector,
     validate_enum,
+    validate_index_list,
     MAX_OBJECT_NAME_LENGTH,
+    MAX_INDEX_LIST_LENGTH,
 )
 
 
@@ -281,3 +283,45 @@ class TestValidateEnum:
         allowed = {"MESH"}
         with pytest.raises(ValidationError, match="must be one of"):
             validate_enum("mesh", allowed)
+
+
+# ---------------------------------------------------------------------------
+# validate_index_list
+# ---------------------------------------------------------------------------
+class TestValidateIndexList:
+    def test_valid_list(self):
+        assert validate_index_list([0, 1, 2]) == [0, 1, 2]
+
+    def test_empty_list_is_valid(self):
+        assert validate_index_list([]) == []
+
+    def test_tuple_is_valid(self):
+        assert validate_index_list((0, 1, 2)) == [0, 1, 2]
+
+    def test_non_list_raises(self):
+        with pytest.raises(ValidationError, match="must be a list"):
+            validate_index_list("not a list")
+
+    def test_negative_index_raises(self):
+        with pytest.raises(ValidationError, match="non-negative integers"):
+            validate_index_list([1, 2, -1])
+
+    def test_float_element_raises(self):
+        with pytest.raises(ValidationError, match="non-negative integers"):
+            validate_index_list([1, 2.5])
+
+    def test_bool_element_raises(self):
+        with pytest.raises(ValidationError, match="non-negative integers"):
+            validate_index_list([True, False])
+
+    def test_over_max_length_raises(self):
+        with pytest.raises(ValidationError, match="exceeds maximum length"):
+            validate_index_list(list(range(MAX_INDEX_LIST_LENGTH + 1)))
+
+    def test_at_max_length_ok(self):
+        indices = list(range(MAX_INDEX_LIST_LENGTH))
+        assert validate_index_list(indices) == indices
+
+    def test_custom_name_in_error(self):
+        with pytest.raises(ValidationError, match="vertex_indices"):
+            validate_index_list("bad", name="vertex_indices")

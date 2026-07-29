@@ -21,6 +21,15 @@ from blend_ai.tools.mesh_editing import (
     spin_mesh,
     set_edge_crease,
     select_linked,
+    select_vertices_by_index,
+    select_edges_by_index,
+    select_faces_by_index,
+    save_selection_set,
+    select_selection_set,
+    list_selection_sets,
+    grow_selection,
+    shrink_selection,
+    select_similar,
 )
 
 
@@ -484,3 +493,207 @@ class TestSelectLinked:
         mock_conn.send_command.return_value = {"status": "error", "result": "fail"}
         with pytest.raises(RuntimeError):
             select_linked("Cube")
+
+
+# ---------------------------------------------------------------------------
+# select_vertices_by_index / select_edges_by_index / select_faces_by_index
+# ---------------------------------------------------------------------------
+
+
+class TestSelectVerticesByIndex:
+    def test_valid(self, mock_conn):
+        select_vertices_by_index("Cube", [0, 1, 2])
+        mock_conn.send_command.assert_called_once_with(
+            "select_vertices_by_index", {"object_name": "Cube", "indices": [0, 1, 2]},
+        )
+
+    def test_empty_indices_valid(self, mock_conn):
+        select_vertices_by_index("Cube", [])
+        mock_conn.send_command.assert_called_once_with(
+            "select_vertices_by_index", {"object_name": "Cube", "indices": []},
+        )
+
+    def test_empty_name_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            select_vertices_by_index("", [0])
+
+    def test_negative_index_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            select_vertices_by_index("Cube", [-1])
+
+    def test_non_list_indices_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            select_vertices_by_index("Cube", "not-a-list")
+
+    def test_error_response_raises(self, mock_conn):
+        mock_conn.send_command.return_value = {"status": "error", "result": "fail"}
+        with pytest.raises(RuntimeError):
+            select_vertices_by_index("Cube", [0])
+
+
+class TestSelectEdgesByIndex:
+    def test_valid(self, mock_conn):
+        select_edges_by_index("Cube", [0, 1])
+        mock_conn.send_command.assert_called_once_with(
+            "select_edges_by_index", {"object_name": "Cube", "indices": [0, 1]},
+        )
+
+    def test_empty_name_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            select_edges_by_index("", [0])
+
+    def test_negative_index_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            select_edges_by_index("Cube", [-1])
+
+    def test_error_response_raises(self, mock_conn):
+        mock_conn.send_command.return_value = {"status": "error", "result": "fail"}
+        with pytest.raises(RuntimeError):
+            select_edges_by_index("Cube", [0])
+
+
+class TestSelectFacesByIndex:
+    def test_valid(self, mock_conn):
+        select_faces_by_index("Cube", [0])
+        mock_conn.send_command.assert_called_once_with(
+            "select_faces_by_index", {"object_name": "Cube", "indices": [0]},
+        )
+
+    def test_empty_name_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            select_faces_by_index("", [0])
+
+    def test_negative_index_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            select_faces_by_index("Cube", [-1])
+
+    def test_error_response_raises(self, mock_conn):
+        mock_conn.send_command.return_value = {"status": "error", "result": "fail"}
+        with pytest.raises(RuntimeError):
+            select_faces_by_index("Cube", [0])
+
+
+# ---------------------------------------------------------------------------
+# save_selection_set / select_selection_set / list_selection_sets
+# ---------------------------------------------------------------------------
+
+
+class TestSaveSelectionSet:
+    def test_valid(self, mock_conn):
+        save_selection_set("Cube", "top_face")
+        mock_conn.send_command.assert_called_once_with(
+            "save_selection_set", {"object_name": "Cube", "set_name": "top_face"},
+        )
+
+    def test_empty_object_name_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            save_selection_set("", "top_face")
+
+    def test_empty_set_name_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            save_selection_set("Cube", "")
+
+    def test_error_response_raises(self, mock_conn):
+        mock_conn.send_command.return_value = {"status": "error", "result": "fail"}
+        with pytest.raises(RuntimeError):
+            save_selection_set("Cube", "top_face")
+
+
+class TestSelectSelectionSet:
+    def test_valid(self, mock_conn):
+        select_selection_set("Cube", "top_face")
+        mock_conn.send_command.assert_called_once_with(
+            "select_selection_set", {"object_name": "Cube", "set_name": "top_face"},
+        )
+
+    def test_empty_set_name_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            select_selection_set("Cube", "")
+
+    def test_error_response_raises(self, mock_conn):
+        mock_conn.send_command.return_value = {"status": "error", "result": "fail"}
+        with pytest.raises(RuntimeError):
+            select_selection_set("Cube", "top_face")
+
+
+class TestListSelectionSets:
+    def test_valid(self, mock_conn):
+        list_selection_sets("Cube")
+        mock_conn.send_command.assert_called_once_with(
+            "list_selection_sets", {"object_name": "Cube"},
+        )
+
+    def test_empty_name_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            list_selection_sets("")
+
+    def test_error_response_raises(self, mock_conn):
+        mock_conn.send_command.return_value = {"status": "error", "result": "fail"}
+        with pytest.raises(RuntimeError):
+            list_selection_sets("Cube")
+
+
+# ---------------------------------------------------------------------------
+# grow_selection / shrink_selection / select_similar
+# ---------------------------------------------------------------------------
+
+
+class TestGrowSelection:
+    def test_valid(self, mock_conn):
+        grow_selection("Cube")
+        mock_conn.send_command.assert_called_once_with(
+            "grow_selection", {"object_name": "Cube"},
+        )
+
+    def test_empty_name_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            grow_selection("")
+
+    def test_error_response_raises(self, mock_conn):
+        mock_conn.send_command.return_value = {"status": "error", "result": "fail"}
+        with pytest.raises(RuntimeError):
+            grow_selection("Cube")
+
+
+class TestShrinkSelection:
+    def test_valid(self, mock_conn):
+        shrink_selection("Cube")
+        mock_conn.send_command.assert_called_once_with(
+            "shrink_selection", {"object_name": "Cube"},
+        )
+
+    def test_empty_name_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            shrink_selection("")
+
+    def test_error_response_raises(self, mock_conn):
+        mock_conn.send_command.return_value = {"status": "error", "result": "fail"}
+        with pytest.raises(RuntimeError):
+            shrink_selection("Cube")
+
+
+class TestSelectSimilar:
+    def test_valid_defaults(self, mock_conn):
+        select_similar("Cube")
+        mock_conn.send_command.assert_called_once_with(
+            "select_similar", {"object_name": "Cube", "compare_by": "NORMAL"},
+        )
+
+    def test_custom_compare_by(self, mock_conn):
+        select_similar("Cube", compare_by="MATERIAL")
+        mock_conn.send_command.assert_called_once_with(
+            "select_similar", {"object_name": "Cube", "compare_by": "MATERIAL"},
+        )
+
+    def test_invalid_compare_by_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            select_similar("Cube", compare_by="BOGUS")
+
+    def test_empty_name_raises(self, mock_conn):
+        with pytest.raises(ValidationError):
+            select_similar("")
+
+    def test_error_response_raises(self, mock_conn):
+        mock_conn.send_command.return_value = {"status": "error", "result": "fail"}
+        with pytest.raises(RuntimeError):
+            select_similar("Cube")

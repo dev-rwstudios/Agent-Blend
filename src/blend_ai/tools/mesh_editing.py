@@ -8,6 +8,9 @@ from blend_ai.validators import (
     validate_object_name,
     validate_numeric_range,
     validate_vector,
+    validate_index_list,
+    validate_enum,
+    SIMILAR_COMPARE_OPTIONS,
 )
 
 
@@ -418,6 +421,218 @@ def select_linked(object_name: str) -> dict[str, Any]:
 
     conn = get_connection()
     response = conn.send_command("select_linked", {"object_name": object_name})
+    if response.get("status") == "error":
+        raise RuntimeError(f"Blender error: {response.get('result')}")
+    return response.get("result")
+
+
+@mcp.tool()
+def select_vertices_by_index(object_name: str, indices: list[int]) -> dict[str, Any]:
+    """Select specific vertices by index, leaving the mesh in edit mode.
+
+    Enables granular mesh editing instead of the all-or-nothing selection
+    every other mesh_editing tool uses. The object remains in Edit Mode
+    after this call so the selection is visible/usable for the next step.
+
+    Args:
+        object_name: Name of the mesh object.
+        indices: List of vertex indices to select (0-based).
+
+    Returns:
+        Dict with selected indices, any invalid (out-of-range) indices, and mode.
+    """
+    object_name = validate_object_name(object_name)
+    indices = validate_index_list(indices)
+
+    conn = get_connection()
+    response = conn.send_command("select_vertices_by_index", {
+        "object_name": object_name,
+        "indices": indices,
+    })
+    if response.get("status") == "error":
+        raise RuntimeError(f"Blender error: {response.get('result')}")
+    return response.get("result")
+
+
+@mcp.tool()
+def select_edges_by_index(object_name: str, indices: list[int]) -> dict[str, Any]:
+    """Select specific edges by index, leaving the mesh in edit mode.
+
+    Args:
+        object_name: Name of the mesh object.
+        indices: List of edge indices to select (0-based).
+
+    Returns:
+        Dict with selected indices, any invalid (out-of-range) indices, and mode.
+    """
+    object_name = validate_object_name(object_name)
+    indices = validate_index_list(indices)
+
+    conn = get_connection()
+    response = conn.send_command("select_edges_by_index", {
+        "object_name": object_name,
+        "indices": indices,
+    })
+    if response.get("status") == "error":
+        raise RuntimeError(f"Blender error: {response.get('result')}")
+    return response.get("result")
+
+
+@mcp.tool()
+def select_faces_by_index(object_name: str, indices: list[int]) -> dict[str, Any]:
+    """Select specific faces by index, leaving the mesh in edit mode.
+
+    Args:
+        object_name: Name of the mesh object.
+        indices: List of face indices to select (0-based).
+
+    Returns:
+        Dict with selected indices, any invalid (out-of-range) indices, and mode.
+    """
+    object_name = validate_object_name(object_name)
+    indices = validate_index_list(indices)
+
+    conn = get_connection()
+    response = conn.send_command("select_faces_by_index", {
+        "object_name": object_name,
+        "indices": indices,
+    })
+    if response.get("status") == "error":
+        raise RuntimeError(f"Blender error: {response.get('result')}")
+    return response.get("result")
+
+
+@mcp.tool()
+def save_selection_set(object_name: str, set_name: str) -> dict[str, Any]:
+    """Save the current edit-mode selection under a name for later recall.
+
+    Args:
+        object_name: Name of the mesh object (must already have an active
+            edit-mode selection from select_vertices_by_index / select_edges_by_index
+            / select_faces_by_index / select_selection_set).
+        set_name: Name to save the selection under.
+
+    Returns:
+        Dict confirming the saved set contents.
+    """
+    object_name = validate_object_name(object_name)
+    set_name = validate_object_name(set_name)
+    conn = get_connection()
+    response = conn.send_command("save_selection_set", {
+        "object_name": object_name,
+        "set_name": set_name,
+    })
+    if response.get("status") == "error":
+        raise RuntimeError(f"Blender error: {response.get('result')}")
+    return response.get("result")
+
+
+@mcp.tool()
+def select_selection_set(object_name: str, set_name: str) -> dict[str, Any]:
+    """Recall a previously-saved named selection set.
+
+    Args:
+        object_name: Name of the mesh object.
+        set_name: Name of the previously-saved selection set.
+
+    Returns:
+        Dict with the reapplied selection, leaving the object in Edit Mode.
+    """
+    object_name = validate_object_name(object_name)
+    set_name = validate_object_name(set_name)
+    conn = get_connection()
+    response = conn.send_command("select_selection_set", {
+        "object_name": object_name,
+        "set_name": set_name,
+    })
+    if response.get("status") == "error":
+        raise RuntimeError(f"Blender error: {response.get('result')}")
+    return response.get("result")
+
+
+@mcp.tool()
+def list_selection_sets(object_name: str) -> dict[str, Any]:
+    """List saved selection set names on a mesh object.
+
+    MCP calls are stateless — use this to discover what was previously
+    saved with save_selection_set rather than assuming names from memory.
+
+    Args:
+        object_name: Name of the mesh object.
+
+    Returns:
+        Dict with the sorted list of saved set names.
+    """
+    object_name = validate_object_name(object_name)
+    conn = get_connection()
+    response = conn.send_command("list_selection_sets", {"object_name": object_name})
+    if response.get("status") == "error":
+        raise RuntimeError(f"Blender error: {response.get('result')}")
+    return response.get("result")
+
+
+@mcp.tool()
+def grow_selection(object_name: str) -> dict[str, Any]:
+    """Grow the current edit-mode selection along mesh topology.
+
+    Requires an active edit-mode selection (from select_vertices_by_index,
+    select_edges_by_index, select_faces_by_index, or select_selection_set).
+
+    Args:
+        object_name: Name of the mesh object.
+
+    Returns:
+        Dict with the resulting selection counts per element type.
+    """
+    object_name = validate_object_name(object_name)
+    conn = get_connection()
+    response = conn.send_command("grow_selection", {"object_name": object_name})
+    if response.get("status") == "error":
+        raise RuntimeError(f"Blender error: {response.get('result')}")
+    return response.get("result")
+
+
+@mcp.tool()
+def shrink_selection(object_name: str) -> dict[str, Any]:
+    """Shrink the current edit-mode selection along mesh topology.
+
+    Requires an active edit-mode selection (see grow_selection).
+
+    Args:
+        object_name: Name of the mesh object.
+
+    Returns:
+        Dict with the resulting selection counts per element type.
+    """
+    object_name = validate_object_name(object_name)
+    conn = get_connection()
+    response = conn.send_command("shrink_selection", {"object_name": object_name})
+    if response.get("status") == "error":
+        raise RuntimeError(f"Blender error: {response.get('result')}")
+    return response.get("result")
+
+
+@mcp.tool()
+def select_similar(object_name: str, compare_by: str = "NORMAL") -> dict[str, Any]:
+    """Select geometry similar to the current selection.
+
+    Requires an active edit-mode selection (see grow_selection).
+
+    Args:
+        object_name: Name of the mesh object.
+        compare_by: Similarity criterion. One of "NORMAL" (any element type),
+            "MATERIAL" or "AREA" (face selections).
+
+    Returns:
+        Dict with the resulting selection counts per element type.
+    """
+    object_name = validate_object_name(object_name)
+    compare_by = validate_enum(compare_by, SIMILAR_COMPARE_OPTIONS, name="compare_by")
+    conn = get_connection()
+    response = conn.send_command("select_similar", {
+        "object_name": object_name,
+        "compare_by": compare_by,
+    })
     if response.get("status") == "error":
         raise RuntimeError(f"Blender error: {response.get('result')}")
     return response.get("result")

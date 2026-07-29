@@ -36,6 +36,14 @@ An LLM using this MCP should produce professional-quality 3D output without the 
 - [x] Fix known bugs — render guard stuck state, stale connections, screenshot blocking during renders (Validated in Phase 2 + 3)
 - [x] Harden security — address code_exec vulnerability, add command auditing, improve path validation (Validated in Phase 4)
 - [ ] Improve test coverage — code_exec sandbox unvalidated, socket error paths uncovered (handler tests added in Phase 1)
+- [ ] Fine-grained mesh selection — index-based vertex/edge/face selection and named selection sets (Milestone 2, Phase 5)
+- [ ] Transaction & macro reliability — atomic undo grouping, audit logging, macro execution, workflows as callable tools (Milestone 2, Phase 6)
+- [ ] Material & texture production — AO/normal/roughness baking, seam/UV workflow expansion (Milestone 2, Phase 7)
+- [ ] Render quality control — AOVs/passes, denoise, adaptive sampling, light groups, render presets (Milestone 2, Phase 8)
+- [ ] Compositor & post-processing — compositor node tools, glare/bloom, color correction, vignette, depth effects (Milestone 2, Phase 9)
+- [ ] Cinematic camera tools — rigs, safe-area guides, focal-length presets, shot-framing helpers (Milestone 2, Phase 10)
+- [ ] Scene dressing & instancing — scatter/placement with randomization and collision-aware placement (Milestone 2, Phase 11)
+- [ ] Asset library workflow — browse/search/preview/append/link/relink local asset libraries (Milestone 2, Phase 12)
 
 ### Out of Scope
 
@@ -52,6 +60,8 @@ An LLM using this MCP should produce professional-quality 3D output without the 
 - Competition: Other Blender MCPs exist but produce rough results and lack workflow intelligence
 - User pain: Models look toy-like, meshes don't connect properly, LLM doesn't know best Blender practices
 - Blender target: Full 5.1 support (Phase 1 complete — EEVEE renamed, GPencil→Annotation, sculpt stroke_method, CI on Python 3.13)
+- Milestone 1 (v0.2.0, Phases 1-4) complete 2026-03-24: 5.1 compat, expert guidance, visual feedback, security/new-tools
+- Milestone 2 scoped 2026-07-29: usage review found the tool foundation solid for building scenes but insufficient for consistently beautiful, production-quality output. Gap confirmed against source (no compositor tool module, no baking, no scatter/instancing, no asset browsing exist yet); README.md's documented "Selection is all-or-nothing" limitation is the one gap already on record. Eight phases scoped — see ROADMAP.md Milestone 2.
 
 ## Constraints
 
@@ -69,6 +79,9 @@ An LLM using this MCP should produce professional-quality 3D output without the 
 | Context-aware plugin suggestions (not searchable tool) | Proactive suggestions fit the "smart assistant" vision better than a search tool | — Pending |
 | Full 5.1 compat + new features | Users expect both backward compat and access to new capabilities | Phase 1 complete |
 | Expert prompts over more tools | The LLM needs guidance on HOW to use tools well, not just more tools | — Pending |
+| Selection (Phase 5) and transactions (Phase 6) sequenced first in Milestone 2 | Both are infrastructure — baking needs selection targets, bulk placement needs atomic undo — later phases build on them | Milestone 2 scoped |
+| Compositor phase (9) sequenced after render quality (8) | Depth-of-field/depth compositor effects consume the Z/mist pass and light groups that Phase 8 (RQ-01, RQ-04) introduces | Milestone 2 scoped |
+| Texture painting scoped as fill/data-layer ops only, not stroke-based | Same limitation as existing sculpt-brush out-of-scope decision — no mouse/tablet input channel from a TCP server | Milestone 2 scoped |
 
 ## Evolution
 
@@ -88,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-24 after Phase 1 completion*
+*Last updated: 2026-07-29 after Milestone 2 scoping*
