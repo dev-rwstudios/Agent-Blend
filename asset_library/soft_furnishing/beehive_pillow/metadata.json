@@ -1,0 +1,44 @@
+{
+  "id": "soft_furnishing/beehive_pillow",
+  "name": "beehive_pillow",
+  "classification": {
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 501.6,
+    "depth_mm": 608.2,
+    "height_mm": 294.8,
+    "polycount": 69840
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "rest_on_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "sofa"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Beehive pillow"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

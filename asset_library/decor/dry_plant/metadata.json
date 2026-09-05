@@ -1,0 +1,40 @@
+{
+  "id": "decor/dry_plant",
+  "name": "dry_plant",
+  "classification": {
+    "category": "decor",
+    "subcategory": "plant",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 80.1,
+    "depth_mm": 98.1,
+    "height_mm": 91.1,
+    "polycount": 64869
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_dry plant"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

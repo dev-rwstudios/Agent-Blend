@@ -1,0 +1,39 @@
+{
+  "id": "table/modern_bedside_table",
+  "name": "modern_bedside_table",
+  "classification": {
+    "category": "table",
+    "subcategory": "bedside_table",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 529.7,
+    "depth_mm": 675.4,
+    "height_mm": 545.0,
+    "polycount": 16404
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Modern Bed Side Table"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

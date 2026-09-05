@@ -1,0 +1,46 @@
+{
+  "id": "soft_furnishing/pillow_set_01",
+  "name": "pillow_set_01",
+  "classification": {
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 1365.6,
+    "depth_mm": 637.1,
+    "height_mm": 295.9,
+    "polycount": 66076
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "rest_on_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "bed_frame_01"
+    }
+  ],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "pillows",
+      "pillows_border"
+    ],
+    "extraction_notes": "pillows_border is decorative piping/trim on the same pillow product, kept merged."
+  },
+  "needs_review": false
+}

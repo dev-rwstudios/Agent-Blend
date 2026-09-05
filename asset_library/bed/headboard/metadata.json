@@ -1,0 +1,39 @@
+{
+  "id": "bed/headboard",
+  "name": "headboard",
+  "classification": {
+    "category": "bed",
+    "subcategory": "headboard",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 1823.5,
+    "depth_mm": 29.3,
+    "height_mm": 865.4,
+    "polycount": 430
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "headboard_pannels"
+    ],
+    "extraction_notes": "Sibling collection to the 3 bed sets; unclear if paired with a specific bed."
+  },
+  "needs_review": true
+}

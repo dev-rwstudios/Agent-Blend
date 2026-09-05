@@ -1,0 +1,44 @@
+{
+  "id": "architecture/modern_railing_2",
+  "name": "modern_railing_2",
+  "classification": {
+    "category": "architecture",
+    "subcategory": "railing",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "staircase",
+      "hallway"
+    ]
+  },
+  "geometry": {
+    "width_mm": 1378.9,
+    "depth_mm": 1236.0,
+    "height_mm": 6704.8,
+    "polycount": 760
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Modern Railing 2",
+      "Item_INSTANCE",
+      "Item_INSTANCE.001",
+      "Item_INSTANCE.002",
+      "Item_INSTANCE.003"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

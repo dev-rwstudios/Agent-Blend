@@ -1,0 +1,43 @@
+{
+  "id": "storage/dressing_table",
+  "name": "dressing_table",
+  "classification": {
+    "category": "storage",
+    "subcategory": "dressing_table",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 402.1,
+    "depth_mm": 1793.9,
+    "height_mm": 364.5,
+    "polycount": 904
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "panel_horizontal.001",
+      "panel_back.001",
+      "pannel.001",
+      "panel_back.002",
+      "panel_door_handle.002"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

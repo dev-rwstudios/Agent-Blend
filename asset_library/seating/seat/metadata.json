@@ -1,0 +1,41 @@
+{
+  "id": "seating/seat",
+  "name": "seat",
+  "classification": {
+    "category": "seating",
+    "subcategory": "stool",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 359.0,
+    "depth_mm": 458.9,
+    "height_mm": 47.3,
+    "polycount": 56752
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Seat_seat_00",
+      "Seat_seat_01"
+    ],
+    "extraction_notes": "Two near-identical-dimension mesh parts, treated as one two-piece seat product."
+  },
+  "needs_review": false
+}

@@ -1,0 +1,40 @@
+{
+  "id": "table/table_taytum",
+  "name": "table_taytum",
+  "classification": {
+    "category": "table",
+    "subcategory": "side_table",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 800.0,
+    "depth_mm": 400.0,
+    "height_mm": 750.0,
+    "polycount": 1654
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "Table_Taytum__corona"
+    ],
+    "extraction_notes": "Name suggests a 'Taytum' side table product; '_corona' likely a leftover render-engine tag."
+  },
+  "needs_review": true
+}

@@ -1,6 +1,7 @@
 """Shared test fixtures."""
 
 import pytest
+import blend_ai.server
 from unittest.mock import MagicMock, patch
 
 

@@ -1,0 +1,54 @@
+{
+  "id": "electronics/bluetooth_soundbar_sony",
+  "name": "bluetooth_soundbar_sony",
+  "classification": {
+    "category": "electronics",
+    "subcategory": "speaker",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 900.6,
+    "depth_mm": 201.9,
+    "height_mm": 64.0,
+    "polycount": 138515
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "tv_cabinet"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Touches",
+      "Item_Top",
+      "Item_Side",
+      "Rubbers_Rubbers_00",
+      "Item_LED0",
+      "Item_Inside",
+      "Item_Grid",
+      "Item_Bouttons",
+      "Bluetooth sound bar Sony",
+      "Item_Back",
+      "Item_AirGrid"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

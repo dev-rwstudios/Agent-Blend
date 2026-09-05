@@ -1,0 +1,39 @@
+{
+  "id": "door_window/door_aarudhra",
+  "name": "door_aarudhra",
+  "classification": {
+    "category": "door_window",
+    "subcategory": "door",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "any"
+    ]
+  },
+  "geometry": {
+    "width_mm": 11.6,
+    "depth_mm": 384.4,
+    "height_mm": 2137.3,
+    "polycount": 54
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "embed_in_wall"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Aarudhra elevation "
+    ],
+    "extraction_notes": "Distinct named door design ('Aarudhra elevation') picked as representative; a second placement (.001) skipped as duplicate."
+  },
+  "needs_review": true
+}

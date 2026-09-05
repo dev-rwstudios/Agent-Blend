@@ -1,0 +1,39 @@
+{
+  "id": "decor/wardrobe_mirror",
+  "name": "wardrobe_mirror",
+  "classification": {
+    "category": "decor",
+    "subcategory": "mirror",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "closet"
+    ]
+  },
+  "geometry": {
+    "width_mm": 997.8,
+    "depth_mm": 34.3,
+    "height_mm": 1931.5,
+    "polycount": 121
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "mount_on_wall"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_mirror.001"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

@@ -1,0 +1,39 @@
+{
+  "id": "clothing/shirt_mens_01",
+  "name": "shirt_mens_01",
+  "classification": {
+    "category": "clothing",
+    "subcategory": "shirt",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "closet"
+    ]
+  },
+  "geometry": {
+    "width_mm": 146.7,
+    "depth_mm": 464.6,
+    "height_mm": 697.1,
+    "polycount": 58016
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "hang_or_fold"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Shirt_mens_01"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

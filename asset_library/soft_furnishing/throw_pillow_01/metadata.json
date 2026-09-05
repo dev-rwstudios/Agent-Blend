@@ -1,0 +1,44 @@
+{
+  "id": "soft_furnishing/throw_pillow_01",
+  "name": "throw_pillow_01",
+  "classification": {
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 489.1,
+    "depth_mm": 530.0,
+    "height_mm": 427.7,
+    "polycount": 2313
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "rest_on_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "sofa"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_throw"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

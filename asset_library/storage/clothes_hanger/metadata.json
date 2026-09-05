@@ -1,0 +1,44 @@
+{
+  "id": "storage/clothes_hanger",
+  "name": "clothes_hanger",
+  "classification": {
+    "category": "storage",
+    "subcategory": "hanger",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "closet"
+    ]
+  },
+  "geometry": {
+    "width_mm": 299.2,
+    "depth_mm": 42.5,
+    "height_mm": 123.8,
+    "polycount": 8416
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "hang_from_rod"
+  },
+  "relations": [
+    {
+      "relation": "hangs_in",
+      "target": "wardrobe_door"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_hanger.002"
+    ],
+    "extraction_notes": "Representative of 4 identical-geometry hangers (.002-.005); 2 other distinct hanger designs (Item_hanger, Item_hanger.001) exist in source but were not separately extracted."
+  },
+  "needs_review": true
+}

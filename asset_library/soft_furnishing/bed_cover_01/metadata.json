@@ -1,0 +1,45 @@
+{
+  "id": "soft_furnishing/bed_cover_01",
+  "name": "bed_cover_01",
+  "classification": {
+    "category": "soft_furnishing",
+    "subcategory": "bed_cover",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 1705.9,
+    "depth_mm": 801.0,
+    "height_mm": 468.3,
+    "polycount": 109261
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "drape_on_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "bed_frame_01"
+    }
+  ],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "cover"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

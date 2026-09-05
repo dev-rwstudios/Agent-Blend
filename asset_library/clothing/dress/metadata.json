@@ -1,0 +1,44 @@
+{
+  "id": "clothing/dress",
+  "name": "dress",
+  "classification": {
+    "category": "clothing",
+    "subcategory": "dress",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "closet"
+    ]
+  },
+  "geometry": {
+    "width_mm": 439.4,
+    "depth_mm": 186.7,
+    "height_mm": 828.5,
+    "polycount": 14919
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "hang_or_fold"
+  },
+  "relations": [
+    {
+      "relation": "hangs_in",
+      "target": "wardrobe_door"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Dress"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

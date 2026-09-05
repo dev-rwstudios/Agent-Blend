@@ -1,0 +1,44 @@
+{
+  "id": "seating/stool",
+  "name": "stool",
+  "classification": {
+    "category": "seating",
+    "subcategory": "stool",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 414.7,
+    "depth_mm": 1809.1,
+    "height_mm": 113.5,
+    "polycount": 241511
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [
+    {
+      "relation": "faces",
+      "target": "dressing_table"
+    }
+  ],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "Seat"
+    ],
+    "extraction_notes": "Split out from the 'storage'/dressing_table collection as an independently placeable seat."
+  },
+  "needs_review": false
+}

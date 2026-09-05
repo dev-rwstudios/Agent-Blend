@@ -1,0 +1,39 @@
+{
+  "id": "storage/storage_box",
+  "name": "storage_box",
+  "classification": {
+    "category": "storage",
+    "subcategory": "box",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "closet"
+    ]
+  },
+  "geometry": {
+    "width_mm": 670.7,
+    "depth_mm": 628.5,
+    "height_mm": 150.5,
+    "polycount": 11176
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_storage"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

@@ -1,0 +1,39 @@
+{
+  "id": "door_window/gate",
+  "name": "gate",
+  "classification": {
+    "category": "door_window",
+    "subcategory": "gate",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "any"
+    ]
+  },
+  "geometry": {
+    "width_mm": 4983.0,
+    "depth_mm": 100.9,
+    "height_mm": 1654.7,
+    "polycount": 11864
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "embed_in_wall"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_gate"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

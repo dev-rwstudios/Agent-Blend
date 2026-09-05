@@ -1,0 +1,40 @@
+{
+  "id": "decor/decorative_fork",
+  "name": "decorative_fork",
+  "classification": {
+    "category": "decor",
+    "subcategory": "tableware",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 44.7,
+    "depth_mm": 40.1,
+    "height_mm": 145.6,
+    "polycount": 4832
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_decorative fork "
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

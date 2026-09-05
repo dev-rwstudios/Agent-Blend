@@ -1,0 +1,31 @@
+### Blender
+🟢 **Connected** — `127.0.0.1:9876`
+
+### Toolset — 177 tools · 25 modules
+- Animation — 8
+- Armature — 7
+- Asset Library — 4
+- Booltool — 4
+- Camera — 6
+- Code Exec — 1
+- Collections — 4
+- Curves — 9
+- File Ops — 5
+- Geometry Nodes — 5
+- Gpencil — 5
+- Lighting — 7
+- Materials — 14
+- Mesh Editing — 25
+- Mesh Quality — 1
+- Modeling — 13
+- Objects — 15
+- Physics — 9
+- Rendering — 7
+- Scene — 6
+- Screenshot — 1
+- Sculpting — 8
+- Transforms — 6
+- Uv — 4
+- Viewport — 3
+
+Loaded straight from blend-ai's registered tools — no chat model or provider required. Pick one in chat settings when you're ready to talk to it.

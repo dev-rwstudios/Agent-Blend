@@ -1,0 +1,55 @@
+{
+  "id": "lighting/astral_agnes_12_lights_chandelier",
+  "name": "astral_agnes_12_lights_chandelier",
+  "classification": {
+    "category": "lighting",
+    "subcategory": "chandelier",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "dining_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 789.4,
+    "depth_mm": 789.4,
+    "height_mm": 582.4,
+    "polycount": 1392
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "ceiling",
+    "snap_mode": "mount_on_ceiling"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Rotation_Ctrl",
+      "Item_Cylinder.034",
+      "Item_Cylinder.035",
+      "Item_Cylinder.036",
+      "Item_Cylinder.037",
+      "Item_Cylinder.038",
+      "Item_Cylinder.039",
+      "Item_Cylinder.040",
+      "Item_Cylinder.041",
+      "Item_Cylinder.042",
+      "Item_Cylinder.043",
+      "Item_Cylinder.044",
+      "Item_Cylinder.045",
+      "Item_Cylinder.046",
+      "Astral Agnes 01 - 12 Lights.001",
+      "Item_Astral Agnes 01 - 12 Lights"
+    ],
+    "extraction_notes": "Collection also contains generic rig/cylinder helper objects alongside the named chandelier; may need manual cleanup."
+  },
+  "needs_review": true
+}

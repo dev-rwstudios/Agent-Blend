@@ -4,6 +4,7 @@ import json
 import pytest
 from unittest.mock import MagicMock, patch
 
+import blend_ai.server
 from blend_ai.ollama_chat import (
     BlenderChatSession,
     _build_tool_list,
@@ -12,6 +13,8 @@ from blend_ai.ollama_chat import (
     _strip_tool_markup,
     _find_similar_tools,
     parse_image_command,
+    parse_tools_command,
+    format_tools_listing,
     load_image_as_base64,
     SUPPORTED_IMAGE_FORMATS,
     SYSTEM_PROMPT_BASE,
@@ -121,11 +124,36 @@ class TestBlenderChatSession:
             session = BlenderChatSession()
             session.initialize()
             mock_blender_connection.connect.assert_called_once()
-            assert len(session.tools) == 2
-            assert session._tool_names == {"create_object", "get_viewport_screenshot"}
+            assert len(session.tools) == 3
+            assert "create_object" in session._tool_names
+            assert "get_viewport_screenshot" in session._tool_names
             assert session.messages[0]["role"] == "system"
             assert "create_object" in session.messages[0]["content"]
             assert "get_viewport_screenshot" in session.messages[0]["content"]
+
+    def test_initialize_populates_tools_by_module(
+        self, mock_ollama_client, mock_blender_connection, mock_mcp_tools
+    ):
+        # tools_by_module is derived from the real, always-registered mcp
+        # server (not the mocked 2-tool sample), so it reflects the real
+        # ~177-tool catalog regardless of what get_ollama_tools() is mocked
+        # to return elsewhere in this fixture set.
+        with patch("blend_ai.connection.BlenderConnection", return_value=mock_blender_connection):
+            session = BlenderChatSession()
+            session.initialize()
+            assert "objects" in session.tools_by_module
+            assert len(session.tools_by_module) > 1
+
+    def test_list_tools_delegates_to_loaded_catalog(
+        self, mock_ollama_client, mock_blender_connection, mock_mcp_tools
+    ):
+        with patch("blend_ai.connection.BlenderConnection", return_value=mock_blender_connection):
+            session = BlenderChatSession()
+            session.initialize()
+            overview = session.list_tools()
+            assert "tools across" in overview
+            filtered = session.list_tools("objects")
+            assert "objects" in filtered.lower()
 
     def test_execute_tool(self, mock_ollama_client, mock_blender_connection):
         """Test tool execution routes through MCP call_tool."""
@@ -220,10 +248,14 @@ class TestBlenderChatSession:
 
         assert result == "Done! Created a cube."
 
-    def test_chat_screenshot_triggers_vision(
+    def test_chat_screenshot_injects_image_for_active_backend(
         self, mock_ollama_client, mock_blender_connection, mock_mcp_tools
     ):
-        """Test that screenshot tool calls auto-trigger vision analysis."""
+        """After a screenshot tool call, the raw image is attached to a
+        follow-up user-role message so the active backend sees it directly —
+        this replaced the old separate-Ollama-vision-analysis merge, since a
+        "tool"-role message can't carry image content in any of these APIs,
+        and every backend now has real image support via images=."""
         screenshot_result = json.dumps({"image": "base64encodeddata", "width": 1000, "height": 562})
 
         tool_response = MagicMock()
@@ -235,7 +267,7 @@ class TestBlenderChatSession:
 
         final_response = MagicMock()
         final_response.message.tool_calls = None
-        final_response.message.content = "The viewport shows a default cube."
+        final_response.message.content = "I see a default cube."
 
         mock_ollama_client.chat.side_effect = [tool_response, final_response]
 
@@ -243,14 +275,45 @@ class TestBlenderChatSession:
             with patch.object(
                 BlenderChatSession, "execute_tool", return_value=screenshot_result
             ):
-                with patch.object(
-                    BlenderChatSession, "analyze_screenshot", return_value="I see a default cube."
-                ):
-                    session = BlenderChatSession()
-                    session.initialize()
-                    result = session.chat("Take a screenshot")
+                session = BlenderChatSession()
+                session.initialize()
+                result = session.chat("Take a screenshot")
 
-        assert result == "The viewport shows a default cube."
+        assert result == "I see a default cube."
+        image_msgs = [m for m in session.messages if m.get("role") == "user" and m.get("images")]
+        assert len(image_msgs) == 1
+        assert image_msgs[0]["images"] == [{"mime": "image/png", "data": "base64encodeddata"}]
+
+    def test_chat_screenshot_without_image_key_no_injection(
+        self, mock_ollama_client, mock_blender_connection, mock_mcp_tools
+    ):
+        """A screenshot result with no "image" key (e.g. an error response)
+        shouldn't produce a synthetic image message."""
+        screenshot_result = json.dumps({"status": "error", "result": "no viewport available"})
+
+        tool_response = MagicMock()
+        tool_call = MagicMock()
+        tool_call.function.name = "get_viewport_screenshot"
+        tool_call.function.arguments = {}
+        tool_response.message.tool_calls = [tool_call]
+        tool_response.message.content = ""
+
+        final_response = MagicMock()
+        final_response.message.tool_calls = None
+        final_response.message.content = "Something went wrong capturing the viewport."
+
+        mock_ollama_client.chat.side_effect = [tool_response, final_response]
+
+        with patch("blend_ai.connection.BlenderConnection", return_value=mock_blender_connection):
+            with patch.object(
+                BlenderChatSession, "execute_tool", return_value=screenshot_result
+            ):
+                session = BlenderChatSession()
+                session.initialize()
+                session.chat("Take a screenshot")
+
+        image_msgs = [m for m in session.messages if m.get("role") == "user" and m.get("images")]
+        assert image_msgs == []
 
     def test_analyze_screenshot(self, mock_ollama_client):
         """Test vision model analysis of screenshot."""
@@ -296,112 +359,6 @@ class TestBlenderChatSession:
 
         # The session should have cached a loop
         assert session._loop is not None
-
-    def test_vision_note_merged_into_json_result(
-        self, mock_ollama_client, mock_blender_connection, mock_mcp_tools
-    ):
-        """Vision analysis is merged as 'vision_analysis' key when result is valid JSON."""
-        screenshot_result = json.dumps({"image": "base64data", "width": 800, "height": 600})
-        analysis_text = "I see a grey cube on a white background."
-
-        tool_response = MagicMock()
-        tool_call = MagicMock()
-        tool_call.function.name = "get_viewport_screenshot"
-        tool_call.function.arguments = {}
-        tool_response.message.tool_calls = [tool_call]
-        tool_response.message.content = ""
-
-        final_response = MagicMock()
-        final_response.message.tool_calls = None
-        final_response.message.content = "Done."
-
-        mock_ollama_client.chat.side_effect = [tool_response, final_response]
-
-        with patch("blend_ai.connection.BlenderConnection", return_value=mock_blender_connection):
-            with patch.object(BlenderChatSession, "execute_tool", return_value=screenshot_result):
-                with patch.object(
-                    BlenderChatSession, "analyze_screenshot", return_value=analysis_text
-                ):
-                    session = BlenderChatSession()
-                    session.initialize()
-                    session.chat("Take a screenshot")
-
-        tool_msg = next(m for m in session.messages if m["role"] == "tool")
-        parsed = json.loads(tool_msg["content"])
-        assert "vision_analysis" in parsed
-        assert parsed["vision_analysis"] == analysis_text
-
-    def test_vision_note_concatenated_for_non_json_result(
-        self, mock_ollama_client, mock_blender_connection, mock_mcp_tools
-    ):
-        """Vision note falls back to concatenation when result is not valid JSON."""
-        analysis_text = "I see a grey cube."
-
-        tool_response = MagicMock()
-        tool_call = MagicMock()
-        tool_call.function.name = "get_viewport_screenshot"
-        tool_call.function.arguments = {}
-        tool_response.message.tool_calls = [tool_call]
-        tool_response.message.content = ""
-
-        final_response = MagicMock()
-        final_response.message.tool_calls = None
-        final_response.message.content = "Done."
-
-        mock_ollama_client.chat.side_effect = [tool_response, final_response]
-
-        # Patch analyze_screenshot to return analysis even for non-JSON result
-        # We also need parse to succeed at extracting image key — mock execute_tool
-        # to return JSON with "image" so vision analysis is triggered, but then
-        # pretend execute_tool returned plain text for the appended message.
-        # Simplest approach: patch both execute_tool AND analyze_screenshot,
-        # and configure execute_tool to return a JSON that triggers vision analysis
-        # but where we intercept result processing.
-
-        # Actually: execute_tool returns plain text, but vision analysis only triggers
-        # when result JSON has "image" key. So we need execute_tool to return JSON with
-        # "image" key, but also make json.dumps of result_obj fail (TypeError).
-        # Easiest: return valid JSON with "image" key, mock analyze_screenshot,
-        # then verify fallback path via monkeypatching json.loads on the second call.
-
-        # Cleaner test: return a string that has "image" key detectable by json.loads
-        # but then make json.dumps(result_obj) fail by patching json.loads to raise on second call.
-        # Even cleaner: use a side_effect on json.loads.
-
-        # Simplest valid approach: make execute_tool return plain text (no "image" key)
-        # so vision is NOT triggered at all. Instead, test the branch directly on chat().
-        # We need vision_note to be non-empty, which requires "image" key in result JSON.
-        # So: return JSON with image key but arrange for result_obj update to raise TypeError.
-
-        screenshot_json = json.dumps({"image": "data", "width": 100, "height": 100})
-
-        with patch("blend_ai.connection.BlenderConnection", return_value=mock_blender_connection):
-            with patch.object(
-                BlenderChatSession, "execute_tool", return_value=screenshot_json
-            ):
-                with patch.object(
-                    BlenderChatSession, "analyze_screenshot", return_value=analysis_text
-                ):
-                    # Patch json.loads inside ollama_chat to raise on the tool-content parse
-                    original_loads = json.loads
-
-                    call_count = [0]
-
-                    def selective_loads(s, **kwargs):
-                        call_count[0] += 1
-                        # First call is for extracting "image" key — allow it
-                        # Second call is for merging vision note — raise to test fallback
-                        if call_count[0] == 2:
-                            raise json.JSONDecodeError("forced", "", 0)
-                        return original_loads(s, **kwargs)
-
-                    with patch("blend_ai.ollama_chat.json.loads", side_effect=selective_loads):
-                        session = BlenderChatSession()
-                        session.initialize()
-                        session.chat("Take a screenshot")
-
-        tool_msg = next(m for m in session.messages if m["role"] == "tool")
-        assert analysis_text in tool_msg["content"] or "[Vision Analysis]" in tool_msg["content"]
 
 
 class TestParseTextToolCalls:
@@ -590,6 +547,66 @@ class TestParseImageCommand:
     def test_webp_extension(self):
         result = parse_image_command("!image /ref.webp")
         assert result == ("/ref.webp", "")
+
+
+class TestParseToolsCommand:
+    def test_bare_command_returns_empty_query(self):
+        assert parse_tools_command("!tools") == ""
+
+    def test_command_with_query(self):
+        assert parse_tools_command("!tools materials") == "materials"
+
+    def test_command_with_multi_word_query_and_extra_spaces(self):
+        assert parse_tools_command("!tools   screenshot camera  ") == "screenshot camera"
+
+    def test_not_a_tools_command_returns_none(self):
+        assert parse_tools_command("create a cube") is None
+
+    def test_similar_but_different_command_returns_none(self):
+        assert parse_tools_command("!toolsfoo") is None
+
+
+class TestFormatToolsListing:
+    SAMPLE = {
+        "objects": [
+            {"type": "function", "function": {"name": "create_object", "description": "Create a primitive object."}},
+            {"type": "function", "function": {"name": "delete_object", "description": "Delete an object."}},
+        ],
+        "materials": [
+            {"type": "function", "function": {"name": "set_material_color", "description": "Set the base color."}},
+        ],
+    }
+
+    def test_no_query_shows_overview_with_counts(self):
+        result = format_tools_listing(self.SAMPLE)
+        assert "3 tools across 2 modules" in result
+        assert "`objects` — 2 tools" in result
+        assert "`materials` — 1 tools" in result
+        # Overview must not spell out individual tool names.
+        assert "create_object" not in result
+
+    def test_exact_module_name_query_returns_only_that_module(self):
+        result = format_tools_listing(self.SAMPLE, "materials")
+        assert "set_material_color" in result
+        assert "create_object" not in result
+
+    def test_query_matches_tool_name_substring(self):
+        result = format_tools_listing(self.SAMPLE, "delete")
+        assert "delete_object" in result
+        assert "create_object" not in result
+
+    def test_query_matches_description_substring(self):
+        result = format_tools_listing(self.SAMPLE, "primitive")
+        assert "create_object" in result
+
+    def test_query_is_case_insensitive(self):
+        result = format_tools_listing(self.SAMPLE, "MATERIALS")
+        assert "set_material_color" in result
+
+    def test_no_match_returns_helpful_message(self):
+        result = format_tools_listing(self.SAMPLE, "nonexistent_xyz")
+        assert "No tools match" in result
+        assert "!tools" in result
 
 
 class TestLoadImageAsBase64:

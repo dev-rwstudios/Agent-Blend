@@ -1,0 +1,40 @@
+{
+  "id": "lighting/square_ceiling_lamp",
+  "name": "square_ceiling_lamp",
+  "classification": {
+    "category": "lighting",
+    "subcategory": "ceiling_lamp",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "any"
+    ]
+  },
+  "geometry": {
+    "width_mm": 208.0,
+    "depth_mm": 619.9,
+    "height_mm": 27.9,
+    "polycount": 774
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "ceiling",
+    "snap_mode": "mount_on_ceiling"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Square ceiling lamp.001",
+      "Item_Cube.050"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

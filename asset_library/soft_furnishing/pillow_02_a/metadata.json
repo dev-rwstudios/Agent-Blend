@@ -1,0 +1,45 @@
+{
+  "id": "soft_furnishing/pillow_02_a",
+  "name": "pillow_02_a",
+  "classification": {
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 789.7,
+    "depth_mm": 361.7,
+    "height_mm": 436.7,
+    "polycount": 13998
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "rest_on_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "bed_frame_02"
+    }
+  ],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "pillow_1"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

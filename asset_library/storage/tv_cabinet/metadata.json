@@ -1,0 +1,48 @@
+{
+  "id": "storage/tv_cabinet",
+  "name": "tv_cabinet",
+  "classification": {
+    "category": "storage",
+    "subcategory": "tv_cabinet",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 4757.5,
+    "depth_mm": 641.5,
+    "height_mm": 3000.0,
+    "polycount": 121443
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Wall_Plane.007",
+      "Item_Cube.008",
+      "Item_Cube.009",
+      "Wall_Plane.008",
+      "Wall_Plane.009",
+      "Item_Cylinder.016",
+      "Item_Cube.010",
+      "Item_Book 2",
+      "Item_Base",
+      "Item_Decorative"
+    ],
+    "extraction_notes": "Direct members only; nested product collections split out separately below."
+  },
+  "needs_review": false
+}

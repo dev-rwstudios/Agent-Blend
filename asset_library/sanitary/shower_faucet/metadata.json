@@ -1,0 +1,43 @@
+{
+  "id": "sanitary/shower_faucet",
+  "name": "shower_faucet",
+  "classification": {
+    "category": "sanitary",
+    "subcategory": "faucet",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bathroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 734.6,
+    "depth_mm": 3678.4,
+    "height_mm": 5354.8,
+    "polycount": 545836
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Shower_Faucet_faucet_00",
+      "Shower_Faucet_faucet_01",
+      "Shower_Faucet_faucet_02",
+      "Shower_Faucet_Shower Faucet_03",
+      "Shower_Faucet_water_04"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

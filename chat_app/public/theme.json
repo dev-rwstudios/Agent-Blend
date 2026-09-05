@@ -1,0 +1,44 @@
+{
+  "variables": {
+    "light": {
+      "--background": "0 0% 100%",
+      "--foreground": "0 0% 8%",
+      "--card": "0 0% 100%",
+      "--card-foreground": "0 0% 8%",
+      "--popover": "0 0% 100%",
+      "--popover-foreground": "0 0% 8%",
+      "--primary": "24 95% 48%",
+      "--primary-foreground": "0 0% 100%",
+      "--secondary": "24 20% 95%",
+      "--secondary-foreground": "0 0% 15%",
+      "--muted": "0 0% 92%",
+      "--muted-foreground": "0 0% 40%",
+      "--accent": "24 40% 93%",
+      "--accent-foreground": "0 0% 15%",
+      "--border": "0 0% 88%",
+      "--input": "0 0% 88%",
+      "--ring": "24 95% 48%",
+      "--radius": ".6rem"
+    },
+    "dark": {
+      "--background": "0 0% 8%",
+      "--foreground": "0 0% 95%",
+      "--card": "0 0% 12%",
+      "--card-foreground": "0 0% 95%",
+      "--popover": "0 0% 12%",
+      "--popover-foreground": "0 0% 95%",
+      "--primary": "24 95% 53%",
+      "--primary-foreground": "0 0% 100%",
+      "--secondary": "0 0% 16%",
+      "--secondary-foreground": "0 0% 95%",
+      "--muted": "0 0% 18%",
+      "--muted-foreground": "0 0% 65%",
+      "--accent": "24 30% 20%",
+      "--accent-foreground": "0 0% 95%",
+      "--border": "0 0% 20%",
+      "--input": "0 0% 20%",
+      "--ring": "24 95% 53%",
+      "--radius": ".6rem"
+    }
+  }
+}

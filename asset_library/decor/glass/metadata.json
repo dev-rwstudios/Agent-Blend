@@ -1,0 +1,40 @@
+{
+  "id": "decor/glass",
+  "name": "glass",
+  "classification": {
+    "category": "decor",
+    "subcategory": "tableware",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 66.1,
+    "depth_mm": 66.1,
+    "height_mm": 80.2,
+    "polycount": 2240
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Glass"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

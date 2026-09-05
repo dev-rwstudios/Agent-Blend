@@ -1,0 +1,40 @@
+{
+  "id": "decor/vase_04",
+  "name": "vase_04",
+  "classification": {
+    "category": "decor",
+    "subcategory": "vase",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 71.3,
+    "depth_mm": 71.3,
+    "height_mm": 76.4,
+    "polycount": 25542
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Vases_vase_04"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

@@ -1,0 +1,41 @@
+{
+  "id": "bed/bed_frame_01",
+  "name": "bed_frame_01",
+  "classification": {
+    "category": "bed",
+    "subcategory": "bed_frame",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 1625.9,
+    "depth_mm": 2160.7,
+    "height_mm": 189.0,
+    "polycount": 40847
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "bed_01",
+      "base.001",
+      "legs"
+    ],
+    "extraction_notes": "Structural frame+base+legs of bed set 01."
+  },
+  "needs_review": false
+}

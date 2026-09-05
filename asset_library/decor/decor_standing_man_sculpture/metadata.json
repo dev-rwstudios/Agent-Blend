@@ -1,0 +1,48 @@
+{
+  "id": "decor/decor_standing_man_sculpture",
+  "name": "decor_standing_man_sculpture",
+  "classification": {
+    "category": "decor",
+    "subcategory": "sculpture",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 212.7,
+    "depth_mm": 212.7,
+    "height_mm": 379.3,
+    "polycount": 15262
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "coffee_table"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_SM",
+      "Item_Decor",
+      "Item_Decor.001",
+      "Decor Standing Man"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

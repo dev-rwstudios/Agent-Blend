@@ -1,0 +1,41 @@
+{
+  "id": "sanitary/wall_hung_toilet",
+  "name": "wall_hung_toilet",
+  "classification": {
+    "category": "sanitary",
+    "subcategory": "toilet",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bathroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 604.3,
+    "depth_mm": 230.0,
+    "height_mm": 514.1,
+    "polycount": 7103
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "mount_on_wall"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Wall hung toilet",
+      "Item_toilet",
+      "Item_flush control"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

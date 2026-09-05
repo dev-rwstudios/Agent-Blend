@@ -1,0 +1,44 @@
+{
+  "id": "soft_furnishing/almofada_pontilhado_bege_pillow",
+  "name": "almofada_pontilhado_bege_pillow",
+  "classification": {
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 489.3,
+    "depth_mm": 354.2,
+    "height_mm": 404.4,
+    "polycount": 118942
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "rest_on_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "sofa"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Almofada Pontilhado Bege"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

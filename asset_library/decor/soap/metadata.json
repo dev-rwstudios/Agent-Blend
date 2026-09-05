@@ -1,0 +1,39 @@
+{
+  "id": "decor/soap",
+  "name": "soap",
+  "classification": {
+    "category": "decor",
+    "subcategory": "bathroom_accessory",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bathroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 79.1,
+    "depth_mm": 92.3,
+    "height_mm": 250.0,
+    "polycount": 5938
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Soap"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

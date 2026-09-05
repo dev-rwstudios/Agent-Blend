@@ -4,7 +4,8 @@ import sys
 
 # Ensure mcp.prompt() works as identity decorator (same as mcp.tool())
 _server = sys.modules["blend_ai.server"]
-_server.mcp.prompt.return_value = lambda fn: fn
+if hasattr(_server.mcp.prompt, "return_value"):
+    _server.mcp.prompt.return_value = lambda fn: fn
 
 from blend_ai.prompts.workflows import (  # noqa: E402
     topology_best_practices,

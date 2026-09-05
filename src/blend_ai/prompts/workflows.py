@@ -1,6 +1,13 @@
 """MCP prompt templates for common Blender workflows."""
 
+from blend_ai.rules import ASSET_FIRST_PROTOCOL
 from blend_ai.server import mcp
+
+
+@mcp.prompt()
+def asset_first_workflow() -> str:
+    """Mandatory protocol for building interior scenes: search the asset library before modeling primitives."""
+    return ASSET_FIRST_PROTOCOL
 
 
 @mcp.prompt()

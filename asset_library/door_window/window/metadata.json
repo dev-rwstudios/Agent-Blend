@@ -1,0 +1,39 @@
+{
+  "id": "door_window/window",
+  "name": "window",
+  "classification": {
+    "category": "door_window",
+    "subcategory": "window",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "any"
+    ]
+  },
+  "geometry": {
+    "width_mm": 75.6,
+    "depth_mm": 1546.1,
+    "height_mm": 1792.6,
+    "polycount": 908
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "embed_in_wall"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_win.002"
+    ],
+    "extraction_notes": "One representative picked from ~11 repeated window placements (windows__g); same design reused, not exported per-placement."
+  },
+  "needs_review": true
+}

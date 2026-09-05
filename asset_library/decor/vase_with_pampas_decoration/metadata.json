@@ -1,0 +1,54 @@
+{
+  "id": "decor/vase_with_pampas_decoration",
+  "name": "vase_with_pampas_decoration",
+  "classification": {
+    "category": "decor",
+    "subcategory": "vase",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 508.5,
+    "depth_mm": 682.2,
+    "height_mm": 612.2,
+    "polycount": 122119
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "coffee_table"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_pampas twigs",
+      "Item_pampas twigs.001",
+      "Item_pampas twigs.002",
+      "Item_pampas twigs.003",
+      "Item_pampas twigs.004",
+      "Vases_Gray vase_01",
+      "Vases_Gray vase_02",
+      "Item_Glass pitcher",
+      "Decoration vases with pampas",
+      "Vases_black vase_07"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

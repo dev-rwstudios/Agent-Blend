@@ -1,0 +1,40 @@
+{
+  "id": "decor/bird_of_paradise_vase",
+  "name": "bird_of_paradise_vase",
+  "classification": {
+    "category": "decor",
+    "subcategory": "vase",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 1081.0,
+    "depth_mm": 1050.6,
+    "height_mm": 1836.8,
+    "polycount": 56018
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Vases_HQ Plants Bird Of ParadiseBird Vase_08"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

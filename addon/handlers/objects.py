@@ -3,6 +3,8 @@
 import math
 
 import bpy
+from mathutils import Vector
+
 from .. import dispatcher
 
 # Map of primitive type to bpy.ops function
@@ -19,6 +21,24 @@ _PRIMITIVE_OPS = {
     "MONKEY": "bpy.ops.mesh.primitive_monkey_add",
     "EMPTY": None,  # Handled separately
 }
+
+
+def _world_bounding_box(obj) -> tuple[list[float], list[float]]:
+    """Compute an object's axis-aligned world-space bounding box.
+
+    Transforms the object's 8 local bound_box corners into world space so
+    callers can snap objects to floors/surfaces without guessing whether the
+    object's origin sits at its base or its center.
+    """
+    if not obj.bound_box:
+        loc = list(obj.matrix_world.translation)
+        return loc, loc
+
+    corners = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
+    xs = [c.x for c in corners]
+    ys = [c.y for c in corners]
+    zs = [c.z for c in corners]
+    return [min(xs), min(ys), min(zs)], [max(xs), max(ys), max(zs)]
 
 
 def _get_primitive_op(ptype: str):
@@ -387,6 +407,8 @@ def handle_get_object_info(params: dict) -> dict:
                 "name": slot.material.name if slot.material else None,
             })
 
+        bbox_min, bbox_max = _world_bounding_box(obj)
+
         return {
             "name": obj.name,
             "type": obj.type,
@@ -395,6 +417,8 @@ def handle_get_object_info(params: dict) -> dict:
             "rotation_mode": obj.rotation_mode,
             "scale": list(obj.scale),
             "dimensions": list(obj.dimensions),
+            "bound_box_world_min": bbox_min,
+            "bound_box_world_max": bbox_max,
             "modifiers": modifiers,
             "materials": mat_slots,
             "parent": obj.parent.name if obj.parent else None,

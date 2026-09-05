@@ -1,0 +1,45 @@
+{
+  "id": "door_window/wardrobe_door",
+  "name": "wardrobe_door",
+  "classification": {
+    "category": "door_window",
+    "subcategory": "wardrobe_door",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "closet"
+    ]
+  },
+  "geometry": {
+    "width_mm": 1008.7,
+    "depth_mm": 310.3,
+    "height_mm": 2439.2,
+    "polycount": 2036
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "embed_in_wall"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Door #1",
+      "Item_Handle 2",
+      "Item_Handle 1",
+      "Item_Frame 3",
+      "Item_Frame 2",
+      "Item_Frame 1",
+      "Item_Door "
+    ],
+    "extraction_notes": "One representative wardrobe door unit; a second identical placement (.001 suffixed) skipped as duplicate."
+  },
+  "needs_review": false
+}

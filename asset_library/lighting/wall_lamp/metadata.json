@@ -1,0 +1,45 @@
+{
+  "id": "lighting/wall_lamp",
+  "name": "wall_lamp",
+  "classification": {
+    "category": "lighting",
+    "subcategory": "wall_lamp",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom",
+      "hallway"
+    ]
+  },
+  "geometry": {
+    "width_mm": 200.0,
+    "depth_mm": 67.6,
+    "height_mm": 200.0,
+    "polycount": 14270
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "mount_on_wall"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Wall Mount",
+      "Wall Lamp",
+      "Item_Middle Part",
+      "Item_Front",
+      "Item_Back.001"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

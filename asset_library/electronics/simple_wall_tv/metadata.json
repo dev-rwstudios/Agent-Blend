@@ -1,0 +1,46 @@
+{
+  "id": "electronics/simple_wall_tv",
+  "name": "simple_wall_tv",
+  "classification": {
+    "category": "electronics",
+    "subcategory": "television",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 1876.3,
+    "depth_mm": 60.3,
+    "height_mm": 1109.7,
+    "polycount": 319
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "mount_on_wall"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "tv_cabinet"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_TV Sensor Panel",
+      "Item_TV Back Panel",
+      "Item_Simple Television (Wall Mounted)"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

@@ -1,0 +1,40 @@
+{
+  "id": "furniture_other/unidentified_furniture_piece",
+  "name": "unidentified_furniture_piece",
+  "classification": {
+    "category": "furniture_other",
+    "subcategory": "unknown",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 451.0,
+    "depth_mm": 1737.9,
+    "height_mm": 366.8,
+    "polycount": 102438
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "default.001"
+    ],
+    "extraction_notes": "Generic leftover name 'default.001' but substantial real geometry (~105k verts, 1.7x0.45x0.37m) -- likely a bench/console, identity unconfirmed."
+  },
+  "needs_review": true
+}

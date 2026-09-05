@@ -1,0 +1,42 @@
+{
+  "id": "table/coffee_table",
+  "name": "coffee_table",
+  "classification": {
+    "category": "table",
+    "subcategory": "coffee_table",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 2443.7,
+    "depth_mm": 1065.2,
+    "height_mm": 470.6,
+    "polycount": 23699
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Wall_Plane.004",
+      "Wall_Plane.005",
+      "Wall_Plane.006",
+      "Item_Cylinder.015"
+    ],
+    "extraction_notes": "Direct members only; nested decor collections (vases, sculpture, pillow) split out separately."
+  },
+  "needs_review": false
+}

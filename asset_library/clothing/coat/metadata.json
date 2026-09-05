@@ -1,0 +1,44 @@
+{
+  "id": "clothing/coat",
+  "name": "coat",
+  "classification": {
+    "category": "clothing",
+    "subcategory": "coat",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "closet"
+    ]
+  },
+  "geometry": {
+    "width_mm": 442.2,
+    "depth_mm": 176.8,
+    "height_mm": 559.2,
+    "polycount": 45838
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "hang_or_fold"
+  },
+  "relations": [
+    {
+      "relation": "hangs_in",
+      "target": "wardrobe_door"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_coat"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

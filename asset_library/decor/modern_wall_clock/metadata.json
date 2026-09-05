@@ -1,0 +1,46 @@
+{
+  "id": "decor/modern_wall_clock",
+  "name": "modern_wall_clock",
+  "classification": {
+    "category": "decor",
+    "subcategory": "clock",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "hallway"
+    ]
+  },
+  "geometry": {
+    "width_mm": 35.6,
+    "depth_mm": 716.7,
+    "height_mm": 1082.1,
+    "polycount": 41876
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "mount_on_wall"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_rotor",
+      "Item_radial",
+      "Modern Wall clock",
+      "Item_min",
+      "Item_joint",
+      "Item_hour",
+      "Item_body"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

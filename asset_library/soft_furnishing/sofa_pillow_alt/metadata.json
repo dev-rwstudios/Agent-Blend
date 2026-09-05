@@ -1,0 +1,44 @@
+{
+  "id": "soft_furnishing/sofa_pillow_alt",
+  "name": "sofa_pillow_alt",
+  "classification": {
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 455.5,
+    "depth_mm": 434.7,
+    "height_mm": 481.1,
+    "polycount": 22428
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "rest_on_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "sofa"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Pillow"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

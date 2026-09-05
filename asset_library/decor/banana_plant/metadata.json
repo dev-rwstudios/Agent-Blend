@@ -1,0 +1,40 @@
+{
+  "id": "decor/banana_plant",
+  "name": "banana_plant",
+  "classification": {
+    "category": "decor",
+    "subcategory": "plant",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 469.1,
+    "depth_mm": 448.9,
+    "height_mm": 867.7,
+    "polycount": 38280
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Banana  Plants"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

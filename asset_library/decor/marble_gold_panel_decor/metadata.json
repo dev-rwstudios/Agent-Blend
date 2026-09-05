@@ -1,0 +1,41 @@
+{
+  "id": "decor/marble_gold_panel_decor",
+  "name": "marble_gold_panel_decor",
+  "classification": {
+    "category": "decor",
+    "subcategory": "wall_panel",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 2167.5,
+    "depth_mm": 197.3,
+    "height_mm": 3000.0,
+    "polycount": 1014
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "mount_on_wall"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Wall_Plane.010",
+      "Marble w/Vertical golden panels"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

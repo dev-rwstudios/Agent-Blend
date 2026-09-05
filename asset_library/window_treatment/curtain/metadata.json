@@ -1,0 +1,40 @@
+{
+  "id": "window_treatment/curtain",
+  "name": "curtain",
+  "classification": {
+    "category": "window_treatment",
+    "subcategory": "curtain",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "any"
+    ]
+  },
+  "geometry": {
+    "width_mm": 168.5,
+    "depth_mm": 4125.4,
+    "height_mm": 3123.0,
+    "polycount": 189728
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "hang_from_track"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Curtain",
+      "Item_Curtain.001"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

@@ -31,6 +31,12 @@ line-length = 100
 installer = [
     "textual>=0.50.0",
 ]
+chat = [
+    "chainlit>=2.0",
+    "ollama>=0.4",
+    "openai>=1.0",
+    "google-genai>=1.0",
+]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",

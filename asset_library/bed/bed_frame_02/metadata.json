@@ -1,0 +1,41 @@
+{
+  "id": "bed/bed_frame_02",
+  "name": "bed_frame_02",
+  "classification": {
+    "category": "bed",
+    "subcategory": "bed_frame",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 1848.0,
+    "depth_mm": 1995.9,
+    "height_mm": 293.9,
+    "polycount": 7488
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "bed_02",
+      "Base",
+      "legs.001"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

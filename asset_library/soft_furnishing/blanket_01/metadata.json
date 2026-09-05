@@ -1,0 +1,45 @@
+{
+  "id": "soft_furnishing/blanket_01",
+  "name": "blanket_01",
+  "classification": {
+    "category": "soft_furnishing",
+    "subcategory": "blanket",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 1761.7,
+    "depth_mm": 821.2,
+    "height_mm": 426.7,
+    "polycount": 63222
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "drape_on_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "bed_frame_01"
+    }
+  ],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "blanked"
+    ],
+    "extraction_notes": "Object literally named 'blanked' in source file (likely a typo for 'blanket')."
+  },
+  "needs_review": false
+}

@@ -1,0 +1,46 @@
+{
+  "id": "lighting/stella_spot_light",
+  "name": "stella_spot_light",
+  "classification": {
+    "category": "lighting",
+    "subcategory": "spot_light",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "any"
+    ]
+  },
+  "geometry": {
+    "width_mm": 3899.9,
+    "depth_mm": 4247.9,
+    "height_mm": 51.1,
+    "polycount": 38160
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_STELLA",
+      "Item_STELLA.001",
+      "Item_STELLA.002",
+      "Item_STELLA.003",
+      "Item_STELLA.004",
+      "Item_STELLA.005",
+      "Item_STELLA.006",
+      "Item_STELLA.007"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

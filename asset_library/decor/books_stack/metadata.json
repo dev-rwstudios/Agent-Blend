@@ -1,0 +1,41 @@
+{
+  "id": "decor/books_stack",
+  "name": "books_stack",
+  "classification": {
+    "category": "decor",
+    "subcategory": "books",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 264.1,
+    "depth_mm": 288.1,
+    "height_mm": 49.3,
+    "polycount": 10000
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "Aset_props_books_S_wleidix_00_LOD0",
+      "world_root.004"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

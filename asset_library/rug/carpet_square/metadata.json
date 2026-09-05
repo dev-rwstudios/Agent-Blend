@@ -1,0 +1,44 @@
+{
+  "id": "rug/carpet_square",
+  "name": "carpet_square",
+  "classification": {
+    "category": "rug",
+    "subcategory": "carpet",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 3396.9,
+    "depth_mm": 3303.5,
+    "height_mm": 39.4,
+    "polycount": 76386
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "flat_on_floor"
+  },
+  "relations": [
+    {
+      "relation": "faces",
+      "target": "sofa"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Beige Carpet"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

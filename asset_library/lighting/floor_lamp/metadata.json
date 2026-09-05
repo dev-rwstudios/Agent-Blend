@@ -1,0 +1,46 @@
+{
+  "id": "lighting/floor_lamp",
+  "name": "floor_lamp",
+  "classification": {
+    "category": "lighting",
+    "subcategory": "floor_lamp",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 512.9,
+    "depth_mm": 484.8,
+    "height_mm": 1987.5,
+    "polycount": 2240
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_FloroLamp",
+      "FloorLamp_Wire",
+      "Item_FloorLamp.002",
+      "FloorLamp_Light",
+      "Item_FloorLamp.001",
+      "Item_FloorLamp",
+      "Floor Lamp"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

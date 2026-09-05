@@ -1,0 +1,40 @@
+{
+  "id": "decor/design_book",
+  "name": "design_book",
+  "classification": {
+    "category": "decor",
+    "subcategory": "books",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 286.5,
+    "depth_mm": 250.3,
+    "height_mm": 29.4,
+    "polycount": 100000
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Design book"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

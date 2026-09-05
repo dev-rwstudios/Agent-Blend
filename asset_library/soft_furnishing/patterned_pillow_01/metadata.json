@@ -1,0 +1,44 @@
+{
+  "id": "soft_furnishing/patterned_pillow_01",
+  "name": "patterned_pillow_01",
+  "classification": {
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 403.1,
+    "depth_mm": 422.5,
+    "height_mm": 354.9,
+    "polycount": 4304
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "rest_on_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "sofa"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Patterned pillow-01"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

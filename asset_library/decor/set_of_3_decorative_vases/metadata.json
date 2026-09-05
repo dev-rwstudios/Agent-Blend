@@ -1,0 +1,45 @@
+{
+  "id": "decor/set_of_3_decorative_vases",
+  "name": "set_of_3_decorative_vases",
+  "classification": {
+    "category": "decor",
+    "subcategory": "vase",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 356.9,
+    "depth_mm": 125.6,
+    "height_mm": 227.3,
+    "polycount": 56224
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "tv_cabinet"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Vases_Set of 3 decorative vases_03"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

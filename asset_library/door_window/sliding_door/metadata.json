@@ -1,0 +1,40 @@
+{
+  "id": "door_window/sliding_door",
+  "name": "sliding_door",
+  "classification": {
+    "category": "door_window",
+    "subcategory": "sliding_door",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "any"
+    ]
+  },
+  "geometry": {
+    "width_mm": 22.6,
+    "depth_mm": 1632.7,
+    "height_mm": 3007.3,
+    "polycount": 644
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "embed_in_wall"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Sliding_Door_sliding_00",
+      "Sliding_Door_sliding_01"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

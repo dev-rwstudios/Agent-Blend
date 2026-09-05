@@ -1,0 +1,39 @@
+{
+  "id": "decor/bathroom_mirror",
+  "name": "bathroom_mirror",
+  "classification": {
+    "category": "decor",
+    "subcategory": "mirror",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bathroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 741.2,
+    "depth_mm": 41.8,
+    "height_mm": 1290.0,
+    "polycount": 199
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "mount_on_wall"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_mirror"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

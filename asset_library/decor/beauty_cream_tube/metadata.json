@@ -1,0 +1,40 @@
+{
+  "id": "decor/beauty_cream_tube",
+  "name": "beauty_cream_tube",
+  "classification": {
+    "category": "decor",
+    "subcategory": "bathroom_accessory",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 85.9,
+    "depth_mm": 147.3,
+    "height_mm": 47.4,
+    "polycount": 15536
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "Beauty Cream Tube"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

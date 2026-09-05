@@ -1,0 +1,56 @@
+{
+  "id": "storage/modern_wood_shelf",
+  "name": "modern_wood_shelf",
+  "classification": {
+    "category": "storage",
+    "subcategory": "shelf",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom",
+      "living_room",
+      "closet"
+    ]
+  },
+  "geometry": {
+    "width_mm": 3474.3,
+    "depth_mm": 1233.4,
+    "height_mm": 2814.9,
+    "polycount": 201306
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "mount_on_wall"
+  },
+  "relations": [
+    {
+      "relation": "mounted_above",
+      "target": "tv_cabinet"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_decoration",
+      "Item_decoration.001",
+      "Item_decoration.002",
+      "Item_decoration.003",
+      "Item_decoration.004",
+      "Item_decoration.005",
+      "Item_decoration.006",
+      "Item_decoration.007",
+      "Item_decoration.008",
+      "Item_decoration.009",
+      "Item_decoration.010"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

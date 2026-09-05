@@ -1,0 +1,40 @@
+{
+  "id": "decor/stack_of_books",
+  "name": "stack_of_books",
+  "classification": {
+    "category": "decor",
+    "subcategory": "books",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 204.6,
+    "depth_mm": 272.3,
+    "height_mm": 105.1,
+    "polycount": 100431
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Books_Stack of books_01"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

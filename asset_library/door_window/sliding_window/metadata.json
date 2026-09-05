@@ -1,0 +1,43 @@
+{
+  "id": "door_window/sliding_window",
+  "name": "sliding_window",
+  "classification": {
+    "category": "door_window",
+    "subcategory": "sliding_window",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "any"
+    ]
+  },
+  "geometry": {
+    "width_mm": 1670.8,
+    "depth_mm": 175.3,
+    "height_mm": 1064.3,
+    "polycount": 10952
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "wall",
+    "snap_mode": "embed_in_wall"
+  },
+  "relations": [],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "Cube.009",
+      "Cube.003",
+      "Bolt.004",
+      "Bolt.002",
+      "2 panel sliding window"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

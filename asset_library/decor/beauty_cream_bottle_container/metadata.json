@@ -1,0 +1,40 @@
+{
+  "id": "decor/beauty_cream_bottle_container",
+  "name": "beauty_cream_bottle_container",
+  "classification": {
+    "category": "decor",
+    "subcategory": "bathroom_accessory",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 154.4,
+    "depth_mm": 126.9,
+    "height_mm": 65.3,
+    "polycount": 17204
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "Beauty cream bottle container"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

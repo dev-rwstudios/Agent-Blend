@@ -1,0 +1,46 @@
+{
+  "id": "storage/tv_stand",
+  "name": "tv_stand",
+  "classification": {
+    "category": "storage",
+    "subcategory": "tv_stand",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 1806.8,
+    "depth_mm": 337.3,
+    "height_mm": 465.2,
+    "polycount": 15769
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "TV_stand",
+      "Item_SUBWOOFER",
+      "Item_structure",
+      "Item_panel",
+      "Item_legs",
+      "Item_Obj",
+      "Item_Obj.001",
+      "Item_Obj.002"
+    ],
+    "extraction_notes": "Built-in subwoofer bundled with stand carcass; generic 'Obj' parts of uncertain role kept merged."
+  },
+  "needs_review": true
+}

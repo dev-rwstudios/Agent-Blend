@@ -1,0 +1,40 @@
+{
+  "id": "decor/rubber_item",
+  "name": "rubber_item",
+  "classification": {
+    "category": "decor",
+    "subcategory": "unknown",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 821.8,
+    "depth_mm": 67.7,
+    "height_mm": 1.2,
+    "polycount": 5120
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Rubbers_Rubbers_00"
+    ],
+    "extraction_notes": "Name 'Rubbers_Rubbers_00' gives no clear real-world identity; kept for completeness."
+  },
+  "needs_review": true
+}

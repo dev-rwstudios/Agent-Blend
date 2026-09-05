@@ -1,0 +1,39 @@
+{
+  "id": "storage/wardrobe",
+  "name": "wardrobe",
+  "classification": {
+    "category": "storage",
+    "subcategory": "wardrobe",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 19.4,
+    "depth_mm": 1076.2,
+    "height_mm": 25.5,
+    "polycount": 210
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "panel_door_handle.002"
+    ],
+    "extraction_notes": "Collection named 'wardrobe' only contains a door handle mesh; wardrobe body geometry appears missing/incomplete in source file."
+  },
+  "needs_review": true
+}

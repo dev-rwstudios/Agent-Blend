@@ -5,11 +5,15 @@ import os
 from mcp.server.fastmcp import FastMCP
 
 from blend_ai.connection import BlenderConnection
+from blend_ai.rules import ASSET_FIRST_PROTOCOL
 
 # Create the MCP server
 mcp = FastMCP(
     "blend-ai",
-    instructions="The most intuitive and efficient MCP Server for Blender",
+    instructions=(
+        "The most intuitive and efficient MCP Server for Blender.\n\n"
+        + ASSET_FIRST_PROTOCOL
+    ),
 )
 
 # Global connection instance
@@ -52,10 +56,11 @@ from blend_ai.tools import (  # noqa: E402, F401
     mesh_editing,
     mesh_quality,
     gpencil,
+    asset_library,
 )
 
 # Import resources and prompts
-from blend_ai.resources import scene_info  # noqa: E402, F401
+from blend_ai.resources import scene_info, asset_library as asset_library_resource  # noqa: E402, F401
 from blend_ai.prompts import workflows  # noqa: E402, F401
 
 

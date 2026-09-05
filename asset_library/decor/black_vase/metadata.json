@@ -1,0 +1,40 @@
+{
+  "id": "decor/black_vase",
+  "name": "black_vase",
+  "classification": {
+    "category": "decor",
+    "subcategory": "vase",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 114.1,
+    "depth_mm": 114.2,
+    "height_mm": 230.0,
+    "polycount": 12522
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Vases_black vase_07"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

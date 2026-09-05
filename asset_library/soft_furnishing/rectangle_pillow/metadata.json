@@ -1,0 +1,45 @@
+{
+  "id": "soft_furnishing/rectangle_pillow",
+  "name": "rectangle_pillow",
+  "classification": {
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 28.9,
+    "depth_mm": 15.7,
+    "height_mm": 42.1,
+    "polycount": 72
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "rest_on_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "coffee_table"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Label"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

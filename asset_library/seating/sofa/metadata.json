@@ -1,0 +1,40 @@
+{
+  "id": "seating/sofa",
+  "name": "sofa",
+  "classification": {
+    "category": "seating",
+    "subcategory": "sofa",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 3344.6,
+    "depth_mm": 3797.1,
+    "height_mm": 4180.6,
+    "polycount": 323668
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "floor",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Couch Piece",
+      "Item_Couch Piece.001"
+    ],
+    "extraction_notes": "Direct members only (couch pieces); nested pillow collections split out separately below."
+  },
+  "needs_review": false
+}

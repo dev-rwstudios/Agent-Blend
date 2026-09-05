@@ -1,0 +1,40 @@
+{
+  "id": "decor/beauty_spray_glass_bottle",
+  "name": "beauty_spray_glass_bottle",
+  "classification": {
+    "category": "decor",
+    "subcategory": "bathroom_accessory",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 37.0,
+    "depth_mm": 37.1,
+    "height_mm": 121.0,
+    "polycount": 41685
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "master_bedroom_tex_42.blend",
+    "object_names": [
+      "Beauty Spray Glass Bottle"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

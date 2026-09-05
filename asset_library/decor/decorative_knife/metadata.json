@@ -1,0 +1,41 @@
+{
+  "id": "decor/decorative_knife",
+  "name": "decorative_knife",
+  "classification": {
+    "category": "decor",
+    "subcategory": "tableware",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ]
+  },
+  "geometry": {
+    "width_mm": 28.7,
+    "depth_mm": 104.0,
+    "height_mm": 141.2,
+    "polycount": 7520
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "bottom_to_surface"
+  },
+  "relations": [],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_decorative knife",
+      "Item_decorative knife.001"
+    ],
+    "extraction_notes": ""
+  },
+  "needs_review": false
+}

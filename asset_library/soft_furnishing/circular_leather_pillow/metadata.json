@@ -1,0 +1,44 @@
+{
+  "id": "soft_furnishing/circular_leather_pillow",
+  "name": "circular_leather_pillow",
+  "classification": {
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "style_tags": [
+      "contemporary"
+    ],
+    "room_types": [
+      "living_room"
+    ]
+  },
+  "geometry": {
+    "width_mm": 371.9,
+    "depth_mm": 200.1,
+    "height_mm": 355.9,
+    "polycount": 58662
+  },
+  "orientation": {
+    "up_axis": "+Z",
+    "forward_axis": "+Y",
+    "confidence": 0.3,
+    "needs_review": true
+  },
+  "placement": {
+    "surface": "surface",
+    "snap_mode": "rest_on_surface"
+  },
+  "relations": [
+    {
+      "relation": "rests_on",
+      "target": "sofa"
+    }
+  ],
+  "source": {
+    "file": "villa_interior_model_test.blend",
+    "object_names": [
+      "Item_Circular Leather Pillow"
+    ],
+    "extraction_notes": " [materials omitted: Blender glTF exporter UDIM bug]"
+  },
+  "needs_review": true
+}
