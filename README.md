@@ -1,3 +1,11 @@
+## To Run
+uv run --extra chat chainlit run app.py -w
+
+open blender and click "n" then click start server button
+
+all set.
+
+
 # Agent-Blend
 
 > **Control Blender entirely through AI — create 3D models, set up scenes, animate, render, and more, all through natural language.**
