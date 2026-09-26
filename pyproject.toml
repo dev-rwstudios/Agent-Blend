@@ -36,6 +36,9 @@ chat = [
     "ollama>=0.4",
     "openai>=1.0",
     "google-genai>=1.0",
+    "anthropic>=1.0",
+    "sqlalchemy>=2.0",
+    "aiosqlite>=0.20",
 ]
 dev = [
     "pytest>=7.0",

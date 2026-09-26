@@ -184,6 +184,20 @@ def handle_open_file(params: dict) -> dict:
         raise RuntimeError(f"Failed to open file '{filepath}': {e}")
 
 
+def handle_save_checkpoint(params: dict) -> dict:
+    """Write a copy of the current scene to `filepath` without changing the
+    file Blender has open — the chat app's per-turn undo snapshots."""
+    filepath = params.get("filepath", "")
+    if not filepath.endswith(".blend"):
+        raise ValueError("Checkpoint path must end in .blend")
+    try:
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        bpy.ops.wm.save_as_mainfile(filepath=filepath, copy=True, compress=True)
+        return {"filepath": filepath, "success": True, "source_filepath": bpy.data.filepath}
+    except Exception as e:
+        raise RuntimeError(f"Failed to save checkpoint: {e}")
+
+
 def handle_list_recent_files(params: dict) -> list:
     """List recently opened files."""
     try:
@@ -202,3 +216,4 @@ def register():
     dispatcher.register_handler("save_file", handle_save_file)
     dispatcher.register_handler("open_file", handle_open_file)
     dispatcher.register_handler("list_recent_files", handle_list_recent_files)
+    dispatcher.register_handler("save_checkpoint", handle_save_checkpoint)
