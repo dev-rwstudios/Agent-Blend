@@ -1,9 +1,35 @@
 ## To Run
+
+```bash
+cd chat_app
+cp .env.example .env        # optional: add API keys for hosted providers
 uv run --extra chat chainlit run app.py -w
+```
 
-open blender and click "n" then click start server button
+Open Blender, press `N`, and click **Start Server** in the blend-ai tab. Then open the chat
+(http://localhost:8000 by default; add `--port 8001` to the command to use another port).
 
-all set.
+**Studio chat features**
+
+- **Providers:** LM Studio, Ollama, Anthropic Claude, OpenAI, Google Gemini, OpenRouter, Groq,
+  DeepSeek, Mistral, xAI, or any OpenAI-compatible server. Pick one in chat settings (gear icon
+  in the message box). Keys come from `chat_app/.env`, or can be pasted per chat; pasted keys
+  stay in memory and are never written to history.
+- **Pickers in the message box:** switch the model, and choose the approach: **Build** (make
+  changes), **Plan first** (propose a plan, then run it with one click) or **Ask** (read-only).
+- **Studio panel:** live viewport preview, scene outliner (frame an object, or refer to it in your
+  next message), asset library browser with one-click **Add**, undo history, and token usage.
+- **Undo:** a checkpoint of the scene is saved after every turn that changes it. Use **Undo** under
+  a reply, or restore any checkpoint from the panel's History tab.
+- **Approvals:** scene-changing actions pause on an approval card (approve, approve the rest of
+  the turn, suggest changes, or reject).
+- **Chat history:** chats are saved locally in `chat_app/.data/` and can be resumed from the
+  sidebar. Set `AGENT_BLEND_HISTORY=0` to turn this off.
+- **Toolset:** "Core" sends ~80 everyday tools instead of all 170+, which helps small local models.
+
+> The undo checkpoints use a new `save_checkpoint` command in the add-on. Older installed add-ons
+> still work (the chat falls back to the sandboxed code runner), but reinstall the add-on zip when
+> you can.
 
 
 # Agent-Blend

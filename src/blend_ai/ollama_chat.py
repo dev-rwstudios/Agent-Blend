@@ -22,6 +22,11 @@ except ImportError:
     OpenAI = None
 
 try:
+    import anthropic
+except ImportError:
+    anthropic = None
+
+try:
     from google import genai as google_genai
     from google.genai import errors as google_genai_errors
 except ImportError:
@@ -53,8 +58,37 @@ _READ_ONLY_TOOL_PREFIXES = ("get_", "list_", "search_")
 _READ_ONLY_TOOL_NAMES = frozenset({"render_image", "fast_viewport_capture"})
 
 
-def _is_read_only_tool(name: str) -> bool:
+def is_read_only_tool(name: str) -> bool:
     return name.startswith(_READ_ONLY_TOOL_PREFIXES) or name in _READ_ONLY_TOOL_NAMES
+
+
+# Tool modules offered under the "core" toolset — enough for everyday
+# modeling, materials, lighting, and asset-driven scenes. Smaller local
+# models pick tools far more reliably from ~80 than from the full 170+.
+CORE_TOOL_MODULES = frozenset({
+    "objects", "transforms", "modeling", "materials", "lighting", "camera",
+    "scene", "screenshot", "rendering", "asset_library", "scene_agent",
+})
+
+
+class ContextOverflowError(RuntimeError):
+    """The prompt (system prompt + tool definitions + history) no longer fits
+    the model's context window. The chat app reacts to this specifically —
+    e.g. by retrying with the smaller "core" toolset."""
+
+
+# Phrases servers use when the prompt exceeds the context window (llama.cpp /
+# LM Studio "n_ctx", OpenAI "maximum context length", Anthropic "prompt is
+# too long", Ollama "context length").
+_CONTEXT_OVERFLOW_MARKERS = (
+    "n_ctx", "context length", "context_length", "maximum context", "context window",
+    "prompt is too long", "too many tokens", "exceeds the context",
+)
+
+
+def is_context_overflow(message: str) -> bool:
+    lowered = message.lower()
+    return any(marker in lowered for marker in _CONTEXT_OVERFLOW_MARKERS)
 
 
 @dataclass
@@ -77,6 +111,7 @@ class OllamaBackend:
     def __init__(self, model: str, host: str | None = None):
         self.model = model
         self.client = OllamaClient(host=host) if host else OllamaClient()
+        self.last_usage: dict[str, int] = {}
 
     def step(self, messages: list, tools: list) -> tuple[str, list[dict], Any]:
         """Run one chat turn.
@@ -90,6 +125,10 @@ class OllamaBackend:
         response = self.client.chat(
             model=self.model, messages=_ollama_messages(messages), tools=tools, options={"num_ctx": 32768},
         )
+        self.last_usage = {
+            "input": getattr(response, "prompt_eval_count", 0) or 0,
+            "output": getattr(response, "eval_count", 0) or 0,
+        }
         msg = response.message
         normalized = [
             {"id": f"call_{i}", "name": tc.function.name, "arguments": dict(tc.function.arguments)}
@@ -105,19 +144,37 @@ class OpenAICompatBackend:
     OpenAI-shaped, so the same self.tools list works for both backends.
     """
 
-    def __init__(self, model: str, base_url: str, api_key: str = "not-needed"):
+    def __init__(
+        self, model: str, base_url: str, api_key: str = "not-needed",
+        default_headers: dict[str, str] | None = None,
+    ):
         if OpenAI is None:
             raise RuntimeError(
                 "The 'openai' package is required for LM Studio / OpenAI-compatible "
                 "providers. Install it with: uv pip install openai"
             )
         self.model = model
-        self.client = OpenAI(base_url=base_url, api_key=api_key)
+        self.client = OpenAI(base_url=base_url, api_key=api_key or "not-needed", default_headers=default_headers)
+        self.last_usage: dict[str, int] = {}
 
     def step(self, messages: list, tools: list) -> tuple[str, list[dict], Any]:
-        response = self.client.chat.completions.create(
-            model=self.model, messages=_openai_messages(messages), tools=tools or None,
-        )
+        import openai
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model, messages=_openai_messages(messages), tools=tools or None,
+            )
+        except openai.APIStatusError as e:
+            if is_context_overflow(str(e)):
+                raise ContextOverflowError(f"The prompt doesn't fit {self.model}'s context window. ({e})") from e
+            raise RuntimeError(_openai_status_message(e.status_code, self.model, e)) from e
+        except openai.APIConnectionError as e:
+            raise RuntimeError(f"Couldn't reach {self.client.base_url} — is the server running?") from e
+        usage = getattr(response, "usage", None)
+        self.last_usage = {
+            "input": getattr(usage, "prompt_tokens", 0) or 0,
+            "output": getattr(usage, "completion_tokens", 0) or 0,
+        }
         msg = response.choices[0].message
         raw_tool_calls = msg.tool_calls or []
         normalized = [
@@ -135,6 +192,170 @@ class OpenAICompatBackend:
                 for tc in raw_tool_calls
             ]
         return msg.content or "", normalized, raw_assistant_message
+
+
+def _openai_status_message(status: int, model: str, error: Exception) -> str:
+    hints = {
+        401: "The API key was rejected — check it in chat settings.",
+        402: "The provider account is out of credits — add credits or pick another provider.",
+        403: "This API key isn't allowed to use that model.",
+        404: f"Model '{model}' wasn't found on this server.",
+        429: "Rate limit reached — wait a moment and try again.",
+    }
+    detail = getattr(error, "message", "") or str(error)
+    return f"{hints.get(status, f'The provider returned HTTP {status}.')} ({detail})"
+
+
+# Models that support the server-side refusal fallback (see AnthropicBackend.step).
+_ANTHROPIC_FALLBACK_MODELS = ("claude-fable-5", "claude-opus-5")
+
+
+class AnthropicBackend:
+    """Chat backend for Claude via the official Anthropic SDK (Messages API).
+
+    The API is stateless, so the full history is replayed every call. Each
+    assistant turn's raw content blocks (text, tool_use, thinking, ...) are
+    kept verbatim on the raw message under "anthropic_content" and echoed
+    back unchanged — thinking blocks must be returned exactly as received.
+    The system prompt and tool list never change within a session, so both
+    carry a cache breakpoint: a 173-tool catalog is large and otherwise
+    re-billed in full every round of the tool loop.
+    """
+
+    def __init__(self, model: str, api_key: str = ""):
+        if anthropic is None:
+            raise RuntimeError(
+                "The 'anthropic' package is required for the Anthropic provider. "
+                "Install it with: uv pip install anthropic"
+            )
+        self.model = model
+        # No key -> the SDK resolves ANTHROPIC_API_KEY / an `ant auth login` profile itself.
+        self.client = anthropic.Anthropic(api_key=api_key) if api_key else anthropic.Anthropic()
+        self.last_usage: dict[str, int] = {}
+
+    def step(self, messages: list, tools: list) -> tuple[str, list[dict], Any]:
+        system, converted = _anthropic_messages(messages)
+        claude_tools = [
+            {
+                "name": t["function"]["name"],
+                "description": t["function"].get("description", ""),
+                "input_schema": t["function"].get("parameters") or {"type": "object", "properties": {}},
+            }
+            for t in tools
+        ]
+        if claude_tools:
+            claude_tools[-1]["cache_control"] = {"type": "ephemeral"}
+
+        kwargs: dict[str, Any] = {
+            "model": self.model,
+            "max_tokens": 16000,
+            "messages": converted,
+        }
+        if system:
+            kwargs["system"] = [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
+        if claude_tools:
+            kwargs["tools"] = claude_tools
+
+        try:
+            if self.model.startswith(_ANTHROPIC_FALLBACK_MODELS):
+                # Route a policy decline to a fallback model inside the same call.
+                response = self.client.beta.messages.create(
+                    betas=["server-side-fallback-2026-07-01"], fallbacks="default", **kwargs,
+                )
+            else:
+                response = self.client.messages.create(**kwargs)
+        except anthropic.AuthenticationError as e:
+            raise RuntimeError("Anthropic rejected the API key — check it in chat settings.") from e
+        except anthropic.NotFoundError as e:
+            raise RuntimeError(f"Model '{self.model}' wasn't found for this Anthropic account.") from e
+        except anthropic.RateLimitError as e:
+            raise RuntimeError("Anthropic rate limit reached — wait a moment and try again.") from e
+        except anthropic.APIStatusError as e:
+            if is_context_overflow(str(e)):
+                raise ContextOverflowError(f"The prompt doesn't fit {self.model}'s context window. ({e})") from e
+            raise RuntimeError(f"Anthropic API error ({e.status_code}): {e.message}") from e
+        except anthropic.APIConnectionError as e:
+            raise RuntimeError("Couldn't reach the Anthropic API — check your network.") from e
+
+        usage = response.usage
+        self.last_usage = {
+            "input": (usage.input_tokens or 0)
+            + (getattr(usage, "cache_read_input_tokens", 0) or 0)
+            + (getattr(usage, "cache_creation_input_tokens", 0) or 0),
+            "output": usage.output_tokens or 0,
+        }
+
+        if response.stop_reason == "refusal":
+            text = "Claude declined this request."
+            details = getattr(response, "stop_details", None)
+            if details is not None and getattr(details, "explanation", None):
+                text += f" ({details.explanation})"
+            return text, [], {"role": "assistant", "content": text}
+
+        text_parts = [b.text for b in response.content if b.type == "text"]
+        normalized = [
+            {"id": b.id, "name": b.name, "arguments": dict(b.input or {})}
+            for b in response.content if b.type == "tool_use"
+        ]
+        content = "\n".join(text_parts)
+        raw_message = {
+            "role": "assistant",
+            "content": content,
+            "anthropic_content": [b.model_dump(exclude_none=True) for b in response.content],
+        }
+        return content, normalized, raw_message
+
+
+def _anthropic_messages(messages: list[dict]) -> tuple[str, list[dict]]:
+    """Translate the shared generic history into Messages API shape.
+
+    Returns (system_prompt, messages). Tool results become tool_result
+    blocks in a user turn; a follow-up user turn (e.g. the screenshot the
+    session attaches after get_viewport_screenshot) is merged into that same
+    user turn so the tool_result blocks stay first, directly after the
+    assistant's tool_use. Tool messages with no id (from the text-parsed
+    tool call fallback, which has no tool_use block to answer) are sent as
+    plain text instead.
+    """
+    system = ""
+    out: list[dict] = []
+
+    def user_blocks() -> list[dict]:
+        if out and out[-1]["role"] == "user":
+            return out[-1]["content"]
+        out.append({"role": "user", "content": []})
+        return out[-1]["content"]
+
+    for m in messages:
+        role = m.get("role")
+        if role == "system":
+            system = m.get("content", "")
+        elif role == "user":
+            blocks = user_blocks()
+            for img in m.get("images") or []:
+                img = _normalize_image(img)
+                blocks.append({
+                    "type": "image",
+                    "source": {"type": "base64", "media_type": img["mime"], "data": img["data"]},
+                })
+            blocks.append({"type": "text", "text": m.get("content") or "(no text)"})
+        elif role == "tool":
+            blocks = user_blocks()
+            if m.get("tool_call_id"):
+                blocks.append({
+                    "type": "tool_result",
+                    "tool_use_id": m["tool_call_id"],
+                    "content": m.get("content") or "(empty result)",
+                })
+            else:
+                blocks.append({"type": "text", "text": f"Tool result: {m.get('content', '')}"})
+        elif role == "assistant":
+            content = m.get("anthropic_content")
+            if not content:
+                content = [{"type": "text", "text": m.get("content") or "(no text)"}]
+            out.append({"role": "assistant", "content": content})
+    return system, out
+
 
 def _normalize_image(img: Any) -> dict[str, str]:
     """Accept either a bare base64 string (assumed PNG — every existing
@@ -243,6 +464,7 @@ class GeminiBackend:
         self._last_interaction_id: str | None = None
         self._sent_up_to = 0  # index into `messages` already reflected server-side
         self._pending_call_names: dict[str, str] = {}  # tool_call_id -> tool name
+        self.last_usage: dict[str, int] = {}
 
     def step(self, messages: list, tools: list) -> tuple[str, list[dict], Any]:
         system_instruction = None
@@ -323,6 +545,11 @@ class GeminiBackend:
                     ) from e
                 raise RuntimeError(f"Gemini API error: {e}") from e
         self._last_interaction_id = _get(interaction, "id")
+        usage = _get(interaction, "usage")
+        self.last_usage = {
+            "input": _get(usage, "total_input_tokens", 0) or 0,
+            "output": _get(usage, "total_output_tokens", 0) or 0,
+        } if usage is not None else {}
 
         normalized: list[dict[str, Any]] = []
         for step_obj in _get(interaction, "steps", []) or []:
@@ -547,6 +774,22 @@ class BlenderChatSession:
         self.on_assistant_text: Callable[[str], None] | None = None
         self.on_approval_request: Callable[[list[dict[str, Any]]], ApprovalDecision] | None = None
 
+        # "full" sends every registered tool; "core" only CORE_TOOL_MODULES.
+        # Read at initialize() — changing it later needs a reconnect.
+        self.toolset: str = "full"
+        # When set, mutating tool calls are refused with this reason instead
+        # of executed (plan/ask modes). Read-only lookups still run.
+        self.read_only_reason: str | None = None
+        # Set from another thread (the UI's stop button) to end the tool loop
+        # after the round in progress.
+        self.cancel_requested: bool = False
+        # Token accounting, summed from each backend's last_usage.
+        self.turn_usage: dict[str, int] = {"input": 0, "output": 0}
+        self.total_usage: dict[str, int] = {"input": 0, "output": 0}
+        # Names of mutating tools that actually ran during the last chat()
+        # call — the UI uses this to decide whether to checkpoint/refresh.
+        self.turn_mutations: list[str] = []
+
     def initialize(self) -> None:
         """Connect to Blender and load tool definitions."""
         # Import here to avoid circular imports — server module registers all tools
@@ -558,16 +801,25 @@ class BlenderChatSession:
         srv._connection = BlenderConnection(host=self.host, port=self.port)
         srv._connection.connect()
 
-        self.tools = get_ollama_tools(mcp) + [scene_agent.POPULATE_SCENE_TOOL]
-        self._tool_names = {t["function"]["name"] for t in self.tools}
+        all_tools = get_ollama_tools(mcp) + [scene_agent.POPULATE_SCENE_TOOL]
         self.tools_by_module = get_tools_by_module(mcp)
         # populate_scene isn't a real MCP tool (see execute_tool's special
         # case for it below), so it's added to the display grouping by hand
         # for !tools/sidebar parity with everything else the model can call.
         self.tools_by_module.setdefault("scene_agent", []).append(scene_agent.POPULATE_SCENE_TOOL)
+        # The scene sub-agent always gets its full toolset, whatever the
+        # main loop's toolset is.
         self._scene_agent_tools = [
-            t for t in self.tools if t["function"]["name"] in scene_agent.SCENE_AGENT_TOOL_NAMES
+            t for t in all_tools if t["function"]["name"] in scene_agent.SCENE_AGENT_TOOL_NAMES
         ]
+        if self.toolset == "core":
+            self.tools_by_module = {
+                m: ts for m, ts in self.tools_by_module.items() if m in CORE_TOOL_MODULES
+            }
+            core_names = {t["function"]["name"] for ts in self.tools_by_module.values() for t in ts}
+            all_tools = [t for t in all_tools if t["function"]["name"] in core_names]
+        self.tools = all_tools
+        self._tool_names = {t["function"]["name"] for t in self.tools}
 
         # Build system prompt with tool listing grouped by module
         tool_list = _build_tool_list(self.tools)
@@ -695,9 +947,19 @@ class BlenderChatSession:
         if images:
             user_msg["images"] = images
         self.messages.append(user_msg)
+        self.cancel_requested = False
+        self.turn_usage = {"input": 0, "output": 0}
+        self.turn_mutations = []
 
         for _round in range(MAX_TOOL_ROUNDS):
+            if self.cancel_requested:
+                # History ends on tool results here, which every backend
+                # accepts as the next turn's context.
+                return "(Stopped.)"
             content, tool_calls, raw_message = self.backend.step(self.messages, self.tools)
+            for key, value in (getattr(self.backend, "last_usage", None) or {}).items():
+                self.turn_usage[key] = self.turn_usage.get(key, 0) + value
+                self.total_usage[key] = self.total_usage.get(key, 0) + value
 
             # Fallback: parse tool calls from text if the model output them as text
             # instead of using native tool-calling (some smaller/local models do this).
@@ -719,8 +981,22 @@ class BlenderChatSession:
                 if content and self.on_assistant_text:
                     self.on_assistant_text(content)
 
+            if self.read_only_reason:
+                mutating = [tc for tc in tool_calls if not is_read_only_tool(tc["name"])]
+                if mutating:
+                    note = (
+                        f"Not executed: {self.read_only_reason} Only read-only tools "
+                        "(get_/list_/search_ and screenshots) are available right now."
+                    )
+                    for tool_call in tool_calls:
+                        tool_msg = {"role": "tool", "content": note}
+                        if tool_call.get("id"):
+                            tool_msg["tool_call_id"] = tool_call["id"]
+                        self.messages.append(tool_msg)
+                    continue
+
             if self.require_approval and self.on_approval_request:
-                mutating = [tc for tc in tool_calls if not _is_read_only_tool(tc["name"])]
+                mutating = [tc for tc in tool_calls if not is_read_only_tool(tc["name"])]
                 if mutating:
                     decision = self.on_approval_request(tool_calls)
                     if not decision.approved:
@@ -745,6 +1021,7 @@ class BlenderChatSession:
                 # going through execute_tool()/mcp.call_tool().
                 if tool_name == "populate_scene":
                     print(f"  -> populate_scene({_format_args(tool_args)}) [delegating to scene sub-agent]")
+                    self.turn_mutations.append(tool_name)
                     result = self._run_scene_agent(tool_args.get("description", ""))
                     tool_msg = {"role": "tool", "content": result}
                     if tool_call_id:
@@ -770,6 +1047,8 @@ class BlenderChatSession:
 
                 print(f"  -> {tool_name}({_format_args(tool_args)})")
 
+                if not is_read_only_tool(tool_name):
+                    self.turn_mutations.append(tool_name)
                 result = self.execute_tool(tool_name, tool_args)
 
                 # If tool errored, still feed it back so the model can recover

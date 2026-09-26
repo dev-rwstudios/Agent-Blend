@@ -1,216 +1,648 @@
-"""Chainlit chat shell for Agent-Blend.
+"""Agent-Blend studio — the Chainlit chat app for driving Blender.
 
-Base scaffold: wires Chainlit's async message handlers directly to
-BlenderChatSession (the same tool-calling loop the blend-ai-chat terminal
-REPL uses), so the whole chain — Chainlit -> tool loop -> Blender TCP
-connection -> model backend — is proven end to end before anything else
-(the human-in-the-loop asset picker, hosted API-key providers, real
-MCP-client connection) is layered on top.
+Wires Chainlit's handlers to BlenderChatSession (the same tool-calling loop
+the blend-ai-chat terminal REPL uses) and adds the studio around it: a
+provider/model picker covering local and hosted models, composer modes
+(Build / Plan first / Ask), approval cards, a side panel with the live
+viewport, scene objects, asset browser and per-turn undo checkpoints, and
+local chat history.
 
-Run with (from inside chat_app/ — Chainlit writes its config/welcome files
-relative to the current working directory, and this repo's copy of both
-already lives here, not at the repo root):
+Run from inside chat_app/ — Chainlit reads .chainlit/, public/ and .env
+relative to the working directory:
     cd chat_app && uv run --extra chat chainlit run app.py -w
 
-Requires Blender running with the blend-ai addon's server started, and
-either a local OpenAI-compatible server (LM Studio, llama.cpp's server,
-vLLM, ...) or a Gemini API key. Provider, host, and model are all chosen
-from chat settings (the settings/sliders icon in the message toolbar, near attach-file and history — not a top-right gear), populated from whatever
-that server actually reports as loaded/available — nothing is hardcoded.
+Requires Blender running with the blend-ai addon's server started (N-panel
+-> blend-ai -> Start Server).
 """
+
 
 import base64
 import json
 import os
-import re
+import sys
+import time
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
 
-import chainlit as cl
-from chainlit.input_widget import NumberInput, Select, Switch, TextInput
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from blend_ai.connection import BlenderConnection, BlenderConnectionError
-from blend_ai.ollama_chat import (
-    DEFAULT_CHAT_MODEL,
+from studio.persistence import DATA_DIR, SQLiteDataLayer, ensure_auth_secret, ensure_database  # noqa: E402
+
+HISTORY_ENABLED = os.environ.get("AGENT_BLEND_HISTORY", "1") != "0"
+if HISTORY_ENABLED:
+    # Must happen before Chainlit validates its auth config at startup.
+    ensure_auth_secret()
+
+import chainlit as cl  # noqa: E402
+from chainlit.input_widget import NumberInput, Select, Switch, TextInput  # noqa: E402
+
+from blend_ai.connection import BlenderConnection, BlenderConnectionError  # noqa: E402
+from blend_ai.ollama_chat import (  # noqa: E402
     ApprovalDecision,
     BlenderChatSession,
-    GeminiBackend,
-    OpenAICompatBackend,
+    ContextOverflowError,
+    is_read_only_tool,
     parse_tools_command,
 )
-from blend_ai.tool_registry import get_tools_by_module
+from blend_ai.providers import (  # noqa: E402
+    DEFAULT_PROVIDER,
+    PROVIDERS,
+    list_models,
+    make_backend,
+    pick_default_model,
+)
+from studio import blender_ops  # noqa: E402
+from studio.checkpoints import CheckpointStore  # noqa: E402
+from studio.ui import (  # noqa: E402
+    ASK_INSTRUCTION,
+    COMMANDS,
+    MODULE_ICONS,
+    PLAN_INSTRUCTION,
+    build_modes,
+    module_label,
+    pretty_tool_name,
+    short_args,
+    starter_categories,
+)
 
-# For LM Studio this is a host URL; for Gemini the same settings-panel slot
-# (see _host_widget/_models_for/_connect) instead holds the pasted API key,
-# so its "provider default" here is just an empty string to reset to when
-# switching providers. Ollama isn't offered — this deployment only talks to
-# LM Studio (local) and Gemini (cloud).
-PROVIDERS = {
-    "LM Studio / OpenAI-compatible": "http://127.0.0.1:1234/v1",
-    "Gemini": "",
-}
-DEFAULT_PROVIDER = "LM Studio / OpenAI-compatible"
-# Fallback only — if the field in chat settings is left blank, an API key
-# from the environment still works. Not required; pasting a key in the UI
-# is the primary path now.
-GEMINI_API_KEY_ENV = "GEMINI_API_KEY"
-
-# Same BLENDER_HOST/BLENDER_PORT env vars the main MCP server
-# (blend_ai.server.get_connection) reads, so one env setup covers both.
+# Same BLENDER_HOST/BLENDER_PORT env vars the MCP server reads.
 DEFAULT_BLENDER_HOST = os.environ.get("BLENDER_HOST", BlenderConnection.DEFAULT_HOST)
 DEFAULT_BLENDER_PORT = int(os.environ.get("BLENDER_PORT", str(BlenderConnection.DEFAULT_PORT)))
+PREFS_PATH = DATA_DIR / "prefs.json"
 
 
-def _check_blender_reachable(host: str, port: int) -> tuple[bool, str]:
-    """Whether a Blender addon server is actually listening at host:port.
+# ---- per-chat state ------------------------------------------------------
 
-    Deliberately uses connect() alone, not send_command() — send_command's
-    busy-retry loop can block for up to 5 minutes if Blender is mid-render,
-    which would be a terrible price for a sidebar status check.
-    """
+@dataclass
+class Studio:
+    provider: str = DEFAULT_PROVIDER
+    urls: dict[str, str] = field(default_factory=dict)       # provider -> server URL
+    chosen_models: dict[str, str] = field(default_factory=dict)  # provider -> last model
+    models: list[str] = field(default_factory=list)
+    model_error: str = ""
+    blender_host: str = DEFAULT_BLENDER_HOST
+    blender_port: int = DEFAULT_BLENDER_PORT
+    toolset: str = "full"
+    approvals: bool = True
+    checkpoints_on: bool = True
+    auto_viewport: bool = True
+
+    # Runtime only — never persisted (API keys stay in memory).
+    api_keys: dict[str, str] = field(default_factory=dict)
+    session: BlenderChatSession | None = None
+    blender_ok: bool = False
+    blender_error: str = ""
+    focus: str | None = None
+    approve_all_turn: bool = False
+    turn_running: bool = False
+    viewport: dict[str, Any] = field(default_factory=dict)
+    scene: dict[str, Any] | None = None
+    assets: list[dict[str, Any]] = field(default_factory=list)
+    checkpoints: CheckpointStore | None = None
+    panel: cl.CustomElement | None = None
+    # True once the thread has a real name — Chainlit names a thread after
+    # whatever started it, which for a panel click is the action's id.
+    thread_named: bool = False
+
+    @property
+    def model(self) -> str | None:
+        return self.chosen_models.get(self.provider)
+
+    @property
+    def url(self) -> str:
+        return self.urls.get(self.provider, "")
+
+    @property
+    def api_key(self) -> str:
+        return self.api_keys.get(self.provider, "")
+
+    def prefs(self) -> dict[str, Any]:
+        return {
+            "provider": self.provider, "urls": self.urls, "chosen_models": self.chosen_models,
+            "blender_host": self.blender_host, "blender_port": self.blender_port,
+            "toolset": self.toolset, "approvals": self.approvals,
+            "checkpoints_on": self.checkpoints_on, "auto_viewport": self.auto_viewport,
+        }
+
+
+def load_studio() -> Studio:
+    st = Studio()
+    try:
+        prefs = json.loads(PREFS_PATH.read_text())
+    except (OSError, json.JSONDecodeError):
+        prefs = {}
+    for key, value in prefs.items():
+        if hasattr(st, key) and key in st.prefs():
+            setattr(st, key, value)
+    if not prefs:
+        # First run: start on a hosted provider whose key is already in the
+        # environment, if any — otherwise the local LM Studio default.
+        for spec in PROVIDERS.values():
+            if spec.requires_key or spec.kind == "anthropic":
+                if spec.key_env and os.environ.get(spec.key_env):
+                    st.provider = spec.id
+                    break
+    if st.provider not in PROVIDERS:
+        st.provider = DEFAULT_PROVIDER
+    return st
+
+
+def save_prefs(st: Studio) -> None:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    PREFS_PATH.write_text(json.dumps(st.prefs(), indent=2))
+
+
+def studio() -> Studio:
+    st = cl.user_session.get("studio")
+    if st is None:
+        st = load_studio()
+        cl.user_session.set("studio", st)
+    return st
+
+
+async def toast(message: str, kind: str = "info") -> None:
+    await cl.context.emitter.send_toast(message, kind)
+
+
+# ---- auth + history --------------------------------------------------------
+
+if HISTORY_ENABLED:
+    @cl.data_layer
+    def get_data_layer():
+        return SQLiteDataLayer(conninfo=ensure_database())
+
+    @cl.header_auth_callback
+    async def local_user(headers) -> cl.User:
+        # Single-user local app: everyone who can reach this port is the
+        # owner. Put real auth in front of it before exposing it anywhere.
+        return cl.User(identifier="local", metadata={"role": "owner", "provider": "local"})
+
+
+# ---- settings panel --------------------------------------------------------
+
+def settings_widgets(st: Studio) -> list:
+    spec = PROVIDERS[st.provider]
+    provider_note = spec.description
+    if st.model_error:
+        provider_note = f"⚠ {st.model_error}"
+    widgets: list = [
+        Select(
+            id="provider", label="Provider", initial_value=st.provider,
+            items={p.label: p.id for p in PROVIDERS.values()},
+            description=provider_note,
+        ),
+    ]
+    if spec.editable_url:
+        widgets.append(TextInput(
+            id="server_url", label="Server URL", initial=st.url or spec.base_url,
+            description="A bare host:port is fine — /v1 is added automatically for OpenAI-compatible servers.",
+        ))
+    if spec.key_env:
+        env_set = bool(os.environ.get(spec.key_env))
+        if st.api_key:
+            key_note = "✓ Key set for this chat (kept in memory only, never saved to history)."
+        elif env_set:
+            key_note = f"✓ Using {spec.key_env} from the environment. Paste a key here to override it."
+        else:
+            key_note = f"Paste a key, or set {spec.key_env} in chat_app/.env (recommended)."
+        widgets.append(TextInput(
+            id="api_key", label=f"{spec.label} API key", initial="",
+            placeholder="Paste key…" if not st.api_key else "•••••••• (set)", description=key_note,
+        ))
+    if st.models:
+        widgets.append(Select(
+            id="model", label="Model", initial_value=st.model or st.models[0],
+            items={m: m for m in st.models},
+            description="You can also switch models from the picker in the message box.",
+        ))
+    tool_total = sum(len(t) for t in (st.session.tools_by_module.values() if st.session else [])) or None
+    widgets += [
+        Select(
+            id="toolset", label="Toolset", initial_value=st.toolset,
+            items={
+                "Full — every tool" + (f" ({tool_total})" if tool_total and st.toolset == "full" else ""): "full",
+                "Core — ~80 everyday tools (best for small local models)": "core",
+            },
+        ),
+        Switch(
+            id="approvals", label="Ask before scene changes", initial=st.approvals,
+            description="Read-only lookups never ask. You can also approve everything for a single turn.",
+        ),
+        Switch(
+            id="checkpoints_on", label="Checkpoint after each turn", initial=st.checkpoints_on,
+            description="Saves a copy of the scene after every turn that changed it, so you can undo.",
+        ),
+        Switch(
+            id="auto_viewport", label="Refresh viewport preview after each turn", initial=st.auto_viewport,
+        ),
+        TextInput(id="blender_host", label="Blender host", initial=st.blender_host),
+        NumberInput(id="blender_port", label="Blender port", initial=float(st.blender_port)),
+    ]
+    return widgets
+
+
+async def refresh_models(st: Studio) -> None:
+    st.models, st.model_error = await cl.make_async(list_models)(st.provider, st.url, st.api_key)
+    if st.models:
+        chosen = pick_default_model(st.provider, st.models, st.model)
+        if chosen:
+            st.chosen_models[st.provider] = chosen
+
+
+async def send_settings(st: Studio) -> None:
+    await cl.ChatSettings(settings_widgets(st)).send()
+    await cl.context.emitter.set_modes(build_modes(st.models, st.model))
+
+
+# ---- side panel ------------------------------------------------------------
+
+def panel_props(st: Studio) -> dict[str, Any]:
+    s = st.session
+    spec = PROVIDERS[st.provider]
+    modules = []
+    if s:
+        modules = [
+            {"name": m, "label": module_label(m), "tools": [t["function"]["name"] for t in ts]}
+            for m, ts in sorted(s.tools_by_module.items())
+        ]
+    return {
+        "status": {
+            "connected": st.blender_ok,
+            "ready": s is not None,
+            "host": st.blender_host, "port": st.blender_port,
+            "provider": spec.label, "model": s.chat_model if s else st.model,
+            "toolCount": len(s.tools) if s else 0, "toolset": st.toolset,
+            "approvals": st.approvals, "checkpoints": st.checkpoints_on,
+            "error": st.blender_error or st.model_error,
+        },
+        "usage": {
+            "turnIn": s.turn_usage.get("input", 0) if s else 0,
+            "turnOut": s.turn_usage.get("output", 0) if s else 0,
+            "totalIn": s.total_usage.get("input", 0) if s else 0,
+            "totalOut": s.total_usage.get("output", 0) if s else 0,
+        },
+        "viewport": st.viewport,
+        "scene": st.scene,
+        "focus": st.focus,
+        "assets": st.assets,
+        "checkpoints": st.checkpoints.as_props() if st.checkpoints else [],
+        "modules": modules,
+    }
+
+
+async def render_panel(st: Studio) -> None:
+    if st.panel is None:
+        st.panel = cl.CustomElement(name="Studio", props=panel_props(st), display="side")
+        await cl.ElementSidebar.set_elements([st.panel])
+        await cl.ElementSidebar.set_title("Studio")
+    else:
+        st.panel.props = panel_props(st)
+        await st.panel.update()
+        await cl.ElementSidebar.set_title("Studio")
+
+
+async def name_thread(st: Studio, name: str) -> None:
+    """Give the thread a readable name in the history sidebar."""
+    if st.thread_named or not HISTORY_ENABLED:
+        return
+    from chainlit.data import get_data_layer as current_data_layer
+    layer = current_data_layer()
+    if layer is None:
+        return
+    await layer.update_thread(cl.context.session.thread_id, name=name[:60])
+    st.thread_named = True
+
+
+async def refresh_scene_state(st: Studio, viewport: bool = True) -> None:
+    if st.session is None:
+        return
+    try:
+        st.scene = await cl.make_async(blender_ops.scene_summary)()
+    except blender_ops.BlenderOpError:
+        st.scene = None
+    if viewport:
+        image = await cl.make_async(blender_ops.capture_viewport)()
+        if image:
+            st.viewport = {"image": image, "updated": time.time()}
+
+
+# ---- connecting ------------------------------------------------------------
+
+def _carry_history(old: BlenderChatSession | None, new: BlenderChatSession) -> None:
+    """Keep the conversation (text only) when the provider/model/toolset
+    changes mid-chat, so switching doesn't wipe the context."""
+    if old is None:
+        return
+    for m in old.messages[1:]:
+        if m.get("role") in ("user", "assistant") and m.get("content"):
+            new.messages.append({"role": m["role"], "content": m["content"]})
+
+
+def _probe_blender(host: str, port: int) -> tuple[bool, str]:
+    """Connect-only reachability check (never send_command, whose busy
+    retry can block for minutes while Blender renders)."""
     try:
         conn = BlenderConnection(host=host, port=port)
         conn.connect()
         conn.disconnect()
         return True, ""
-    except BlenderConnectionError as e:
+    except (BlenderConnectionError, OSError) as e:
         return False, str(e)
 
 
-def _sidebar_markdown(host: str, port: int, reachable: bool, detail: str) -> str:
-    """Blender connection status + the full tool catalog, independent of
-    whether a chat model/provider has ever been picked — this is the
-    standalone "is Blender connected, what tools exist" view."""
-    from blend_ai.server import mcp
-
-    if reachable:
-        status = f"🟢 **Connected** — `{host}:{port}`"
-    else:
-        status = f"🔴 **Not connected** — `{host}:{port}`\n\n{detail}"
-
-    tools_by_module = get_tools_by_module(mcp)
-    total = sum(len(tools) for tools in tools_by_module.values())
-
-    lines = [
-        "### Blender", status, "",
-        f"### Toolset — {total} tools · {len(tools_by_module)} modules",
-    ]
-    for module in sorted(tools_by_module):
-        lines.append(f"- {_pretty_tool_name(module)} — {len(tools_by_module[module])}")
-    lines.append("")
-    lines.append(
-        "Loaded straight from blend-ai's registered tools — no chat model or "
-        "provider required. Pick one in chat settings when you're ready to talk to it."
-    )
-    return "\n".join(lines)
-
-
-async def _refresh_sidebar(blender_host: str, blender_port: int) -> None:
-    reachable, detail = await cl.make_async(_check_blender_reachable)(blender_host, blender_port)
-    content = _sidebar_markdown(blender_host, blender_port, reachable, detail)
-
-    await cl.ElementSidebar.set_title("blend-ai MCP")
-    await cl.ElementSidebar.set_elements(
-        [cl.Text(name="mcp_status", content=content, display="side")]
+def _blender_help(st: Studio, detail: str) -> str:
+    return (
+        f"Can't reach Blender at {st.blender_host}:{st.blender_port} — open Blender and click "
+        f"Start Server in the N-panel's blend-ai tab. ({detail})"
     )
 
 
-# Substrings that mark a Gemini model as specialized/non-conversational —
-# image/audio/video generation, embeddings, music, robotics, and Google's
-# own agent-specific previews (e.g. "antigravity-preview-05-2026", which
-# listed fine but rejected every request with "Function calling is not
-# enabled for models/antigravity-preview-05-2026"). This app's whole tool
-# loop requires function calling, so anything matching here is useless to
-# offer in the picker regardless of what it's otherwise good at.
-_GEMINI_NON_TOOL_MODEL_MARKERS = (
-    "antigravity", "embedding", "aqa", "image", "banana", "audio", "tts",
-    "video", "robotics", "lyria", "code-mender", "deep-research",
-    "computer-use", "bidi", "live",
-)
-
-
-def _gemini_supports_tools(model_name: str) -> bool:
-    lowered = model_name.lower()
-    return not any(marker in lowered for marker in _GEMINI_NON_TOOL_MODEL_MARKERS)
-
-
-def _models_for(provider: str, host: str) -> tuple[list[str], str]:
-    """Whatever models the server at `host` actually reports right now, plus
-    a short failure reason (empty string on success) — an empty model list
-    alone isn't enough to tell a genuinely-empty server apart from a wrong
-    URL/bad key/unreachable host, which otherwise all look identical to the
-    user ("no models found") with no way to tell which one it was.
-
-    For Gemini, `host` is actually the pasted API key (see _host_widget) —
-    entering a key and submitting the settings form is what triggers this
-    live model lookup, same as pointing LM Studio at a host does.
-    """
+async def connect(st: Studio, announce: bool = False) -> bool:
+    """(Re)build the chat session for the current settings. Returns True
+    when connected. Failures are shown in the panel and as a toast."""
+    old = st.session
+    if st.model is None:
+        # No model to talk to yet — still report whether Blender is up.
+        st.session = None
+        st.blender_ok, detail = await cl.make_async(_probe_blender)(st.blender_host, st.blender_port)
+        st.blender_error = "" if st.blender_ok else _blender_help(st, detail)
+        await render_panel(st)
+        return False
     try:
-        if provider == "Gemini":
-            api_key = host or os.environ.get(GEMINI_API_KEY_ENV, "")
-            if not api_key:
-                return [], ""
-            from google import genai
-            client = genai.Client(api_key=api_key)
-            names = []
-            for m in client.models.list():
-                name = getattr(m, "name", None) or (m.get("name") if isinstance(m, dict) else None)
-                if name:
-                    names.append(name.removeprefix("models/"))
-            return sorted(n for n in set(names) if _gemini_supports_tools(n)), ""
-        else:
-            from openai import OpenAI
-            base_url = _normalize_openai_base_url(host)
-            models = [m.id for m in OpenAI(base_url=base_url, api_key="not-needed").models.list().data]
-            return models, ""
-    except Exception as e:
-        return [], f"{type(e).__name__}: {e}"
+        backend = make_backend(st.provider, st.model, st.url, st.api_key)
+    except RuntimeError as e:
+        st.model_error = str(e)
+        await toast(str(e), "error")
+        await render_panel(st)
+        return False
+
+    session = BlenderChatSession(
+        chat_model=st.model, host=st.blender_host, port=st.blender_port, backend=backend,
+    )
+    session.toolset = st.toolset
+    session.require_approval = st.approvals
+    session.on_tool_call = lambda name, args, result: cl.run_sync(report_tool_call(name, args, result))
+    session.on_assistant_text = lambda text: cl.run_sync(report_assistant_text(text))
+    session.on_approval_request = lambda calls: cl.run_sync(ask_approval(calls))
+    try:
+        await cl.make_async(session.initialize)()
+    except (BlenderConnectionError, OSError) as e:
+        st.session = None
+        st.blender_ok = False
+        st.blender_error = _blender_help(st, str(e))
+        await toast("Blender isn't reachable — start the blend-ai server in Blender.", "error")
+        await render_panel(st)
+        return False
+
+    if old is not None and old is not session:
+        _carry_history(old, session)
+        session.total_usage = dict(old.total_usage)
+    st.session = session
+    st.blender_ok = True
+    st.blender_error = ""
+    if st.checkpoints is None:
+        st.checkpoints = CheckpointStore(cl.context.session.thread_id)
+    if not st.assets:
+        st.assets = await cl.make_async(blender_ops.list_assets)()
+    await refresh_scene_state(st)
+    await render_panel(st)
+    if announce:
+        await toast(f"Connected · {st.model}", "success")
+    return True
 
 
-def _normalize_openai_base_url(host: str) -> str:
-    """LM Studio, llama.cpp's server, and most OpenAI-compatible servers
-    expose their API under /v1 — but their own UI just shows the bare
-    host:port, which is exactly what's natural to paste into the host field
-    here. Without /v1 the openai SDK gets a malformed response and silently
-    looks like "no models available" with no clue why. Append /v1
-    automatically unless the URL already ends in a version segment."""
-    stripped = host.rstrip("/")
-    if re.search(r"/v\d+$", stripped):
-        return stripped
-    return stripped + "/v1"
+async def ensure_connected(st: Studio) -> bool:
+    if st.session is not None:
+        return True
+    if st.model is None:
+        await refresh_models(st)
+        await send_settings(st)
+    return await connect(st)
 
 
-def _pick_default(models: list[str], preferred: str) -> str:
-    if preferred in models:
-        return preferred
-    return models[0] if models else preferred
+# ---- lifecycle -------------------------------------------------------------
+
+@cl.set_starter_categories
+async def starters(user: cl.User | None = None, language: str | None = None):
+    return starter_categories()
 
 
-def _short(args: dict) -> str:
-    """Compact one-line rendering of tool call args for the sub-agent trace display."""
-    parts = []
-    for k, v in args.items():
-        s = repr(v)
-        if len(s) > 40:
-            s = s[:37] + "..."
-        parts.append(f"{k}={s}")
-    return ", ".join(parts)
+@cl.on_chat_start
+async def on_chat_start() -> None:
+    st = studio()
+    await cl.context.emitter.set_commands(COMMANDS)
+    await refresh_models(st)
+    await send_settings(st)
+    # No welcome message on purpose: an empty thread is what shows the
+    # starter cards. Connection problems surface in the panel and a toast.
+    await connect(st)
 
 
-def _pretty_tool_name(name: str) -> str:
-    """'create_object' -> 'Create Object' -- for display only; tool dispatch
-    always uses the real snake_case name, never this."""
-    return name.replace("_", " ").title()
+@cl.on_chat_resume
+async def on_chat_resume(thread: dict) -> None:
+    st = studio()
+    await cl.context.emitter.set_commands(COMMANDS)
+    await refresh_models(st)
+    await send_settings(st)
+    if await connect(st) and st.session is not None:
+        # Replay the visible conversation as context for the model.
+        for step in thread.get("steps", []):
+            if step.get("parentId"):
+                continue
+            if step.get("type") == "user_message" and step.get("output"):
+                st.session.messages.append({"role": "user", "content": step["output"]})
+            elif step.get("type") == "assistant_message" and step.get("output"):
+                st.session.messages.append({"role": "assistant", "content": step["output"]})
 
 
-def _extract_images(elements: list) -> list[dict]:
-    """Base64-encode every image attachment on an incoming message.
+@cl.on_settings_edit
+async def on_settings_edit(settings: dict) -> None:
+    """Fires live per field change. Only used to re-shape the panel the
+    moment the provider changes (URL vs API-key fields, its model list) —
+    connecting still waits for Confirm."""
+    st = studio()
+    provider = settings.get("provider")
+    if not provider or provider == cl.user_session.get("edit_provider", st.provider) or provider not in PROVIDERS:
+        return
+    cl.user_session.set("edit_provider", provider)
+    preview = Studio(**{**st.prefs(), "provider": provider})
+    preview.api_keys = st.api_keys
+    preview.session = st.session
+    await refresh_models(preview)
+    await cl.ChatSettings(settings_widgets(preview)).send()
 
-    Chainlit's spontaneous-file-upload feature (on for this app — see
-    features.spontaneous_file_upload in .chainlit/config.toml) attaches
-    uploads to message.elements; without reading that, an attached image is
-    silently never sent to the model at all, which used to happen here.
-    Checks both `.type` and `.mime` since it isn't documented which one
-    Chainlit's upload widget reliably sets for a given file.
-    """
+
+@cl.on_settings_update
+async def on_settings_update(settings: dict) -> None:
+    st = studio()
+    before = (st.provider, st.model, st.url, st.api_key, st.blender_host, st.blender_port, st.toolset)
+
+    provider = settings.get("provider") or st.provider
+    old_provider = st.provider
+    provider_changed = provider != old_provider
+    st.provider = provider if provider in PROVIDERS else DEFAULT_PROVIDER
+    cl.user_session.set("edit_provider", st.provider)
+    spec = PROVIDERS[st.provider]
+    # on_settings_edit re-renders the form the moment the provider changes,
+    # so what's submitted belongs to the new provider — switching provider
+    # and typing its URL/key in one go is the normal flow. The one thing to
+    # skip is a URL left over from the previous provider's form.
+    url = (settings.get("server_url") or "").strip()
+    if spec.editable_url and url:
+        old_spec = PROVIDERS.get(old_provider)
+        stale = provider_changed and old_spec is not None and url in (
+            st.urls.get(old_provider, ""), old_spec.base_url,
+        )
+        if not stale:
+            st.urls[st.provider] = url
+    key = (settings.get("api_key") or "").strip()
+    if key:
+        st.api_keys[st.provider] = key
+        # Keep the key out of the chat settings Chainlit persists to history.
+        cl.context.session.chat_settings["api_key"] = ""
+
+    st.toolset = settings.get("toolset") or st.toolset
+    st.approvals = bool(settings.get("approvals", st.approvals))
+    st.checkpoints_on = bool(settings.get("checkpoints_on", st.checkpoints_on))
+    st.auto_viewport = bool(settings.get("auto_viewport", st.auto_viewport))
+    st.blender_host = (settings.get("blender_host") or DEFAULT_BLENDER_HOST).strip()
+    try:
+        port = int(settings.get("blender_port") or DEFAULT_BLENDER_PORT)
+        if not 1024 <= port <= 65535:
+            raise ValueError
+        st.blender_port = port
+    except (TypeError, ValueError):
+        await toast("Blender port must be a number between 1024 and 65535.", "error")
+
+    await refresh_models(st)
+    if settings.get("model") in st.models:
+        st.chosen_models[st.provider] = settings["model"]
+    save_prefs(st)
+    await send_settings(st)
+
+    if st.session is not None:
+        st.session.require_approval = st.approvals
+    after = (st.provider, st.model, st.url, st.api_key, st.blender_host, st.blender_port, st.toolset)
+    if after != before or st.session is None:
+        if await connect(st, announce=True):
+            await cl.context.emitter.set_modes(build_modes(st.models, st.model))
+    else:
+        await render_panel(st)
+
+
+@cl.on_stop
+async def on_stop() -> None:
+    st = studio()
+    if st.session is not None:
+        st.session.cancel_requested = True
+
+
+@cl.on_chat_end
+def on_chat_end() -> None:
+    st: Studio | None = cl.user_session.get("studio")
+    if st is not None and st.session is not None:
+        st.session.close()
+
+
+# ---- session hooks (run on the chat worker thread via cl.run_sync) ---------
+
+def _module_of(name: str) -> str:
+    st = studio()
+    if st.session:
+        for module, tools in st.session.tools_by_module.items():
+            if any(t["function"]["name"] == name for t in tools):
+                return module
+    return ""
+
+
+async def report_tool_call(name: str, args: dict, result: str) -> None:
+    st = studio()
+    try:
+        parsed = json.loads(result)
+    except (json.JSONDecodeError, TypeError):
+        parsed = None
+
+    elements: list = []
+    shown = parsed
+    if isinstance(parsed, dict):
+        image = parsed.get("image")
+        if isinstance(image, str) and len(image) > 200:
+            # A screenshot: show the picture, not 500 KB of base64.
+            shown = {k: v for k, v in parsed.items() if k != "image"}
+            elements.append(cl.Image(name="viewport", content=base64.b64decode(image), display="inline", size="large"))
+            st.viewport = {"image": f"data:image/png;base64,{image}", "updated": time.time()}
+        result_data = parsed.get("result") if isinstance(parsed.get("result"), dict) else parsed
+        path = result_data.get("filepath") if isinstance(result_data, dict) else None
+        if name == "render_image" and path and Path(path).exists():
+            elements.append(cl.Image(name=Path(path).name, path=path, display="inline", size="large"))
+
+    is_error = isinstance(parsed, dict) and parsed.get("status") == "error"
+    output = json.dumps(shown, indent=2) if shown is not None else result
+    if len(output) > 1200:
+        output = output[:1200] + "\n…(truncated)"
+
+    async with cl.Step(
+        name=pretty_tool_name(name), type="tool", language="json",
+        icon=MODULE_ICONS.get(_module_of(name), "wrench"),
+    ) as step:
+        step.input = args
+        step.output = output
+        step.is_error = is_error
+        step.elements = elements
+    if elements and any(getattr(e, "name", "") == "viewport" for e in elements):
+        await render_panel(st)
+
+
+async def report_assistant_text(text: str) -> None:
+    await cl.Message(content=text).send()
+
+
+async def ask_approval(tool_calls: list[dict]) -> ApprovalDecision:
+    st = studio()
+    if st.approve_all_turn:
+        return ApprovalDecision(True)
+    calls = [
+        {
+            "label": pretty_tool_name(tc["name"]),
+            "args": tc.get("arguments", {}),
+            "summary": short_args(tc.get("arguments", {})),
+            "readOnly": is_read_only_tool(tc["name"]),
+        }
+        for tc in tool_calls
+    ]
+    ask = cl.AskElementMessage(
+        content="",
+        element=cl.CustomElement(name="ApprovalCard", props={"calls": calls}, display="inline"),
+        timeout=600,
+    )
+    res = await ask.send()
+    names = ", ".join(c["label"] for c in calls)
+    if not res or not res.get("submitted"):
+        ask.content = f"⏱ No answer — skipped: {names}"
+        await ask.update()
+        return ApprovalDecision(False, feedback="(no response — action skipped)")
+    decision = res.get("decision")
+    feedback = (res.get("feedback") or "").strip()
+    if decision in ("approve", "approve_all"):
+        if decision == "approve_all":
+            st.approve_all_turn = True
+        ask.content = f"✓ Approved{' (and the rest of this turn)' if decision == 'approve_all' else ''}: {names}"
+        await ask.update()
+        return ApprovalDecision(True)
+    if decision == "suggest":
+        ask.content = f"✎ Suggested instead of {names}: “{feedback}”"
+        await ask.update()
+        return ApprovalDecision(False, feedback=feedback or "(no suggestion given)")
+    ask.content = f"✕ Rejected: {names}"
+    await ask.update()
+    return ApprovalDecision(False)
+
+
+# ---- turns -----------------------------------------------------------------
+
+def extract_images(elements: list) -> list[dict]:
+    """Base64-encode image attachments on an incoming message."""
     images = []
     for el in elements or []:
         mime = getattr(el, "mime", "") or ""
@@ -219,8 +651,7 @@ def _extract_images(elements: list) -> list[dict]:
         data = getattr(el, "content", None)
         if data is None and getattr(el, "path", None):
             try:
-                with open(el.path, "rb") as f:
-                    data = f.read()
+                data = Path(el.path).read_bytes()
             except OSError:
                 continue
         if data is None:
@@ -231,437 +662,395 @@ def _extract_images(elements: list) -> list[dict]:
     return images
 
 
-def _host_widget(provider: str, host: str) -> TextInput:
-    """The one "connection detail" field in chat settings, shaped per provider.
-
-    Ollama/LM Studio: a host URL. Gemini: an API key, pasted directly —
-    Chainlit's ChatSettings has no masked/password widget type, so this is
-    plain text in the UI. It's kept only in this session's server-side state
-    (cl.user_session) for the life of the chat; it isn't written to disk or
-    echoed back into any message. Prefer the GEMINI_API_KEY environment
-    variable instead if that visibility is a concern.
-    """
-    if provider == "Gemini":
-        return TextInput(
-            id="host",
-            label="Gemini API key",
-            initial=host,
-            placeholder="AIza...",
-            description=(
-                "Pasted keys are visible in this settings panel and are not masked. "
-                "Submit to fetch your available models. Leave blank to fall back to "
-                f"a {GEMINI_API_KEY_ENV} environment variable instead."
-            ),
-        )
-    return TextInput(id="host", label=f"{provider} host", initial=host)
-
-
-def _build_settings_widgets(
-    provider: str,
-    host: str,
-    blender_host: str,
-    blender_port: int,
-    require_approval: bool,
-    models: list[str],
-    chat_model: str | None,
-) -> list:
-    """Shared widget list for both the submit path (_send_settings) and the
-    live edit path (on_settings_edit) — kept in one place so the two never
-    drift into showing different fields for the same provider."""
-    widgets = [
-        Select(id="provider", label="Provider", values=list(PROVIDERS.keys()), initial_value=provider),
-        _host_widget(provider, host),
-        TextInput(id="blender_host", label="Blender host", initial=blender_host),
-        NumberInput(id="blender_port", label="Blender port", initial=float(blender_port)),
-        Switch(
-            id="require_approval",
-            label="Ask before scene-changing actions",
-            initial=require_approval,
-            description=(
-                "When on, anything that would create/modify/delete objects, run code, or "
-                "write files pauses for your approval first. Read-only lookups (scene info, "
-                "asset search) never pause."
-            ),
-        ),
-    ]
-    if models:
-        widgets.append(
-            Select(
-                id="chat_model", label="Chat model", values=models,
-                initial_value=_pick_default(models, chat_model or DEFAULT_CHAT_MODEL),
-            ),
-        )
-    return widgets
-
-
-async def _send_settings(
-    provider: str,
-    host: str,
-    chat_model: str | None,
-    blender_host: str,
-    blender_port: int,
-    require_approval: bool = True,
-) -> None:
-    models, error_detail = _models_for(provider, host)
-    widgets = _build_settings_widgets(
-        provider, host, blender_host, blender_port, require_approval, models, chat_model,
-    )
-    settings = await cl.ChatSettings(widgets).send()
-
-    if not models:
-        detail_line = f"\n\nError: `{error_detail}`" if error_detail else ""
-        if provider == "Gemini":
-            message = (
-                "No models found — either no API key was entered above, or it isn't "
-                f"valid.{detail_line}\n\n"
-                "Paste a Gemini API key into the **Gemini API key** field above and submit "
-                "again to fetch your available models. (Alternatively, set a "
-                f"`{GEMINI_API_KEY_ENV}` environment variable before launching the chat app "
-                "and leave the field blank.)"
-            )
-        else:
-            normalized = _normalize_openai_base_url(host)
-            message = (
-                f"No models found at `{normalized}` ({provider}).{detail_line}\n\n"
-                "Load a model in LM Studio and start its local server (a bare `host:port` "
-                "is fine — `/v1` is added automatically), or point the host field at "
-                "wherever that server is reachable.\n\n"
-                "Then update the fields above to retry."
-            )
-        await cl.Message(content=message).send()
+async def run_turn(st: Studio, text: str, images: list[dict] | None = None,
+                   approach: str = "build", label: str = "") -> None:
+    session = st.session
+    assert session is not None
+    if st.turn_running:
+        await toast("Still finishing the previous request — one moment.", "warning")
         return
 
-    blender_host, blender_port, port_error = _resolve_blender_target(settings)
-    if port_error:
-        await cl.Message(content=port_error).send()
+    original = (text, st.focus)
+    history_len = len(session.messages)
+    if st.focus:
+        text += f"\n\n(The user is referring to the Blender object named '{st.focus}'.)"
+        st.focus = None
+    if approach == "plan":
+        session.read_only_reason = "this is plan mode — propose the plan and wait for approval."
+        text = f"{PLAN_INSTRUCTION}\n\n{text}"
+    elif approach == "ask":
+        session.read_only_reason = "Ask mode is read-only."
+        text = f"{ASK_INSTRUCTION}\n\n{text}"
+    else:
+        session.read_only_reason = None
+
+    if approach == "build" and st.checkpoints_on and st.checkpoints is not None and not st.checkpoints.items:
+        try:
+            await cl.make_async(st.checkpoints.create)("Start of chat")
+        except blender_ops.BlenderOpError as e:
+            await toast(f"Couldn't save a checkpoint: {e}", "warning")
+
+    before_turn = st.checkpoints.current_id if st.checkpoints is not None else None
+    st.approve_all_turn = False
+    st.turn_running = True
+
+    def work() -> str:
+        try:
+            return session.chat(text, images or None)
+        finally:
+            st.turn_running = False
+
+    try:
+        async with cl.Step(name="Blender tools", type="run", icon="sparkles"):
+            response = await cl.make_async(work)()
+    except ContextOverflowError as e:
+        session.read_only_reason = None
+        # Drop this turn's half-finished messages so a retry doesn't repeat them.
+        del session.messages[history_len:]
+        if st.toolset == "full":
+            st.toolset = "core"
+            save_prefs(st)
+            await cl.Message(content=(
+                "The full toolset (170+ tool definitions) doesn't fit this model's context window, "
+                "so I've switched to the **Core** toolset (~80 tools) and I'm retrying. "
+                "You can change this under **Toolset** in chat settings."
+            )).send()
+            if await connect(st):
+                await send_settings(st)
+                text, st.focus = original
+                await run_turn(st, text, images, approach, label)
+            return
+        await cl.Message(content=(
+            f"**This conversation no longer fits the model's context window.**\n\n{e}\n\n"
+            "Start a new chat (the pencil icon at the top left), or load the model with a larger "
+            "context length in LM Studio / Ollama."
+        )).send()
+        await render_panel(st)
         return
-
-    await _connect(
-        provider, host, settings["chat_model"], blender_host, blender_port,
-        require_approval=bool(settings.get("require_approval", True)),
-    )
-
-
-def _resolve_blender_target(settings: dict) -> tuple[str, int, str | None]:
-    """Pull blender_host/blender_port out of a settings dict, with a
-    friendly error string (third element) instead of raising on a bad port —
-    a settings panel is easy to mistype into."""
-    blender_host = settings.get("blender_host") or DEFAULT_BLENDER_HOST
-    raw_port = settings.get("blender_port")
-    try:
-        blender_port = int(raw_port) if raw_port is not None else DEFAULT_BLENDER_PORT
-    except (TypeError, ValueError):
-        return blender_host, DEFAULT_BLENDER_PORT, f"Blender port must be a number, got `{raw_port}`."
-    if not (1024 <= blender_port <= 65535):
-        return blender_host, DEFAULT_BLENDER_PORT, f"Blender port must be between 1024 and 65535, got `{blender_port}`."
-    return blender_host, blender_port, None
-
-
-@cl.on_chat_start
-async def start() -> None:
-    # Blender status + the full tool catalog, in the sidebar, before any
-    # model/provider is picked — these don't need one.
-    await _refresh_sidebar(DEFAULT_BLENDER_HOST, DEFAULT_BLENDER_PORT)
-
-    await _send_settings(
-        provider=DEFAULT_PROVIDER, host=PROVIDERS[DEFAULT_PROVIDER], chat_model=None,
-        blender_host=DEFAULT_BLENDER_HOST, blender_port=DEFAULT_BLENDER_PORT,
-    )
-
-
-@cl.on_settings_update
-async def on_settings_update(settings: dict) -> None:
-    old_session: BlenderChatSession | None = cl.user_session.get("session")
-    if old_session is not None:
-        old_session.close()
-
-    provider = settings.get("provider") or DEFAULT_PROVIDER
-    # Trust the submitted host outright. This used to fall back to the
-    # provider's default whenever the *confirmed* provider differed from
-    # this submission's — meant to clear a stale value carried over from a
-    # previous provider's render — but on_settings_edit now already resets
-    # the field live the instant the dropdown changes (see below), before
-    # the user ever types into it. Re-applying that same reset here on
-    # submit had a real bug: switching provider AND typing a new host in
-    # the same sitting (the normal way to do it) has "confirmed provider"
-    # still pointing at the OLD provider at submit time, so this branch
-    # threw away the just-typed host and silently fell back to localhost —
-    # exactly what happened when a custom LM Studio LAN address got
-    # replaced with 127.0.0.1 without any error.
-    host = settings.get("host") or PROVIDERS[provider]
-    cl.user_session.set("provider", provider)
-    cl.user_session.set("edit_provider", provider)
-
-    blender_host, blender_port, port_error = _resolve_blender_target(settings)
-    if port_error:
-        await cl.Message(content=port_error).send()
-        blender_host = settings.get("blender_host") or DEFAULT_BLENDER_HOST
-        blender_port = cl.user_session.get("blender_port") or DEFAULT_BLENDER_PORT
-
-    # Re-check whichever Blender target is now configured, independent of
-    # whatever happens with the model/provider below.
-    await _refresh_sidebar(blender_host, blender_port)
-
-    await _send_settings(
-        provider=provider, host=host, chat_model=settings.get("chat_model"),
-        blender_host=blender_host, blender_port=blender_port,
-        require_approval=bool(settings.get("require_approval", True)),
-    )
-
-
-@cl.on_settings_edit
-async def on_settings_edit(settings: dict) -> None:
-    """Fires live, per field change (Chainlit's "chat_settings_edit" socket
-    event) — unlike on_settings_update, this needs no Confirm click. Used
-    ONLY to re-render the panel immediately when the provider dropdown
-    changes, so switching to Gemini shows the "Gemini API key" field right
-    away instead of only after confirming and reopening settings. Never
-    connects/reconnects or fetches models here — that stays gated behind an
-    actual submit, so typing into the key field doesn't spam the API.
-
-    Chainlit doesn't document whether this payload is the full settings
-    dict or just the changed field, so it's merged into a per-session draft
-    rather than trusted alone — a partial payload then can't wipe out
-    fields (Blender host/port, the approval toggle) the user already set
-    earlier in the same still-open panel.
-    """
-    draft = cl.user_session.get("settings_draft") or {}
-    draft.update(settings)
-    cl.user_session.set("settings_draft", draft)
-
-    provider = draft.get("provider") or DEFAULT_PROVIDER
-    prev_provider = cl.user_session.get("edit_provider") or cl.user_session.get("provider")
-    if provider == prev_provider:
-        return  # only the field shape (which provider) needs a live re-render
-    cl.user_session.set("edit_provider", provider)
-
-    # Same reset rule on_settings_update uses: a provider that just changed
-    # gets a fresh (empty) field rather than showing the previous provider's
-    # value in a field now labeled for a different one.
-    host = PROVIDERS[provider]
-    blender_host = draft.get("blender_host") or DEFAULT_BLENDER_HOST
-    raw_port = draft.get("blender_port")
-    try:
-        blender_port = float(raw_port) if raw_port is not None else DEFAULT_BLENDER_PORT
-    except (TypeError, ValueError):
-        blender_port = DEFAULT_BLENDER_PORT
-    require_approval = bool(draft.get("require_approval", True))
-
-    models, _ = _models_for(provider, host)  # empty for a freshly-switched-to provider — no API hit for Gemini here
-    widgets = _build_settings_widgets(provider, host, blender_host, blender_port, require_approval, models, None)
-    await cl.ChatSettings(widgets).send()
-
-
-async def _ask_approval(tool_calls: list[dict]) -> ApprovalDecision:
-    """Approve/Reject/Suggest prompt for one round's proposed mutating tool
-    calls. Blocks (via cl.run_sync, since this is invoked from the worker
-    thread running session.chat()) until the user responds or it times out.
-    """
-    lines = [
-        f"{i}. **{_pretty_tool_name(tc['name'])}** — `{_short(tc.get('arguments', {})) or 'no arguments'}`"
-        for i, tc in enumerate(tool_calls, 1)
-    ]
-    content = "#### Confirm before this runs\n\nThe assistant wants to:\n\n" + "\n".join(lines)
-    actions = [
-        cl.Action(name="approve", payload={}, label="Approve", tooltip="Run this exactly as proposed"),
-        cl.Action(name="reject", payload={}, label="Reject", tooltip="Skip it — the assistant will try a different approach"),
-        cl.Action(name="suggest", payload={}, label="Suggest changes", tooltip="Skip it and tell the assistant what to do instead"),
-    ]
-    res = await cl.AskActionMessage(content=content, actions=actions, timeout=300, raise_on_timeout=False).send()
-    if res is None:
-        return ApprovalDecision(False, feedback="(no response within 5 minutes — action skipped)")
-    if res["name"] == "approve":
-        return ApprovalDecision(True)
-    if res["name"] == "suggest":
-        follow = await cl.AskUserMessage(content="What would you like it to do instead?", timeout=300).send()
-        feedback = (follow.get("output") if follow else "") or "(no suggestion given)"
-        return ApprovalDecision(False, feedback=feedback)
-    return ApprovalDecision(False)
-
-
-async def _report_tool_call(name: str, args: dict, result: str) -> None:
-    """One completed tool call as its own live step — this is what replaces
-    the single unbroken spinner with visible incremental progress."""
-    try:
-        parsed = json.loads(result)
-    except (json.JSONDecodeError, TypeError):
-        parsed = None
-
-    is_error = isinstance(parsed, dict) and parsed.get("status") == "error"
-    output = json.dumps(parsed, indent=2) if parsed is not None else result
-    if len(output) > 800:
-        output = output[:800] + "\n...(truncated)"
-
-    async with cl.Step(name=_pretty_tool_name(name), type="tool", language="json") as step:
-        step.input = args
-        step.output = output
-        step.is_error = is_error
-
-
-async def _report_assistant_text(text: str) -> None:
-    """Surface the model's interim narration (said before it goes on to call
-    tools) instead of silently discarding it — the other half of "I can't
-    tell what it's thinking"."""
-    await cl.Message(content=text, author="blend-ai").send()
-
-
-async def _connect(
-    provider: str, host: str, chat_model: str, blender_host: str, blender_port: int,
-    require_approval: bool = True,
-) -> None:
-    cl.user_session.set("provider", provider)
-    cl.user_session.set("blender_host", blender_host)
-    cl.user_session.set("blender_port", blender_port)
-
-    try:
-        if provider == "Gemini":
-            # `host` is the pasted API key here (see _host_widget), with an
-            # environment variable as a fallback for anyone who'd rather not
-            # put it in the (unmasked) settings panel.
-            backend = GeminiBackend(chat_model, api_key=host or os.environ.get(GEMINI_API_KEY_ENV, ""))
-        else:
-            backend = OpenAICompatBackend(chat_model, base_url=_normalize_openai_base_url(host))
-    except RuntimeError as e:
-        await cl.Message(content=f"Couldn't set up the {provider} backend: {e}").send()
+    except Exception as e:  # noqa: BLE001 — any backend failure is shown to the user
+        session.read_only_reason = None
+        await cl.Message(content=(
+            f"**Something went wrong talking to the model.**\n\n{e}\n\n"
+            "If the model doesn't support tool calling, pick another one from the model picker "
+            "in the message box or in chat settings."
+        )).send()
+        await render_panel(st)
         return
+    session.read_only_reason = None
 
-    # Screenshots and uploaded images go straight to whichever backend is
-    # active (see ollama_chat.chat()'s screenshot handling and
-    # _extract_images below) — no separate Ollama vision model involved.
-    session = BlenderChatSession(
-        chat_model=chat_model,
-        host=blender_host,
-        port=blender_port,
-        backend=backend,
-    )
-    session.require_approval = require_approval
-    # These hooks run on the worker thread session.chat() executes on (see
-    # cl.make_async below) — cl.run_sync is Chainlit's documented bridge for
-    # calling back into async UI code from exactly that kind of sync context.
-    session.on_tool_call = lambda name, args, result: cl.run_sync(_report_tool_call(name, args, result))
-    session.on_assistant_text = lambda text: cl.run_sync(_report_assistant_text(text))
-    session.on_approval_request = lambda tool_calls: cl.run_sync(_ask_approval(tool_calls))
-    try:
-        await cl.make_async(session.initialize)()
-    except BlenderConnectionError as e:
-        await cl.Message(
-            content=(
-                f"Couldn't connect to Blender at `{blender_host}:{blender_port}`: {e}\n\n"
-                "Make sure Blender is running with the blend-ai addon's server started "
-                "(N-panel -> blend-ai tab -> Start Server), and that the port there matches "
-                "the Blender port in this chat's settings (the settings/sliders icon in the "
-                "message toolbar at the bottom, not a top-right gear)."
-            )
-        ).send()
-        return
+    elements = []
+    if session.last_scene_agent_render:
+        elements.append(cl.Image(
+            name="scene_render", content=base64.b64decode(session.last_scene_agent_render),
+            display="inline", size="large",
+        ))
+        session.last_scene_agent_render = None
 
-    cl.user_session.set("session", session)
-    displayed_host = _normalize_openai_base_url(host) if provider == "LM Studio / OpenAI-compatible" else host
-    provider_detail = provider if provider == "Gemini" else f"{provider} (`{displayed_host}`)"
-    approval_note = (
-        "Scene-changing actions will pause for your approval before running."
-        if require_approval else
-        "Approval prompts are off — everything runs immediately (toggle this back on in chat settings)."
-    )
-    await cl.Message(
-        content=(
-            f"Connected to Blender at `{blender_host}:{blender_port}`. "
-            f"Model: `{chat_model}` via {provider_detail}. "
-            f"{len(session.tools)} tools loaded — type `!tools` to see them, `!mcp` for connection details. "
-            f"{approval_note} "
-            "Describe a scene (e.g. \"furnish a bedroom with a bed, nightstand, and a rug\") and "
-            "the scene sub-agent will pull real assets from the library. What do you want to build?"
-        )
-    ).send()
+    # Save the checkpoint first so the reply can offer an undo for it.
+    if session.turn_mutations and st.checkpoints_on and st.checkpoints is not None:
+        try:
+            await cl.make_async(st.checkpoints.create)(label or text.split("\n")[0])
+        except blender_ops.BlenderOpError as e:
+            await toast(f"Couldn't save a checkpoint: {e}", "warning")
 
+    actions = []
+    if approach == "plan":
+        actions = [
+            cl.Action(name="run_plan", payload={}, label="Run this plan", icon="play"),
+            cl.Action(name="revise_plan", payload={}, label="Revise", icon="pencil"),
+        ]
+    elif session.turn_mutations and before_turn:
+        actions = [cl.Action(
+            name="undo_turn", payload={"id": before_turn}, label="Undo", icon="undo-2",
+            tooltip="Restore the scene to how it was before this turn",
+        )]
+    await cl.Message(content=response or "(no response)", elements=elements, actions=actions).send()
+    if approach == "plan":
+        cl.user_session.set("plan_actions", actions)
 
-def _mcp_status(session: BlenderChatSession) -> str:
-    """Current connection config, for the `!mcp` command — everything the
-    settings panel lets you configure, read back from the live session."""
-    provider = cl.user_session.get("provider") or DEFAULT_PROVIDER
-    return (
-        f"**Blender:** `{session.host}:{session.port}` — {len(session.tools)} tools loaded "
-        f"across {len(session.tools_by_module)} modules\n"
-        f"**Chat model:** `{session.chat_model}` via {provider} (handles text, tools, and images directly)\n\n"
-        "Change any of this from chat settings (the settings/sliders icon in the message toolbar, near attach-file and history — not a top-right gear) — "
-        "editing it there reconnects to Blender with the new host/port."
-    )
+    if session.last_scene_agent_trace:
+        trace_lines = [
+            f"{i}. **{pretty_tool_name(t['tool'])}** — `{short_args(t['args']) or 'no arguments'}`\n   → {t['result_preview']}"
+            for i, t in enumerate(session.last_scene_agent_trace, 1)
+        ]
+        await cl.Message(content=(
+            f"<details><summary>Scene sub-agent — {len(session.last_scene_agent_trace)} step(s)</summary>\n\n"
+            + "\n".join(trace_lines) + "\n\n</details>"
+        )).send()
+        session.last_scene_agent_trace = []
+
+    if session.turn_mutations:
+        await refresh_scene_state(st, viewport=st.auto_viewport)
+    await render_panel(st)
 
 
 @cl.on_message
 async def on_message(message: cl.Message) -> None:
-    session: BlenderChatSession | None = cl.user_session.get("session")
-    if session is None:
-        await cl.Message(
-            content=(
-                "Not connected — open chat settings (the settings/sliders icon in the "
-                "message toolbar at the bottom, not a top-right gear) to pick a provider "
-                "and model first."
-            )
-        ).send()
-        return
+    st = studio()
 
-    # !tools [query] lists the loaded tool catalog directly — answered from
-    # what's already loaded in the session, no model round trip.
+    if message.command:
+        await run_command(st, message.command)
+        return
     tools_query = parse_tools_command(message.content)
     if tools_query is not None:
-        await cl.Message(content=session.list_tools(tools_query)).send()
+        if await ensure_connected(st):
+            await cl.Message(content=st.session.list_tools(tools_query)).send()
         return
 
-    # !mcp shows the current connection config — the settings panel (gear
-    # icon) is where you *change* it; this is where you *see* it without
-    # opening that panel.
-    if message.content.strip() == "!mcp":
-        await cl.Message(content=_mcp_status(session)).send()
+    if not await ensure_connected(st):
+        await cl.Message(content=(
+            "**Not connected yet.** " + (st.blender_error or st.model_error or
+            "Pick a provider and model in chat settings (the gear icon in the message box).")
+        )).send()
         return
 
-    images = _extract_images(message.elements)
+    if cl.user_session.get("action_started_thread"):
+        await name_thread(st, message.content.split("\n")[0] or "Untitled scene")
+    st.thread_named = True
 
-    async with cl.Step(name="blend-ai", type="run"):
-        try:
-            response = await cl.make_async(session.chat)(message.content, images or None)
-        except Exception as e:
-            await cl.Message(
-                content=(
-                    f"Something went wrong talking to the model: {e}\n\n"
-                    "If this is a model-capability error, pick a different model from "
-                    "chat settings (the settings/sliders icon in the message toolbar) "
-                    "and try again."
-                )
-            ).send()
+    modes = message.modes or {}
+    wanted_model = modes.get("model")
+    if wanted_model and wanted_model != st.session.chat_model and wanted_model in st.models:
+        await switch_model(st, wanted_model)
+
+    await run_turn(
+        st, message.content, extract_images(message.elements),
+        approach=modes.get("approach", "build"), label=message.content.split("\n")[0],
+    )
+
+
+async def switch_model(st: Studio, model: str) -> None:
+    """Swap the model in place, keeping the conversation."""
+    session = st.session
+    assert session is not None
+    try:
+        session.backend = make_backend(st.provider, model, st.url, st.api_key)
+    except RuntimeError as e:
+        await toast(str(e), "error")
+        return
+    session.chat_model = model
+    if PROVIDERS[st.provider].kind == "gemini":
+        # Gemini keeps conversation state server-side per interaction chain,
+        # which a new backend can't continue — start its context fresh.
+        session.messages = session.messages[:1]
+        await toast("Switched model — Gemini starts a fresh context.", "info")
+    st.chosen_models[st.provider] = model
+    save_prefs(st)
+    await send_settings(st)
+
+
+# ---- commands --------------------------------------------------------------
+
+def _thread_dir(kind: str) -> Path:
+    return DATA_DIR / kind / cl.context.session.thread_id
+
+
+async def run_command(st: Studio, command: str) -> None:
+    if command == "Tools":
+        if await ensure_connected(st):
+            await cl.Message(content=st.session.list_tools("")).send()
+        return
+    if not await ensure_connected(st):
+        await toast("Connect to Blender first.", "error")
+        return
+
+    if command == "Screenshot":
+        image = await cl.make_async(blender_ops.capture_viewport)(1280)
+        if image is None:
+            await toast("Couldn't capture the viewport.", "error")
             return
+        st.viewport = {"image": image, "updated": time.time()}
+        data = base64.b64decode(image.split(",", 1)[1])
+        await cl.Message(content="Viewport", elements=[cl.Image(name="viewport", content=data, display="inline", size="large")]).send()
+        await render_panel(st)
 
-    # If the request went through the scene sub-agent (populate_scene), show
-    # its verification render + call trace as follow-up messages rather than
-    # folding them into the main reply — keeps the primary answer readable
-    # while still giving full transparency into what it actually did.
-    elements = []
-    if session.last_scene_agent_render:
-        elements.append(cl.Image(
-            name="scene_render",
-            content=base64.b64decode(session.last_scene_agent_render),
-            display="inline",
-        ))
-        session.last_scene_agent_render = None
+    elif command == "Render":
+        path = _thread_dir("renders") / f"render_{int(time.time())}.png"
+        async with cl.Step(name="Rendering", type="tool", icon="clapperboard"):
+            try:
+                await cl.make_async(blender_ops.render_to)(path)
+            except blender_ops.BlenderOpError as e:
+                await toast(f"Render failed: {e}", "error")
+                return
+        await cl.Message(content="Render", elements=[cl.Image(name=path.name, path=str(path), display="inline", size="large")]).send()
 
-    await cl.Message(content=response or "(no response)", elements=elements).send()
+    elif command == "Undo":
+        target = st.checkpoints.previous() if st.checkpoints else None
+        if target is None:
+            await toast("Nothing to undo yet.", "info")
+            return
+        await restore_checkpoint(st, target.id)
 
-    if session.last_scene_agent_trace:
-        trace_lines = [
-            f"{i}. **{_pretty_tool_name(t['tool'])}** — `{_short(t['args']) or 'no arguments'}`\n   → {t['result_preview']}"
-            for i, t in enumerate(session.last_scene_agent_trace, 1)
-        ]
-        await cl.Message(
-            content=(
-                f"<details><summary>Scene sub-agent — {len(session.last_scene_agent_trace)} "
-                f"step(s)</summary>\n\n" + "\n".join(trace_lines) + "\n\n</details>"
-            ),
+    elif command == "Export":
+        res = await cl.AskActionMessage(
+            content="Export the scene as:",
+            actions=[cl.Action(name="export", payload={"fmt": f}, label=label) for f, label in blender_ops.EXPORT_FORMATS.items()],
+            timeout=120, raise_on_timeout=False,
         ).send()
-        session.last_scene_agent_trace = []
+        if not res:
+            return
+        fmt = res["payload"]["fmt"]
+        path = _thread_dir("exports") / f"scene_{time.strftime('%Y%m%d_%H%M%S')}.{fmt}"
+        try:
+            await cl.make_async(blender_ops.export_to)(path, fmt)
+        except blender_ops.BlenderOpError as e:
+            await toast(f"Export failed: {e}", "error")
+            return
+        await cl.Message(content=f"Exported **{path.name}**", elements=[cl.File(name=path.name, path=str(path), display="inline")]).send()
 
 
-@cl.on_chat_end
-def end() -> None:
-    session: BlenderChatSession | None = cl.user_session.get("session")
-    if session is not None:
-        session.close()
+async def restore_checkpoint(st: Studio, cp_id: str) -> None:
+    if st.checkpoints is None:
+        return
+    try:
+        target = await cl.make_async(st.checkpoints.restore)(cp_id)
+    except (blender_ops.BlenderOpError, OSError) as e:
+        await toast(f"Restore failed: {e}", "error")
+        return
+    await refresh_scene_state(st)
+    await render_panel(st)
+    await cl.Message(content=(
+        f"↺ Restored the scene to **{target.label}**. Blender now has a working copy of that "
+        "checkpoint open — use File › Save As to keep it in your project."
+    )).send()
+    if st.session is not None:
+        st.session.messages.append({
+            "role": "user",
+            "content": f"(The user restored the Blender scene to an earlier checkpoint: '{target.label}'. "
+                       "Re-check the scene before relying on earlier observations.)",
+        })
+
+
+# ---- panel + message actions ----------------------------------------------
+
+def _mark_action_started() -> None:
+    # A panel click can be the first interaction in a thread; Chainlit then
+    # names the thread after the action id ("add_asset"). The first real
+    # message renames it (see on_message).
+    if not studio().thread_named:
+        cl.user_session.set("action_started_thread", True)
+
+
+@cl.action_callback("refresh_viewport")
+async def on_refresh_viewport(action: cl.Action):
+    _mark_action_started()
+    st = studio()
+    image = await cl.make_async(blender_ops.capture_viewport)()
+    if image:
+        st.viewport = {"image": image, "updated": time.time()}
+    else:
+        await toast("Couldn't capture the viewport.", "error")
+    await render_panel(st)
+
+
+@cl.action_callback("refresh_scene")
+async def on_refresh_scene(action: cl.Action):
+    _mark_action_started()
+    st = studio()
+    await refresh_scene_state(st, viewport=False)
+    await render_panel(st)
+
+
+@cl.action_callback("focus_object")
+async def on_focus_object(action: cl.Action):
+    _mark_action_started()
+    try:
+        await cl.make_async(blender_ops.focus_object)(action.payload.get("name", ""))
+    except blender_ops.BlenderOpError as e:
+        await toast(str(e), "error")
+
+
+@cl.action_callback("reference_object")
+async def on_reference_object(action: cl.Action):
+    _mark_action_started()
+    st = studio()
+    st.focus = action.payload.get("name") or None
+    await render_panel(st)
+    if st.focus:
+        await toast(f"Your next message will refer to “{st.focus}”.", "info")
+
+
+@cl.action_callback("add_asset")
+async def on_add_asset(action: cl.Action):
+    _mark_action_started()
+    st = studio()
+    asset_id = action.payload.get("id", "")
+    try:
+        result = await cl.make_async(blender_ops.import_asset)(asset_id)
+    except blender_ops.BlenderOpError as e:
+        await toast(f"Couldn't add asset: {e}", "error")
+        return
+    name = result.get("name") or result.get("anchor") or asset_id
+    await toast(f"Added {name} to the scene.", "success")
+    if st.session is not None:
+        st.session.messages.append({
+            "role": "user",
+            "content": f"(The user added the library asset '{asset_id}' to the scene; it is named '{name}'.)",
+        })
+    if st.checkpoints_on and st.checkpoints is not None:
+        await cl.make_async(st.checkpoints.create)(f"Added {name}")
+    await refresh_scene_state(st)
+    await render_panel(st)
+
+
+@cl.action_callback("create_checkpoint")
+async def on_create_checkpoint(action: cl.Action):
+    _mark_action_started()
+    st = studio()
+    if st.checkpoints is None:
+        return
+    try:
+        await cl.make_async(st.checkpoints.create)(f"Manual checkpoint · {time.strftime('%H:%M')}")
+    except blender_ops.BlenderOpError as e:
+        await toast(f"Couldn't save a checkpoint: {e}", "error")
+    await render_panel(st)
+
+
+@cl.action_callback("restore_checkpoint")
+async def on_restore_checkpoint(action: cl.Action):
+    _mark_action_started()
+    await restore_checkpoint(studio(), action.payload.get("id", ""))
+
+
+@cl.action_callback("undo_turn")
+async def on_undo_turn(action: cl.Action):
+    await action.remove()
+    await restore_checkpoint(studio(), action.payload.get("id", ""))
+
+
+@cl.action_callback("undo_last")
+async def on_undo_last(action: cl.Action):
+    _mark_action_started()
+    st = studio()
+    target = st.checkpoints.previous() if st.checkpoints else None
+    if target is None:
+        await toast("Nothing to undo yet.", "info")
+        return
+    await restore_checkpoint(st, target.id)
+
+
+async def _clear_plan_actions() -> None:
+    for plan_action in cl.user_session.get("plan_actions") or []:
+        await plan_action.remove()
+    cl.user_session.set("plan_actions", [])
+
+
+@cl.action_callback("run_plan")
+async def on_run_plan(action: cl.Action):
+    st = studio()
+    await _clear_plan_actions()
+    if not await ensure_connected(st):
+        return
+    await cl.Message(content="▶ Running the approved plan.").send()
+    # The plan itself was the approval, so don't ask again per step.
+    st.session.require_approval = False
+    try:
+        await run_turn(st, "The plan above is approved. Execute it now, step by step.", label="Ran approved plan")
+    finally:
+        st.session.require_approval = st.approvals
+
+
+@cl.action_callback("revise_plan")
+async def on_revise_plan(action: cl.Action):
+    await _clear_plan_actions()
+    await cl.Message(content="What should change in the plan? Reply with Approach set to **Plan first** to get a revised plan.").send()
