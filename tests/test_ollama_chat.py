@@ -8,6 +8,7 @@ import blend_ai.server
 from blend_ai.ollama_chat import (
     BlenderChatSession,
     _build_tool_list,
+    _compact_tool_result_for_context,
     _format_args,
     _parse_text_tool_calls,
     _strip_tool_markup,
@@ -128,8 +129,7 @@ class TestBlenderChatSession:
             assert "create_object" in session._tool_names
             assert "get_viewport_screenshot" in session._tool_names
             assert session.messages[0]["role"] == "system"
-            assert "create_object" in session.messages[0]["content"]
-            assert "get_viewport_screenshot" in session.messages[0]["content"]
+            assert "Tool selection" in session.messages[0]["content"]
 
     def test_initialize_populates_tools_by_module(
         self, mock_ollama_client, mock_blender_connection, mock_mcp_tools
@@ -283,6 +283,10 @@ class TestBlenderChatSession:
         image_msgs = [m for m in session.messages if m.get("role") == "user" and m.get("images")]
         assert len(image_msgs) == 1
         assert image_msgs[0]["images"] == [{"mime": "image/png", "data": "base64encodeddata"}]
+        tool_msgs = [m for m in session.messages if m.get("role") == "tool"]
+        assert len(tool_msgs) == 1
+        assert "base64encodeddata" not in tool_msgs[0]["content"]
+        assert "omitted base64 image" in tool_msgs[0]["content"]
 
     def test_chat_screenshot_without_image_key_no_injection(
         self, mock_ollama_client, mock_blender_connection, mock_mcp_tools
@@ -500,6 +504,22 @@ class TestBuildToolList:
         ]
         result = _build_tool_list(tools)
         assert result.index("a_tool") < result.index("z_tool")
+
+
+class TestCompactToolResultForContext:
+    def test_replaces_screenshot_base64_with_marker(self):
+        result = _compact_tool_result_for_context(
+            "get_viewport_screenshot",
+            json.dumps({"image": "a" * 100, "width": 1000, "height": 562}),
+        )
+        assert "a" * 100 not in result
+        assert "omitted base64 image: 100 chars" in result
+
+    def test_truncates_very_large_non_json_payload(self):
+        payload = "x" * 20000
+        result = _compact_tool_result_for_context("get_scene_info", payload)
+        assert len(result) < len(payload)
+        assert "truncated" in result
 
 
 class TestFormatArgs:
