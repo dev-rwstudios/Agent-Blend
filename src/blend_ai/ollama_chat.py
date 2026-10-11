@@ -47,6 +47,7 @@ DEFAULT_VISION_MODEL = "llava-llama3:latest"
 
 # Max tool-call loop iterations to prevent infinite retries
 MAX_TOOL_ROUNDS = 25
+MAX_TOOL_RESULT_CONTEXT_CHARS = 3000
 
 # Tools that only observe state (never create/modify/delete anything in the
 # Blender scene or on disk) — exempt from the approval gate below even when
@@ -821,9 +822,12 @@ class BlenderChatSession:
         self.tools = all_tools
         self._tool_names = {t["function"]["name"] for t in self.tools}
 
-        # Build system prompt with tool listing grouped by module
-        tool_list = _build_tool_list(self.tools)
-        system_prompt = SYSTEM_PROMPT_BASE + "\nAvailable tools:\n" + tool_list
+        # Tool schemas are sent through the native tool-calling API each round,
+        # so avoid duplicating the entire catalog in the system prompt.
+        system_prompt = (
+            SYSTEM_PROMPT_BASE
+            + "\nTool selection: Use only tools from the provided tool schema."
+        )
         self.messages = [{"role": "system", "content": system_prompt}]
 
     def list_tools(self, query: str = "") -> str:
@@ -1023,7 +1027,10 @@ class BlenderChatSession:
                     print(f"  -> populate_scene({_format_args(tool_args)}) [delegating to scene sub-agent]")
                     self.turn_mutations.append(tool_name)
                     result = self._run_scene_agent(tool_args.get("description", ""))
-                    tool_msg = {"role": "tool", "content": result}
+                    tool_msg = {
+                        "role": "tool",
+                        "content": _compact_tool_result_for_context(tool_name, result),
+                    }
                     if tool_call_id:
                         tool_msg["tool_call_id"] = tool_call_id
                     self.messages.append(tool_msg)
@@ -1059,7 +1066,10 @@ class BlenderChatSession:
                 # Vision always goes through Ollama (see __init__) even when the
                 # main chat backend is something else — if Ollama isn't
                 # reachable at all, degrade gracefully instead of failing the turn.
-                tool_msg = {"role": "tool", "content": result}
+                tool_msg = {
+                    "role": "tool",
+                    "content": _compact_tool_result_for_context(tool_name, result),
+                }
                 if tool_call_id:
                     tool_msg["tool_call_id"] = tool_call_id
                 self.messages.append(tool_msg)
@@ -1235,6 +1245,33 @@ def _strip_tool_markup(text: str) -> str:
     # Remove closing </tool_call> tags
     cleaned = re.sub(r'</tool_call>', '', cleaned)
     return cleaned.strip() or ""
+
+
+def _compact_tool_result_for_context(tool_name: str, result: str) -> str:
+    """Shrink oversized tool outputs before replaying them to the model."""
+    if not isinstance(result, str):
+        result = json.dumps(result, default=str)
+
+    # Screenshot tools return large base64 payloads; the active backend already
+    # receives the actual image via the follow-up user/images message.
+    if tool_name in {"get_viewport_screenshot", "fast_viewport_capture"}:
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = None
+        if isinstance(parsed, dict) and isinstance(parsed.get("image"), str):
+            parsed = dict(parsed)
+            parsed["image"] = f"[omitted base64 image: {len(parsed['image'])} chars]"
+            result = json.dumps(parsed, default=str)
+
+    if len(result) <= MAX_TOOL_RESULT_CONTEXT_CHARS:
+        return result
+    keep = MAX_TOOL_RESULT_CONTEXT_CHARS // 2
+    trimmed = len(result) - (keep * 2)
+    return (
+        f"{result[:keep]}\n...[truncated {trimmed} chars for context]...\n"
+        f"{result[-keep:]}"
+    )
 
 
 def _format_args(args: dict[str, Any]) -> str:
