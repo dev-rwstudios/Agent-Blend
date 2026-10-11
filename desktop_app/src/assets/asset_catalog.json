@@ -1,0 +1,2394 @@
+[
+  {
+    "id": "architecture/modern_railing_2",
+    "name": "modern_railing_2",
+    "category": "architecture",
+    "subcategory": "railing",
+    "room_types": [
+      "staircase",
+      "hallway"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.379,
+      "depth": 1.236,
+      "height": 6.705
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 760,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\architecture\\modern_railing_2\\model.glb"
+  },
+  {
+    "id": "bed/bed_frame_01",
+    "name": "bed_frame_01",
+    "category": "bed",
+    "subcategory": "bed_frame",
+    "room_types": [
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.626,
+      "depth": 2.161,
+      "height": 0.189
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 40847,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\bed\\bed_frame_01\\model.glb"
+  },
+  {
+    "id": "bed/bed_frame_02",
+    "name": "bed_frame_02",
+    "category": "bed",
+    "subcategory": "bed_frame",
+    "room_types": [
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.848,
+      "depth": 1.996,
+      "height": 0.294
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 7488,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\bed\\bed_frame_02\\model.glb"
+  },
+  {
+    "id": "bed/bed_frame_03",
+    "name": "bed_frame_03",
+    "category": "bed",
+    "subcategory": "bed_frame",
+    "room_types": [
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.848,
+      "depth": 1.856,
+      "height": 0.281
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 50159,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\bed\\bed_frame_03\\model.glb"
+  },
+  {
+    "id": "bed/headboard",
+    "name": "headboard",
+    "category": "bed",
+    "subcategory": "headboard",
+    "room_types": [
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.823,
+      "depth": 0.029,
+      "height": 0.865
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": true,
+    "polycount": 430,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\bed\\headboard\\model.glb"
+  },
+  {
+    "id": "clothing/coat",
+    "name": "coat",
+    "category": "clothing",
+    "subcategory": "coat",
+    "room_types": [
+      "closet"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.442,
+      "depth": 0.177,
+      "height": 0.559
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "hangs_in",
+        "target": "wardrobe_door"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 45838,
+    "snap_mode": "hang_or_fold",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\clothing\\coat\\model.glb"
+  },
+  {
+    "id": "clothing/dress",
+    "name": "dress",
+    "category": "clothing",
+    "subcategory": "dress",
+    "room_types": [
+      "closet"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.439,
+      "depth": 0.187,
+      "height": 0.829
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "hangs_in",
+        "target": "wardrobe_door"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 14919,
+    "snap_mode": "hang_or_fold",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\clothing\\dress\\model.glb"
+  },
+  {
+    "id": "clothing/shirt_mens_00",
+    "name": "shirt_mens_00",
+    "category": "clothing",
+    "subcategory": "shirt",
+    "room_types": [
+      "closet"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.412,
+      "depth": 0.13,
+      "height": 0.618
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 58016,
+    "snap_mode": "hang_or_fold",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\clothing\\shirt_mens_00\\model.glb"
+  },
+  {
+    "id": "clothing/shirt_mens_01",
+    "name": "shirt_mens_01",
+    "category": "clothing",
+    "subcategory": "shirt",
+    "room_types": [
+      "closet"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.147,
+      "depth": 0.465,
+      "height": 0.697
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 58016,
+    "snap_mode": "hang_or_fold",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\clothing\\shirt_mens_01\\model.glb"
+  },
+  {
+    "id": "clothing/shirt_variant_02",
+    "name": "shirt_variant_02",
+    "category": "clothing",
+    "subcategory": "shirt",
+    "room_types": [
+      "closet"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.17,
+      "depth": 0.512,
+      "height": 0.757
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 8507,
+    "snap_mode": "hang_or_fold",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\clothing\\shirt_variant_02\\model.glb"
+  },
+  {
+    "id": "decor/art_book",
+    "name": "art_book",
+    "category": "decor",
+    "subcategory": "books",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.279,
+      "depth": 0.246,
+      "height": 0.035
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 100000,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\art_book\\model.glb"
+  },
+  {
+    "id": "decor/banana_plant",
+    "name": "banana_plant",
+    "category": "decor",
+    "subcategory": "plant",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.469,
+      "depth": 0.449,
+      "height": 0.868
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 38280,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\banana_plant\\model.glb"
+  },
+  {
+    "id": "decor/bathroom_mirror",
+    "name": "bathroom_mirror",
+    "category": "decor",
+    "subcategory": "mirror",
+    "room_types": [
+      "bathroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.741,
+      "depth": 0.042,
+      "height": 1.29
+    },
+    "surface": "wall",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 199,
+    "snap_mode": "mount_on_wall",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\bathroom_mirror\\model.glb"
+  },
+  {
+    "id": "decor/beauty_cream_bottle_container",
+    "name": "beauty_cream_bottle_container",
+    "category": "decor",
+    "subcategory": "bathroom_accessory",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.154,
+      "depth": 0.127,
+      "height": 0.065
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 17204,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\beauty_cream_bottle_container\\model.glb"
+  },
+  {
+    "id": "decor/beauty_cream_tube",
+    "name": "beauty_cream_tube",
+    "category": "decor",
+    "subcategory": "bathroom_accessory",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.086,
+      "depth": 0.147,
+      "height": 0.047
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 15536,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\beauty_cream_tube\\model.glb"
+  },
+  {
+    "id": "decor/beauty_spray_glass_bottle",
+    "name": "beauty_spray_glass_bottle",
+    "category": "decor",
+    "subcategory": "bathroom_accessory",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.037,
+      "depth": 0.037,
+      "height": 0.121
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 41685,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\beauty_spray_glass_bottle\\model.glb"
+  },
+  {
+    "id": "decor/bird_of_paradise_vase",
+    "name": "bird_of_paradise_vase",
+    "category": "decor",
+    "subcategory": "vase",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.081,
+      "depth": 1.051,
+      "height": 1.837
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 56018,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\bird_of_paradise_vase\\model.glb"
+  },
+  {
+    "id": "decor/black_vase",
+    "name": "black_vase",
+    "category": "decor",
+    "subcategory": "vase",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.114,
+      "depth": 0.114,
+      "height": 0.23
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 12522,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\black_vase\\model.glb"
+  },
+  {
+    "id": "decor/books_stack",
+    "name": "books_stack",
+    "category": "decor",
+    "subcategory": "books",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.264,
+      "depth": 0.288,
+      "height": 0.049
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 10000,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\books_stack\\model.glb"
+  },
+  {
+    "id": "decor/decor_standing_man_sculpture",
+    "name": "decor_standing_man_sculpture",
+    "category": "decor",
+    "subcategory": "sculpture",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.213,
+      "depth": 0.213,
+      "height": 0.379
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "coffee_table"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 15262,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\decor_standing_man_sculpture\\model.glb"
+  },
+  {
+    "id": "decor/decorative_fork",
+    "name": "decorative_fork",
+    "category": "decor",
+    "subcategory": "tableware",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.045,
+      "depth": 0.04,
+      "height": 0.146
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 4832,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\decorative_fork\\model.glb"
+  },
+  {
+    "id": "decor/decorative_knife",
+    "name": "decorative_knife",
+    "category": "decor",
+    "subcategory": "tableware",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.029,
+      "depth": 0.104,
+      "height": 0.141
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 7520,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\decorative_knife\\model.glb"
+  },
+  {
+    "id": "decor/decorative_vase_set_v2",
+    "name": "decorative_vase_set_v2",
+    "category": "decor",
+    "subcategory": "vase",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.357,
+      "depth": 0.126,
+      "height": 0.227
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 56224,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\decorative_vase_set_v2\\model.glb"
+  },
+  {
+    "id": "decor/design_book",
+    "name": "design_book",
+    "category": "decor",
+    "subcategory": "books",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.286,
+      "depth": 0.25,
+      "height": 0.029
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 100000,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\design_book\\model.glb"
+  },
+  {
+    "id": "decor/dry_plant",
+    "name": "dry_plant",
+    "category": "decor",
+    "subcategory": "plant",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.08,
+      "depth": 0.098,
+      "height": 0.091
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 64869,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\dry_plant\\model.glb"
+  },
+  {
+    "id": "decor/glass",
+    "name": "glass",
+    "category": "decor",
+    "subcategory": "tableware",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.066,
+      "depth": 0.066,
+      "height": 0.08
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 2240,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\glass\\model.glb"
+  },
+  {
+    "id": "decor/marble_gold_panel_decor",
+    "name": "marble_gold_panel_decor",
+    "category": "decor",
+    "subcategory": "wall_panel",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 2.167,
+      "depth": 0.197,
+      "height": 3.0
+    },
+    "surface": "wall",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 1014,
+    "snap_mode": "mount_on_wall",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\marble_gold_panel_decor\\model.glb"
+  },
+  {
+    "id": "decor/modern_wall_clock",
+    "name": "modern_wall_clock",
+    "category": "decor",
+    "subcategory": "clock",
+    "room_types": [
+      "living_room",
+      "hallway"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.036,
+      "depth": 0.717,
+      "height": 1.082
+    },
+    "surface": "wall",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 41876,
+    "snap_mode": "mount_on_wall",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\modern_wall_clock\\model.glb"
+  },
+  {
+    "id": "decor/rubber_item",
+    "name": "rubber_item",
+    "category": "decor",
+    "subcategory": "unknown",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.822,
+      "depth": 0.068,
+      "height": 0.001
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": true,
+    "polycount": 5120,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\rubber_item\\model.glb"
+  },
+  {
+    "id": "decor/self_books_stack",
+    "name": "self_books_stack",
+    "category": "decor",
+    "subcategory": "books",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.151,
+      "depth": 0.113,
+      "height": 0.151
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 28299,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\self_books_stack\\model.glb"
+  },
+  {
+    "id": "decor/set_of_3_decorative_vases",
+    "name": "set_of_3_decorative_vases",
+    "category": "decor",
+    "subcategory": "vase",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.357,
+      "depth": 0.126,
+      "height": 0.227
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "tv_cabinet"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 56224,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\set_of_3_decorative_vases\\model.glb"
+  },
+  {
+    "id": "decor/soap",
+    "name": "soap",
+    "category": "decor",
+    "subcategory": "bathroom_accessory",
+    "room_types": [
+      "bathroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.079,
+      "depth": 0.092,
+      "height": 0.25
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 5938,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\soap\\model.glb"
+  },
+  {
+    "id": "decor/stack_of_books",
+    "name": "stack_of_books",
+    "category": "decor",
+    "subcategory": "books",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.205,
+      "depth": 0.272,
+      "height": 0.105
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 100431,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\stack_of_books\\model.glb"
+  },
+  {
+    "id": "decor/vase_04",
+    "name": "vase_04",
+    "category": "decor",
+    "subcategory": "vase",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.071,
+      "depth": 0.071,
+      "height": 0.076
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 25542,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\vase_04\\model.glb"
+  },
+  {
+    "id": "decor/vase_set_09",
+    "name": "vase_set_09",
+    "category": "decor",
+    "subcategory": "vase",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.517,
+      "depth": 0.432,
+      "height": 0.648
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 269006,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\vase_set_09\\model.glb"
+  },
+  {
+    "id": "decor/vase_set_10",
+    "name": "vase_set_10",
+    "category": "decor",
+    "subcategory": "vase",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.517,
+      "depth": 0.432,
+      "height": 0.648
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 269006,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\vase_set_10\\model.glb"
+  },
+  {
+    "id": "decor/vase_with_pampas_decoration",
+    "name": "vase_with_pampas_decoration",
+    "category": "decor",
+    "subcategory": "vase",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.508,
+      "depth": 0.682,
+      "height": 0.612
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "coffee_table"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 122119,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\vase_with_pampas_decoration\\model.glb"
+  },
+  {
+    "id": "decor/venus_de_milo_sculpture",
+    "name": "venus_de_milo_sculpture",
+    "category": "decor",
+    "subcategory": "sculpture",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.121,
+      "depth": 0.109,
+      "height": 0.346
+    },
+    "surface": "surface",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 266871,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\venus_de_milo_sculpture\\model.glb"
+  },
+  {
+    "id": "decor/wardrobe_mirror",
+    "name": "wardrobe_mirror",
+    "category": "decor",
+    "subcategory": "mirror",
+    "room_types": [
+      "closet"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.998,
+      "depth": 0.034,
+      "height": 1.931
+    },
+    "surface": "wall",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 121,
+    "snap_mode": "mount_on_wall",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\decor\\wardrobe_mirror\\model.glb"
+  },
+  {
+    "id": "door_window/door_aarudhra",
+    "name": "door_aarudhra",
+    "category": "door_window",
+    "subcategory": "door",
+    "room_types": [
+      "any"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.012,
+      "depth": 0.384,
+      "height": 2.137
+    },
+    "surface": "wall",
+    "relations": [],
+    "needs_review": true,
+    "polycount": 54,
+    "snap_mode": "embed_in_wall",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\door_window\\door_aarudhra\\model.glb"
+  },
+  {
+    "id": "door_window/gate",
+    "name": "gate",
+    "category": "door_window",
+    "subcategory": "gate",
+    "room_types": [
+      "any"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 4.983,
+      "depth": 0.101,
+      "height": 1.655
+    },
+    "surface": "wall",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 11864,
+    "snap_mode": "embed_in_wall",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\door_window\\gate\\model.glb"
+  },
+  {
+    "id": "door_window/sliding_door",
+    "name": "sliding_door",
+    "category": "door_window",
+    "subcategory": "sliding_door",
+    "room_types": [
+      "any"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.023,
+      "depth": 1.633,
+      "height": 3.007
+    },
+    "surface": "wall",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 644,
+    "snap_mode": "embed_in_wall",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\door_window\\sliding_door\\model.glb"
+  },
+  {
+    "id": "door_window/sliding_window",
+    "name": "sliding_window",
+    "category": "door_window",
+    "subcategory": "sliding_window",
+    "room_types": [
+      "any"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.671,
+      "depth": 0.175,
+      "height": 1.064
+    },
+    "surface": "wall",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 10952,
+    "snap_mode": "embed_in_wall",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\door_window\\sliding_window\\model.glb"
+  },
+  {
+    "id": "door_window/wardrobe_door",
+    "name": "wardrobe_door",
+    "category": "door_window",
+    "subcategory": "wardrobe_door",
+    "room_types": [
+      "closet"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.009,
+      "depth": 0.31,
+      "height": 2.439
+    },
+    "surface": "wall",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 2036,
+    "snap_mode": "embed_in_wall",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\door_window\\wardrobe_door\\model.glb"
+  },
+  {
+    "id": "door_window/window",
+    "name": "window",
+    "category": "door_window",
+    "subcategory": "window",
+    "room_types": [
+      "any"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.076,
+      "depth": 1.546,
+      "height": 1.793
+    },
+    "surface": "wall",
+    "relations": [],
+    "needs_review": true,
+    "polycount": 908,
+    "snap_mode": "embed_in_wall",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\door_window\\window\\model.glb"
+  },
+  {
+    "id": "electronics/bluetooth_soundbar_sony",
+    "name": "bluetooth_soundbar_sony",
+    "category": "electronics",
+    "subcategory": "speaker",
+    "room_types": [
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.901,
+      "depth": 0.202,
+      "height": 0.064
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "tv_cabinet"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 138515,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\electronics\\bluetooth_soundbar_sony\\model.glb"
+  },
+  {
+    "id": "electronics/simple_wall_tv",
+    "name": "simple_wall_tv",
+    "category": "electronics",
+    "subcategory": "television",
+    "room_types": [
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.876,
+      "depth": 0.06,
+      "height": 1.11
+    },
+    "surface": "wall",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "tv_cabinet"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 319,
+    "snap_mode": "mount_on_wall",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\electronics\\simple_wall_tv\\model.glb"
+  },
+  {
+    "id": "furniture_other/unidentified_furniture_piece",
+    "name": "unidentified_furniture_piece",
+    "category": "furniture_other",
+    "subcategory": "unknown",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.451,
+      "depth": 1.738,
+      "height": 0.367
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": true,
+    "polycount": 102438,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\furniture_other\\unidentified_furniture_piece\\model.glb"
+  },
+  {
+    "id": "lighting/astral_agnes_12_lights_chandelier",
+    "name": "astral_agnes_12_lights_chandelier",
+    "category": "lighting",
+    "subcategory": "chandelier",
+    "room_types": [
+      "living_room",
+      "dining_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.789,
+      "depth": 0.789,
+      "height": 0.582
+    },
+    "surface": "ceiling",
+    "relations": [],
+    "needs_review": true,
+    "polycount": 1392,
+    "snap_mode": "mount_on_ceiling",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\lighting\\astral_agnes_12_lights_chandelier\\model.glb"
+  },
+  {
+    "id": "lighting/floor_lamp",
+    "name": "floor_lamp",
+    "category": "lighting",
+    "subcategory": "floor_lamp",
+    "room_types": [
+      "living_room",
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.513,
+      "depth": 0.485,
+      "height": 1.988
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 2240,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\lighting\\floor_lamp\\model.glb"
+  },
+  {
+    "id": "lighting/square_ceiling_lamp",
+    "name": "square_ceiling_lamp",
+    "category": "lighting",
+    "subcategory": "ceiling_lamp",
+    "room_types": [
+      "any"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.208,
+      "depth": 0.62,
+      "height": 0.028
+    },
+    "surface": "ceiling",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 774,
+    "snap_mode": "mount_on_ceiling",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\lighting\\square_ceiling_lamp\\model.glb"
+  },
+  {
+    "id": "lighting/stella_spot_light",
+    "name": "stella_spot_light",
+    "category": "lighting",
+    "subcategory": "spot_light",
+    "room_types": [
+      "any"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 3.9,
+      "depth": 4.248,
+      "height": 0.051
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 38160,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\lighting\\stella_spot_light\\model.glb"
+  },
+  {
+    "id": "lighting/wall_lamp",
+    "name": "wall_lamp",
+    "category": "lighting",
+    "subcategory": "wall_lamp",
+    "room_types": [
+      "living_room",
+      "bedroom",
+      "hallway"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.2,
+      "depth": 0.068,
+      "height": 0.2
+    },
+    "surface": "wall",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 14270,
+    "snap_mode": "mount_on_wall",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\lighting\\wall_lamp\\model.glb"
+  },
+  {
+    "id": "rug/carpet_square",
+    "name": "carpet_square",
+    "category": "rug",
+    "subcategory": "carpet",
+    "room_types": [
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 3.397,
+      "depth": 3.304,
+      "height": 0.039
+    },
+    "surface": "floor",
+    "relations": [
+      {
+        "relation": "faces",
+        "target": "sofa"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 76386,
+    "snap_mode": "flat_on_floor",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\rug\\carpet_square\\model.glb"
+  },
+  {
+    "id": "sanitary/shower_faucet",
+    "name": "shower_faucet",
+    "category": "sanitary",
+    "subcategory": "faucet",
+    "room_types": [
+      "bathroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.735,
+      "depth": 3.678,
+      "height": 5.355
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 545836,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\sanitary\\shower_faucet\\model.glb"
+  },
+  {
+    "id": "sanitary/wall_hung_toilet",
+    "name": "wall_hung_toilet",
+    "category": "sanitary",
+    "subcategory": "toilet",
+    "room_types": [
+      "bathroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.604,
+      "depth": 0.23,
+      "height": 0.514
+    },
+    "surface": "wall",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 7103,
+    "snap_mode": "mount_on_wall",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\sanitary\\wall_hung_toilet\\model.glb"
+  },
+  {
+    "id": "seating/seat",
+    "name": "seat",
+    "category": "seating",
+    "subcategory": "stool",
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.359,
+      "depth": 0.459,
+      "height": 0.047
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 56752,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\seating\\seat\\model.glb"
+  },
+  {
+    "id": "seating/sofa",
+    "name": "sofa",
+    "category": "seating",
+    "subcategory": "sofa",
+    "room_types": [
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 3.345,
+      "depth": 3.797,
+      "height": 4.181
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 323668,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\seating\\sofa\\model.glb"
+  },
+  {
+    "id": "seating/stool",
+    "name": "stool",
+    "category": "seating",
+    "subcategory": "stool",
+    "room_types": [
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.415,
+      "depth": 1.809,
+      "height": 0.114
+    },
+    "surface": "floor",
+    "relations": [
+      {
+        "relation": "faces",
+        "target": "dressing_table"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 241511,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\seating\\stool\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/almofada_pontilhado_bege_pillow",
+    "name": "almofada_pontilhado_bege_pillow",
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "room_types": [
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.489,
+      "depth": 0.354,
+      "height": 0.404
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "sofa"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 118942,
+    "snap_mode": "rest_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\almofada_pontilhado_bege_pillow\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/bed_cover_01",
+    "name": "bed_cover_01",
+    "category": "soft_furnishing",
+    "subcategory": "bed_cover",
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.706,
+      "depth": 0.801,
+      "height": 0.468
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "bed_frame_01"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 109261,
+    "snap_mode": "drape_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\bed_cover_01\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/bedding_03",
+    "name": "bedding_03",
+    "category": "soft_furnishing",
+    "subcategory": "bedding",
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.758,
+      "depth": 1.773,
+      "height": 0.461
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "bed_frame_03"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 367374,
+    "snap_mode": "drape_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\bedding_03\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/bedsheet_01",
+    "name": "bedsheet_01",
+    "category": "soft_furnishing",
+    "subcategory": "bedsheet",
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.436,
+      "depth": 0.823,
+      "height": 0.281
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "bed_frame_01"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 8330,
+    "snap_mode": "drape_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\bedsheet_01\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/bedsheet_02",
+    "name": "bedsheet_02",
+    "category": "soft_furnishing",
+    "subcategory": "bedsheet",
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.722,
+      "depth": 1.936,
+      "height": 0.349
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "bed_frame_02"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 59199,
+    "snap_mode": "drape_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\bedsheet_02\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/beehive_pillow",
+    "name": "beehive_pillow",
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "room_types": [
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.502,
+      "depth": 0.608,
+      "height": 0.295
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "sofa"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 69840,
+    "snap_mode": "rest_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\beehive_pillow\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/blanket_01",
+    "name": "blanket_01",
+    "category": "soft_furnishing",
+    "subcategory": "blanket",
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.762,
+      "depth": 0.821,
+      "height": 0.427
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "bed_frame_01"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 63222,
+    "snap_mode": "drape_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\blanket_01\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/blanket_02",
+    "name": "blanket_02",
+    "category": "soft_furnishing",
+    "subcategory": "blanket",
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 2.245,
+      "depth": 1.539,
+      "height": 0.636
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "bed_frame_02"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 264580,
+    "snap_mode": "drape_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\blanket_02\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/circular_leather_pillow",
+    "name": "circular_leather_pillow",
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "room_types": [
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.372,
+      "depth": 0.2,
+      "height": 0.356
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "sofa"
+      }
+    ],
+    "needs_review": true,
+    "polycount": 58662,
+    "snap_mode": "rest_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\circular_leather_pillow\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/patterned_pillow_01",
+    "name": "patterned_pillow_01",
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "room_types": [
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.403,
+      "depth": 0.422,
+      "height": 0.355
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "sofa"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 4304,
+    "snap_mode": "rest_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\patterned_pillow_01\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/pillow_02_a",
+    "name": "pillow_02_a",
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.79,
+      "depth": 0.362,
+      "height": 0.437
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "bed_frame_02"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 13998,
+    "snap_mode": "rest_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\pillow_02_a\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/pillow_02_b",
+    "name": "pillow_02_b",
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.764,
+      "depth": 0.387,
+      "height": 0.402
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "bed_frame_02"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 13957,
+    "snap_mode": "rest_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\pillow_02_b\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/pillow_02_c",
+    "name": "pillow_02_c",
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.884,
+      "depth": 0.774,
+      "height": 0.389
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "bed_frame_02"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 14106,
+    "snap_mode": "rest_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\pillow_02_c\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/pillow_set_01",
+    "name": "pillow_set_01",
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.366,
+      "depth": 0.637,
+      "height": 0.296
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "bed_frame_01"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 66076,
+    "snap_mode": "rest_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\pillow_set_01\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/rectangle_pillow",
+    "name": "rectangle_pillow",
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.029,
+      "depth": 0.016,
+      "height": 0.042
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "coffee_table"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 72,
+    "snap_mode": "rest_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\rectangle_pillow\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/sofa_pillow",
+    "name": "sofa_pillow",
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "room_types": [
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.435,
+      "depth": 0.39,
+      "height": 0.416
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "sofa"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 8307,
+    "snap_mode": "rest_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\sofa_pillow\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/sofa_pillow_alt",
+    "name": "sofa_pillow_alt",
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "room_types": [
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.456,
+      "depth": 0.435,
+      "height": 0.481
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "sofa"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 22428,
+    "snap_mode": "rest_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\sofa_pillow_alt\\model.glb"
+  },
+  {
+    "id": "soft_furnishing/throw_pillow_01",
+    "name": "throw_pillow_01",
+    "category": "soft_furnishing",
+    "subcategory": "pillow",
+    "room_types": [
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.489,
+      "depth": 0.53,
+      "height": 0.428
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "rests_on",
+        "target": "sofa"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 2313,
+    "snap_mode": "rest_on_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\soft_furnishing\\throw_pillow_01\\model.glb"
+  },
+  {
+    "id": "storage/clothes_hanger",
+    "name": "clothes_hanger",
+    "category": "storage",
+    "subcategory": "hanger",
+    "room_types": [
+      "closet"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.299,
+      "depth": 0.043,
+      "height": 0.124
+    },
+    "surface": "surface",
+    "relations": [
+      {
+        "relation": "hangs_in",
+        "target": "wardrobe_door"
+      }
+    ],
+    "needs_review": true,
+    "polycount": 8416,
+    "snap_mode": "hang_from_rod",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\storage\\clothes_hanger\\model.glb"
+  },
+  {
+    "id": "storage/dressing_table",
+    "name": "dressing_table",
+    "category": "storage",
+    "subcategory": "dressing_table",
+    "room_types": [
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.402,
+      "depth": 1.794,
+      "height": 0.364
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 904,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\storage\\dressing_table\\model.glb"
+  },
+  {
+    "id": "storage/modern_wood_shelf",
+    "name": "modern_wood_shelf",
+    "category": "storage",
+    "subcategory": "shelf",
+    "room_types": [
+      "bedroom",
+      "living_room",
+      "closet"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 3.474,
+      "depth": 1.233,
+      "height": 2.815
+    },
+    "surface": "wall",
+    "relations": [
+      {
+        "relation": "mounted_above",
+        "target": "tv_cabinet"
+      }
+    ],
+    "needs_review": false,
+    "polycount": 201306,
+    "snap_mode": "mount_on_wall",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\storage\\modern_wood_shelf\\model.glb"
+  },
+  {
+    "id": "storage/storage_box",
+    "name": "storage_box",
+    "category": "storage",
+    "subcategory": "box",
+    "room_types": [
+      "closet"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.671,
+      "depth": 0.628,
+      "height": 0.15
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 11176,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\storage\\storage_box\\model.glb"
+  },
+  {
+    "id": "storage/tv_cabinet",
+    "name": "tv_cabinet",
+    "category": "storage",
+    "subcategory": "tv_cabinet",
+    "room_types": [
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 4.758,
+      "depth": 0.641,
+      "height": 3.0
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 121443,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\storage\\tv_cabinet\\model.glb"
+  },
+  {
+    "id": "storage/tv_stand",
+    "name": "tv_stand",
+    "category": "storage",
+    "subcategory": "tv_stand",
+    "room_types": [
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 1.807,
+      "depth": 0.337,
+      "height": 0.465
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": true,
+    "polycount": 15769,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\storage\\tv_stand\\model.glb"
+  },
+  {
+    "id": "storage/wardrobe",
+    "name": "wardrobe",
+    "category": "storage",
+    "subcategory": "wardrobe",
+    "room_types": [
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.019,
+      "depth": 1.076,
+      "height": 0.025
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": true,
+    "polycount": 210,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\storage\\wardrobe\\model.glb"
+  },
+  {
+    "id": "table/coffee_table",
+    "name": "coffee_table",
+    "category": "table",
+    "subcategory": "coffee_table",
+    "room_types": [
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 2.444,
+      "depth": 1.065,
+      "height": 0.471
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 23699,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\table\\coffee_table\\model.glb"
+  },
+  {
+    "id": "table/modern_bedside_table",
+    "name": "modern_bedside_table",
+    "category": "table",
+    "subcategory": "bedside_table",
+    "room_types": [
+      "bedroom"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.53,
+      "depth": 0.675,
+      "height": 0.545
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 16404,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\table\\modern_bedside_table\\model.glb"
+  },
+  {
+    "id": "table/table_taytum",
+    "name": "table_taytum",
+    "category": "table",
+    "subcategory": "side_table",
+    "room_types": [
+      "bedroom",
+      "living_room"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.8,
+      "depth": 0.4,
+      "height": 0.75
+    },
+    "surface": "floor",
+    "relations": [],
+    "needs_review": true,
+    "polycount": 1654,
+    "snap_mode": "bottom_to_surface",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\table\\table_taytum\\model.glb"
+  },
+  {
+    "id": "window_treatment/curtain",
+    "name": "curtain",
+    "category": "window_treatment",
+    "subcategory": "curtain",
+    "room_types": [
+      "any"
+    ],
+    "style_tags": [
+      "contemporary"
+    ],
+    "dimensions_m": {
+      "width": 0.169,
+      "depth": 4.125,
+      "height": 3.123
+    },
+    "surface": "wall",
+    "relations": [],
+    "needs_review": false,
+    "polycount": 189728,
+    "snap_mode": "hang_from_track",
+    "orientation_confidence": 0.3,
+    "forward_axis": "+Y",
+    "model_path": "C:\\Users\\admin\\Desktop\\Agent-Blend\\Agent-Blend\\asset_library\\window_treatment\\curtain\\model.glb"
+  }
+]

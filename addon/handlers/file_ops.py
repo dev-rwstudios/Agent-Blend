@@ -187,15 +187,103 @@ def handle_open_file(params: dict) -> dict:
 def handle_save_checkpoint(params: dict) -> dict:
     """Write a copy of the current scene to `filepath` without changing the
     file Blender has open — the chat app's per-turn undo snapshots."""
+    import tempfile
+    import time
+    name = params.get("name", "checkpoint")
     filepath = params.get("filepath", "")
-    if not filepath.endswith(".blend"):
-        raise ValueError("Checkpoint path must end in .blend")
+    if not filepath:
+        clean_name = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in name)
+        filepath = os.path.join(tempfile.gettempdir(), f"blend_ai_cp_{clean_name}_{int(time.time())}.blend")
+    elif not filepath.endswith(".blend"):
+        filepath = f"{filepath}.blend"
+
     try:
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         bpy.ops.wm.save_as_mainfile(filepath=filepath, copy=True, compress=True)
-        return {"filepath": filepath, "success": True, "source_filepath": bpy.data.filepath}
+        return {"filepath": filepath, "name": name, "success": True, "source_filepath": bpy.data.filepath}
     except Exception as e:
         raise RuntimeError(f"Failed to save checkpoint: {e}")
+
+
+def handle_import_asset(params: dict) -> dict:
+    """Import an asset model (.glb) and snap/position in the scene."""
+    filepath = params.get("model_path") or params.get("filepath")
+    asset_id = params.get("asset_id", "")
+    name = params.get("name", "")
+    location = params.get("location", [0.0, 0.0, 0.0])
+    snap_to_floor = params.get("snap_to_floor", True)
+
+    if not filepath and asset_id:
+        parts = asset_id.split("/")
+        candidates = [
+            os.path.join(r"C:\Users\admin\Desktop\Agent-Blend\Agent-Blend\asset_library", *parts, "model.glb"),
+            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "asset_library", *parts, "model.glb"),
+        ]
+        for c in candidates:
+            if os.path.exists(c):
+                filepath = c
+                break
+
+    if not filepath or not os.path.exists(filepath):
+        raise ValueError(f"Asset model file not found for asset_id '{asset_id}' or path '{filepath}'")
+
+    bpy.context.preferences.filepaths.use_scripts_auto_execute = False
+    objects_before = set(bpy.data.objects.keys())
+
+    res = bpy.ops.import_scene.gltf(filepath=filepath)
+    if res != {'FINISHED'}:
+        raise RuntimeError(f"GLTF import did not finish successfully: {res}")
+
+    objects_after = set(bpy.data.objects.keys())
+    new_objs = [bpy.data.objects[n] for n in (objects_after - objects_before) if n in bpy.data.objects]
+
+    if not new_objs:
+        raise RuntimeError(f"Import of '{filepath}' produced no objects")
+
+    bpy.context.view_layer.update()
+
+    all_verts = []
+    for obj in new_objs:
+        if obj.type == 'MESH' and obj.data:
+            all_verts.extend([obj.matrix_world @ v.co for v in obj.data.vertices])
+
+    if all_verts:
+        min_x = min(v.x for v in all_verts)
+        max_x = max(v.x for v in all_verts)
+        min_y = min(v.y for v in all_verts)
+        max_y = max(v.y for v in all_verts)
+        min_z = min(v.z for v in all_verts)
+        center_x = (min_x + max_x) / 2.0
+        center_y = (min_y + max_y) / 2.0
+
+        target_x = float(location[0]) if len(location) > 0 else 0.0
+        target_y = float(location[1]) if len(location) > 1 else 0.0
+        target_z = float(location[2]) if len(location) > 2 else 0.0
+
+        dx = target_x - center_x
+        dy = target_y - center_y
+        dz = (target_z - min_z) if snap_to_floor else target_z
+
+        for obj in new_objs:
+            if obj.parent is None or obj.parent not in new_objs:
+                obj.location.x += dx
+                obj.location.y += dy
+                obj.location.z += dz
+
+        bpy.context.view_layer.update()
+
+    root_name = new_objs[0].name
+    if name and name != root_name:
+        new_objs[0].name = name
+        root_name = name
+
+    return {
+        "success": True,
+        "asset_id": asset_id,
+        "name": root_name,
+        "imported_objects": [o.name for o in new_objs],
+        "location": [float(location[0]), float(location[1]), float(location[2])] if len(location) >= 3 else [0, 0, 0],
+    }
 
 
 def handle_list_recent_files(params: dict) -> list:
@@ -212,8 +300,10 @@ def handle_list_recent_files(params: dict) -> list:
 def register():
     """Register file operations handlers with the dispatcher."""
     dispatcher.register_handler("import_file", handle_import_file)
+    dispatcher.register_handler("import_asset", handle_import_asset)
     dispatcher.register_handler("export_file", handle_export_file)
     dispatcher.register_handler("save_file", handle_save_file)
     dispatcher.register_handler("open_file", handle_open_file)
     dispatcher.register_handler("list_recent_files", handle_list_recent_files)
     dispatcher.register_handler("save_checkpoint", handle_save_checkpoint)
+

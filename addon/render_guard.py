@@ -22,15 +22,15 @@ class RenderGuard:
     def is_rendering(self) -> bool:
         return self._rendering.is_set()
 
-    def on_render_pre(self, scene) -> None:
+    def on_render_pre(self, *args, **kwargs) -> None:
         """Called by bpy.app.handlers.render_pre."""
         self._rendering.set()
 
-    def on_render_complete(self, scene) -> None:
+    def on_render_complete(self, *args, **kwargs) -> None:
         """Called by bpy.app.handlers.render_complete."""
         self._rendering.clear()
 
-    def on_render_cancel(self, scene) -> None:
+    def on_render_cancel(self, *args, **kwargs) -> None:
         """Called by bpy.app.handlers.render_cancel."""
         self._rendering.clear()
 
