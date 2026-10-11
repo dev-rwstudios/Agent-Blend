@@ -38,6 +38,7 @@ chat = [
     "google-genai>=1.0",
     "anthropic>=1.0",
     "sqlalchemy>=2.0",
+    "greenlet>=3.0",
     "aiosqlite>=0.20",
 ]
 dev = [

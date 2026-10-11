@@ -99,3 +99,4 @@ def handle_execute_code(params: dict) -> dict:
 def register():
     """Register code execution handler with the dispatcher."""
     dispatcher.register_handler("execute_code", handle_execute_code)
+    dispatcher.register_handler("execute_blender_code", handle_execute_code)

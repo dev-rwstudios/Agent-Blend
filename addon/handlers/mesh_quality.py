@@ -19,7 +19,7 @@ def handle_analyze_mesh_quality(params: dict) -> dict:
         Dict with vertex/edge/face counts, defect counts and sample indices,
         and an issues_found boolean.
     """
-    object_name = params.get("object_name", "")
+    object_name = params.get("object_name") or params.get("name") or ""
     obj = bpy.data.objects.get(object_name)
     if obj is None:
         raise ValueError(f"Object '{object_name}' not found")

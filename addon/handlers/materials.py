@@ -121,7 +121,8 @@ def handle_create_principled_material(params: dict) -> dict:
 
         bsdf = _get_principled_bsdf(mat)
 
-        bsdf.inputs["Base Color"].default_value = tuple(params.get("color", [0.8, 0.8, 0.8, 1.0]))
+        raw_color = params.get("color") or params.get("base_color") or [0.8, 0.8, 0.8, 1.0]
+        bsdf.inputs["Base Color"].default_value = tuple(raw_color)
         bsdf.inputs["Metallic"].default_value = params.get("metallic", 0.0)
         bsdf.inputs["Roughness"].default_value = params.get("roughness", 0.5)
         bsdf.inputs["Specular IOR Level"].default_value = params.get("specular", 0.5)
@@ -134,7 +135,7 @@ def handle_create_principled_material(params: dict) -> dict:
         return {
             "name": mat.name,
             "created": True,
-            "color": params.get("color", [0.8, 0.8, 0.8, 1.0]),
+            "color": raw_color,
             "metallic": params.get("metallic", 0.0),
             "roughness": params.get("roughness", 0.5),
         }

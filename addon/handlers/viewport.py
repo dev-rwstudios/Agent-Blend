@@ -87,7 +87,7 @@ def handle_set_viewport_overlay(params: dict) -> dict:
 
 def handle_focus_on_object(params: dict) -> dict:
     """Focus the viewport on a specific object."""
-    object_name = params.get("object_name")
+    object_name = params.get("object_name") or params.get("name")
 
     try:
         obj = bpy.data.objects.get(object_name)
