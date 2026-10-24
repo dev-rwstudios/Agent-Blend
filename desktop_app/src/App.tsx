@@ -24,12 +24,12 @@ const DEFAULT_SETTINGS: AppSettings = {
   blenderPort: 9876,
   assetsPath: '',
   autoRefreshViewport: true,
-  executionMode: 'autonomous', // Autonomous production flow by default
+  executionMode: 'autonomous',
   toolset: 'full',
-  provider: 'builtin', // Default to built-in 3D engine so it works immediately out of the box!
-  model: '3d-director-v1',
+  provider: 'ollama',
+  model: 'llama3.1',
   apiKey: '',
-  apiBaseUrl: '',
+  apiBaseUrl: 'http://localhost:11434',
   temperature: 0.7,
 };
 
@@ -42,6 +42,11 @@ export const App: React.FC = () => {
       if (!parsed.executionMode) {
         parsed.executionMode = 'autonomous';
       }
+      if (parsed.provider === 'builtin') {
+        parsed.provider = 'ollama';
+        parsed.model = 'llama3.1';
+        parsed.apiBaseUrl = 'http://localhost:11434';
+      }
       return { ...DEFAULT_SETTINGS, ...parsed };
     } catch {
       return DEFAULT_SETTINGS;
@@ -50,8 +55,8 @@ export const App: React.FC = () => {
 
   const [blenderConnected, setBlenderConnected] = useState(false);
   const [modelStatus, setModelStatus] = useState<{ ok: boolean; message: string }>({
-    ok: true,
-    message: 'Built-in 3D Engine',
+    ok: false,
+    message: 'Checking Model...',
   });
   const [sceneInfo, setSceneInfo] = useState<SceneInfo | null>(null);
   const [isStudioOpen, setIsStudioOpen] = useState(true);
@@ -134,34 +139,8 @@ export const App: React.FC = () => {
   const handleSendMessage = async (text: string, mode: 'build' | 'plan' | 'ask') => {
     if (!text.trim() || isGenerating) return;
 
-    // Fast 1-click recovery actions
+    // 1-Click quick actions
     const lower = text.toLowerCase();
-    if (lower.includes('switch to built-in') || lower.includes('switch to builtin')) {
-      const updated: AppSettings = { ...settings, provider: 'builtin', model: '3d-director-v1' };
-      setSettings(updated);
-      localStorage.setItem('agent_blend_settings', JSON.stringify(updated));
-      setModelStatus({ ok: true, message: 'Built-in 3D Engine' });
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Math.random().toString(36).substring(7),
-          role: 'user',
-          content: text,
-          timestamp: Date.now(),
-          mode,
-        },
-        {
-          id: Math.random().toString(36).substring(7),
-          role: 'assistant',
-          content: `⚡ Switched to **Built-in 3D Engine**. You can now create objects, setup lights, and apply materials instantly without needing external model servers or API keys!`,
-          timestamp: Date.now(),
-          mode,
-          suggestions: ['Furnish a modern living room', 'Set up 3-point lighting', 'Create gold sphere'],
-        },
-      ]);
-      return;
-    }
-
     if (lower.includes('open settings')) {
       setIsSettingsOpen(true);
       return;

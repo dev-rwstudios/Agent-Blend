@@ -29,7 +29,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   if (!isOpen) return null;
 
   const providers: { id: LLMProvider; name: string; defaultModel: string; defaultUrl: string }[] = [
-    { id: 'builtin', name: '⚡ Built-in 3D Engine (Offline / Instant)', defaultModel: '3d-director-v1', defaultUrl: '' },
     { id: 'ollama', name: 'Ollama (Local)', defaultModel: 'llama3.1', defaultUrl: 'http://localhost:11434' },
     { id: 'lmstudio', name: 'LM Studio (Local)', defaultModel: 'qwen2.5-coder', defaultUrl: 'http://localhost:1234/v1' },
     { id: 'openai', name: 'OpenAI', defaultModel: 'gpt-4o', defaultUrl: 'https://api.openai.com/v1' },
@@ -216,73 +215,57 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </select>
           </div>
 
-          {/* Provider Specific Settings */}
-          {formData.provider === 'builtin' ? (
-            <div style={{
-              backgroundColor: 'var(--bg-secondary)',
-              border: '1px solid var(--border-subtle)',
-              padding: '8px 10px',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '11px',
-              color: 'var(--text-secondary)',
-            }}>
-              ⚡ The built-in 3D engine operates fully offline with instant response times, standard architectural proportions, and zero external dependencies.
+          {/* Model Name */}
+          <div>
+            <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+              Model Identifier
+            </label>
+            <input
+              type="text"
+              value={formData.model}
+              onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+              placeholder="e.g. gpt-4o, llama3.1, claude-3-5-sonnet..."
+              style={{
+                width: '100%',
+                padding: '6px 10px',
+              }}
+            />
+          </div>
+
+          {/* API Key */}
+          {formData.provider !== 'ollama' && formData.provider !== 'lmstudio' && (
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                API Key
+              </label>
+              <input
+                type="password"
+                value={formData.apiKey}
+                onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+                placeholder="sk-..."
+                style={{
+                  width: '100%',
+                  padding: '6px 10px',
+                }}
+              />
             </div>
-          ) : (
-            <>
-              {/* Model Name */}
-              <div>
-                <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                  Model Identifier
-                </label>
-                <input
-                  type="text"
-                  value={formData.model}
-                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                  placeholder="e.g. gpt-4o, llama3.1, claude-3-5-sonnet..."
-                  style={{
-                    width: '100%',
-                    padding: '6px 10px',
-                  }}
-                />
-              </div>
-
-              {/* API Key */}
-              {formData.provider !== 'ollama' && formData.provider !== 'lmstudio' && (
-                <div>
-                  <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                    API Key
-                  </label>
-                  <input
-                    type="password"
-                    value={formData.apiKey}
-                    onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-                    placeholder="sk-..."
-                    style={{
-                      width: '100%',
-                      padding: '6px 10px',
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Base URL */}
-              <div>
-                <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                  API Base URL
-                </label>
-                <input
-                  type="text"
-                  value={formData.apiBaseUrl}
-                  onChange={(e) => setFormData({ ...formData, apiBaseUrl: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '6px 10px',
-                  }}
-                />
-              </div>
-            </>
           )}
+
+          {/* Base URL */}
+          <div>
+            <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+              API Base URL
+            </label>
+            <input
+              type="text"
+              value={formData.apiBaseUrl}
+              onChange={(e) => setFormData({ ...formData, apiBaseUrl: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '6px 10px',
+              }}
+            />
+          </div>
 
           <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)' }} />
 

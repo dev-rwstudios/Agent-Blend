@@ -53,7 +53,6 @@ export interface ChatMessage {
 }
 
 export type LLMProvider = 
-  | 'builtin'
   | 'ollama' 
   | 'lmstudio' 
   | 'openai' 
