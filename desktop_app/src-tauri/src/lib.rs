@@ -103,12 +103,67 @@ fn blender_check_connection(host: Option<String>, port: Option<u16>) -> bool {
     }
 }
 
+/// Helper to find Blender executable across common installation paths
+fn find_blender_binary() -> Option<String> {
+    if let Ok(path) = std::env::var("BLENDER_PATH") {
+        if !path.is_empty() && std::path::Path::new(&path).exists() {
+            return Some(path);
+        }
+    }
+    if let Ok(path) = std::env::var("BLENDER_EXE") {
+        if !path.is_empty() && std::path::Path::new(&path).exists() {
+            return Some(path);
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let candidates = [
+            r"C:\Program Files\Blender Foundation\Blender 5.1\blender.exe",
+            r"C:\Program Files\Blender Foundation\Blender 5.0\blender.exe",
+            r"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe",
+            r"C:\Program Files\Blender Foundation\Blender 4.2\blender.exe",
+        ];
+        for c in candidates {
+            if std::path::Path::new(c).exists() {
+                return Some(c.to_string());
+            }
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        let mac_path = "/Applications/Blender.app/Contents/MacOS/Blender";
+        if std::path::Path::new(mac_path).exists() {
+            return Some(mac_path.to_string());
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        let linux_path = "/usr/bin/blender";
+        if std::path::Path::new(linux_path).exists() {
+            return Some(linux_path.to_string());
+        }
+    }
+
+    None
+}
+
 /// Launch Blender with auto-start script if not already running.
 #[tauri::command]
 fn blender_launch(blender_path: Option<String>, script_path: Option<String>) -> Result<String, String> {
-    let path = blender_path.unwrap_or_else(|| {
-        r"C:\Program Files\Blender Foundation\Blender 5.1\blender.exe".to_string()
-    });
+    let path = blender_path
+        .filter(|p| !p.trim().is_empty())
+        .or_else(find_blender_binary)
+        .unwrap_or_else(|| {
+            #[cfg(target_os = "windows")]
+            { r"C:\Program Files\Blender Foundation\Blender 5.1\blender.exe".to_string() }
+            #[cfg(target_os = "macos")]
+            { "/Applications/Blender.app/Contents/MacOS/Blender".to_string() }
+            #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+            { "blender".to_string() }
+        });
 
     let mut cmd = Command::new(&path);
     if let Some(s) = script_path {
