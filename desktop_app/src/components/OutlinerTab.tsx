@@ -167,6 +167,11 @@ export const OutlinerTab: React.FC<OutlinerTabProps> = ({
                   <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
                     [{obj.type}]
                   </span>
+                  {obj.materials && obj.materials.length > 0 && (
+                    <span className="badge badge-zinc" style={{ fontSize: '9px', padding: '1px 4px', color: '#60a5fa' }}>
+                      {obj.materials[0]}
+                    </span>
+                  )}
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
@@ -215,7 +220,7 @@ export const OutlinerTab: React.FC<OutlinerTabProps> = ({
         }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
               {getObjectIcon(selectedObj.type)}
               <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
                 {selectedObj.name}
@@ -223,6 +228,11 @@ export const OutlinerTab: React.FC<OutlinerTabProps> = ({
               <span className="badge badge-zinc" style={{ fontSize: '9px', padding: '1px 4px' }}>
                 {selectedObj.type}
               </span>
+              {selectedObj.materials && selectedObj.materials.length > 0 && (
+                <span className="badge badge-zinc" style={{ fontSize: '9px', padding: '1px 4px', color: '#60a5fa' }}>
+                  {selectedObj.materials.join(', ')}
+                </span>
+              )}
             </div>
             <button
               onClick={() => setSelectedObj(null)}

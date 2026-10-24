@@ -8,6 +8,7 @@ export interface SceneObject {
   children: string[];
   visible: boolean;
   polycount?: number;
+  materials?: string[];
 }
 
 export interface SceneInfo {
@@ -67,7 +68,6 @@ export interface AppSettings {
   blenderHost: string;
   blenderPort: number;
   assetsPath: string;
-  autoRefreshViewport: boolean;
   executionMode: 'autonomous' | 'manual';
   requireApprovals?: boolean; // legacy compatibility fallback
   toolset: 'core' | 'full';

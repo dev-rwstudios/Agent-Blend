@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { 
   X, 
-  Camera, 
   Layers, 
   RefreshCw
 } from 'lucide-react';
-import { ViewportTab } from './ViewportTab';
 import { OutlinerTab } from './OutlinerTab';
 import { SceneInfo } from '../types';
+import { setViewportShading } from '../services/blender';
 
 interface StudioDrawerProps {
   isOpen: boolean;
@@ -28,9 +27,16 @@ export const StudioDrawer: React.FC<StudioDrawerProps> = ({
   sceneInfo,
   onRefreshScene,
 }) => {
-  const [activeTab, setActiveTab] = useState<'viewport' | 'outliner'>('viewport');
+  const [activeShading, setActiveShading] = useState<'SOLID' | 'MATERIAL' | 'RENDERED' | 'WIREFRAME'>('SOLID');
 
   if (!isOpen) return null;
+
+  const handleShadingChange = async (mode: 'SOLID' | 'MATERIAL' | 'RENDERED' | 'WIREFRAME') => {
+    setActiveShading(mode);
+    if (blenderConnected) {
+      await setViewportShading(mode, blenderHost, blenderPort);
+    }
+  };
 
   return (
     <aside style={{
@@ -43,7 +49,7 @@ export const StudioDrawer: React.FC<StudioDrawerProps> = ({
       flexShrink: 0,
       zIndex: 40,
     }}>
-      {/* Studio Header */}
+      {/* Studio Drawer Header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -52,63 +58,55 @@ export const StudioDrawer: React.FC<StudioDrawerProps> = ({
         borderBottom: '1px solid var(--border-subtle)',
         backgroundColor: 'var(--bg-primary)',
       }}>
-        {/* Segmented Switcher for Viewport & Outliner */}
-        <div style={{
-          display: 'flex',
-          backgroundColor: 'var(--bg-secondary)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 'var(--radius-sm)',
-          padding: '2px',
-          gap: '2px',
-        }}>
-          <button
-            onClick={() => setActiveTab('viewport')}
-            className="btn btn-sm"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              padding: '3px 9px',
-              fontSize: '11px',
-              fontWeight: activeTab === 'viewport' ? '600' : '400',
-              backgroundColor: activeTab === 'viewport' ? 'var(--bg-tertiary)' : 'transparent',
-              color: activeTab === 'viewport' ? 'var(--text-primary)' : 'var(--text-secondary)',
-              borderRadius: 'var(--radius-xs)',
-              border: activeTab === 'viewport' ? '1px solid var(--border-medium)' : '1px solid transparent',
-            }}
-          >
-            <Camera size={12} />
-            <span>Viewport</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('outliner')}
-            className="btn btn-sm"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              padding: '3px 9px',
-              fontSize: '11px',
-              fontWeight: activeTab === 'outliner' ? '600' : '400',
-              backgroundColor: activeTab === 'outliner' ? 'var(--bg-tertiary)' : 'transparent',
-              color: activeTab === 'outliner' ? 'var(--text-primary)' : 'var(--text-secondary)',
-              borderRadius: 'var(--radius-xs)',
-              border: activeTab === 'outliner' ? '1px solid var(--border-medium)' : '1px solid transparent',
-            }}
-          >
-            <Layers size={12} />
-            <span>Outliner {sceneInfo ? `(${sceneInfo.object_count})` : ''}</span>
-          </button>
+        {/* Title and Object Count */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+          <Layers size={14} color="var(--text-secondary)" />
+          <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
+            Scene Inspector
+          </span>
+          <span className="badge badge-zinc" style={{ fontSize: '10px', padding: '1px 5px' }}>
+            {sceneInfo?.object_count || 0} objects
+          </span>
         </div>
 
-        {/* Action Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+        {/* Real Blender Viewport Shading Switcher & Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {/* Shading mode segmented pill */}
+          <div style={{
+            display: 'flex',
+            backgroundColor: 'var(--bg-secondary)',
+            borderRadius: 'var(--radius-xs)',
+            padding: '2px',
+            border: '1px solid var(--border-subtle)',
+          }}>
+            {(['SOLID', 'MATERIAL', 'RENDERED', 'WIREFRAME'] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => handleShadingChange(m)}
+                title={`Set Blender 3D Viewport Shading to ${m}`}
+                className="btn btn-sm"
+                style={{
+                  fontSize: '9px',
+                  padding: '2px 5px',
+                  fontWeight: activeShading === m ? '600' : '400',
+                  backgroundColor: activeShading === m ? 'var(--bg-elevated)' : 'transparent',
+                  color: activeShading === m ? 'var(--text-primary)' : 'var(--text-muted)',
+                  border: activeShading === m ? '1px solid var(--border-medium)' : '1px solid transparent',
+                  borderRadius: 'var(--radius-xs)',
+                }}
+              >
+                {m === 'WIREFRAME' ? 'Wire' : m.charAt(0) + m.slice(1, 4).toLowerCase()}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--border-subtle)' }} />
+
           <button
             onClick={onRefreshScene}
             className="btn btn-ghost btn-sm"
-            style={{ padding: '4px', color: 'var(--text-muted)' }}
-            title="Refresh Scene"
+            style={{ padding: '3px', color: 'var(--text-muted)' }}
+            title="Refresh Scene Tree"
           >
             <RefreshCw size={12} />
           </button>
@@ -116,7 +114,7 @@ export const StudioDrawer: React.FC<StudioDrawerProps> = ({
           <button
             onClick={onClose}
             className="btn btn-ghost btn-sm"
-            style={{ padding: '4px', color: 'var(--text-muted)' }}
+            style={{ padding: '3px', color: 'var(--text-muted)' }}
             title="Hide Panel"
           >
             <X size={13} />
@@ -124,22 +122,14 @@ export const StudioDrawer: React.FC<StudioDrawerProps> = ({
         </div>
       </div>
 
-      {/* Tab Content Area */}
+      {/* Outliner Body */}
       <div style={{ flex: 1, overflow: 'hidden' }}>
-        {activeTab === 'viewport' ? (
-          <ViewportTab
-            blenderConnected={blenderConnected}
-            blenderHost={blenderHost}
-            blenderPort={blenderPort}
-          />
-        ) : (
-          <OutlinerTab
-            objects={sceneInfo?.objects || []}
-            onRefresh={onRefreshScene}
-            blenderHost={blenderHost}
-            blenderPort={blenderPort}
-          />
-        )}
+        <OutlinerTab
+          objects={sceneInfo?.objects || []}
+          onRefresh={onRefreshScene}
+          blenderHost={blenderHost}
+          blenderPort={blenderPort}
+        />
       </div>
     </aside>
   );

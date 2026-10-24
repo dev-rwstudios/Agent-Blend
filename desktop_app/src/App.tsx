@@ -23,7 +23,6 @@ const DEFAULT_SETTINGS: AppSettings = {
   blenderHost: '127.0.0.1',
   blenderPort: 9876,
   assetsPath: '',
-  autoRefreshViewport: true,
   executionMode: 'autonomous',
   toolset: 'full',
   provider: 'ollama',

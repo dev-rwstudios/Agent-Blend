@@ -45,10 +45,19 @@ def handle_get_scene_info(params: dict) -> dict:
         objects = []
         type_counts: dict[str, int] = {}
         for obj in bpy.data.objects:
+            materials = [m.name for m in obj.data.materials if m] if (obj.data and hasattr(obj.data, "materials")) else []
+            dimensions = list(obj.dimensions) if hasattr(obj, "dimensions") else [0.0, 0.0, 0.0]
+            rotation = list(obj.rotation_euler) if hasattr(obj, "rotation_euler") else [0.0, 0.0, 0.0]
+            polycount = len(obj.data.polygons) if (obj.type == "MESH" and obj.data and hasattr(obj.data, "polygons")) else 0
+
             obj_info = {
                 "name": obj.name,
                 "type": obj.type,
                 "location": list(obj.location),
+                "rotation": rotation,
+                "dimensions": dimensions,
+                "materials": materials,
+                "polycount": polycount,
                 "parent": obj.parent.name if obj.parent else None,
                 "children": [child.name for child in obj.children],
                 "visible": obj.visible_get(),
