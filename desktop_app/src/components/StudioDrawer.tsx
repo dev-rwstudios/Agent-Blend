@@ -6,7 +6,6 @@ import {
   Package, 
   Bookmark, 
   Activity,
-  Plus,
   RefreshCw
 } from 'lucide-react';
 import { ViewportTab } from './ViewportTab';
@@ -26,7 +25,6 @@ interface StudioDrawerProps {
   onRefreshScene: () => void;
   checkpoints: CheckpointItem[];
   onAddCheckpoint: (item: CheckpointItem) => void;
-  onAddPrimitive: (type: string) => void;
 }
 
 export const StudioDrawer: React.FC<StudioDrawerProps> = ({
@@ -39,16 +37,14 @@ export const StudioDrawer: React.FC<StudioDrawerProps> = ({
   onRefreshScene,
   checkpoints,
   onAddCheckpoint,
-  onAddPrimitive,
 }) => {
   const [activeTab, setActiveTab] = useState<'viewport' | 'outliner' | 'assets' | 'checkpoints' | 'diagnostics'>('viewport');
-  const [showAddMenu, setShowAddMenu] = useState(false);
 
   if (!isOpen) return null;
 
   return (
     <aside style={{
-      width: '500px',
+      width: '420px',
       height: '100%',
       backgroundColor: 'var(--bg-primary)',
       borderLeft: '1px solid var(--border-subtle)',
@@ -56,78 +52,33 @@ export const StudioDrawer: React.FC<StudioDrawerProps> = ({
       flexDirection: 'column',
       flexShrink: 0,
       zIndex: 40,
-      boxShadow: 'var(--shadow-lg)',
     }}>
       {/* Studio Header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '12px 16px',
+        padding: '10px 14px',
         borderBottom: '1px solid var(--border-subtle)',
+        backgroundColor: 'var(--bg-primary)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '13px', fontWeight: '700', color: '#f8fafc' }}>
-            3D Studio
+          <span style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>
+            Scene Inspector
           </span>
           {sceneInfo && (
-            <span className="badge badge-indigo" style={{ fontSize: '10px' }}>
+            <span className="badge badge-zinc" style={{ fontSize: '10px' }}>
               {sceneInfo.object_count} objects
             </span>
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {/* Quick Add Menu */}
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => setShowAddMenu(!showAddMenu)}
-              className="btn btn-secondary btn-sm"
-              style={{ padding: '3px 8px', fontSize: '11px' }}
-              title="Add Primitive"
-            >
-              <Plus size={12} /> Add
-            </button>
-
-            {showAddMenu && (
-              <div
-                className="glass-panel"
-                style={{
-                  position: 'absolute',
-                  top: '32px',
-                  right: 0,
-                  borderRadius: '10px',
-                  padding: '6px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '2px',
-                  minWidth: '130px',
-                  boxShadow: 'var(--shadow-lg)',
-                  zIndex: 100,
-                }}
-              >
-                {['CUBE', 'SPHERE', 'PLANE', 'LIGHT', 'CAMERA'].map((type) => (
-                  <button
-                    key={type}
-                    className="btn btn-ghost btn-sm"
-                    style={{ justifyContent: 'flex-start', fontSize: '11px' }}
-                    onClick={() => {
-                      onAddPrimitive(type);
-                      setShowAddMenu(false);
-                    }}
-                  >
-                    + {type.charAt(0) + type.slice(1).toLowerCase()}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <button
             onClick={onRefreshScene}
             className="btn btn-ghost btn-sm"
-            style={{ padding: '4px' }}
-            title="Refresh"
+            style={{ padding: '4px', color: 'var(--text-secondary)' }}
+            title="Refresh Scene State"
           >
             <RefreshCw size={13} />
           </button>
@@ -135,27 +86,26 @@ export const StudioDrawer: React.FC<StudioDrawerProps> = ({
           <button
             onClick={onClose}
             className="btn btn-ghost btn-sm"
-            style={{ padding: '4px' }}
-            title="Close Drawer"
+            style={{ padding: '4px', color: 'var(--text-secondary)' }}
+            title="Close Inspector"
           >
-            <X size={15} />
+            <X size={14} />
           </button>
         </div>
       </div>
 
-      {/* Tabs Bar */}
+      {/* Segmented Tabs Bar */}
       <div style={{
         display: 'flex',
         borderBottom: '1px solid var(--border-subtle)',
         backgroundColor: 'var(--bg-secondary)',
-        padding: '2px 8px 0 8px',
-        gap: '4px',
-        overflowX: 'auto',
+        padding: '3px 6px',
+        gap: '2px',
       }}>
         {[
           { id: 'viewport', label: 'Viewport', icon: Camera },
           { id: 'outliner', label: 'Outliner', icon: Layers },
-          { id: 'assets', label: 'Assets (88)', icon: Package },
+          { id: 'assets', label: 'Assets', icon: Package },
           { id: 'checkpoints', label: 'History', icon: Bookmark },
           { id: 'diagnostics', label: 'Console', icon: Activity },
         ].map((tab) => {
@@ -167,16 +117,18 @@ export const StudioDrawer: React.FC<StudioDrawerProps> = ({
               onClick={() => setActiveTab(tab.id as any)}
               className="btn btn-sm"
               style={{
+                flex: 1,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '5px',
-                padding: '6px 10px',
+                justifyContent: 'center',
+                gap: '4px',
+                padding: '5px 4px',
                 fontSize: '11px',
-                fontWeight: '600',
-                borderRadius: '6px 6px 0 0',
-                backgroundColor: isActive ? 'var(--bg-primary)' : 'transparent',
-                color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                borderBottom: isActive ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                fontWeight: isActive ? '600' : '500',
+                borderRadius: 'var(--radius-xs)',
+                backgroundColor: isActive ? 'var(--bg-tertiary)' : 'transparent',
+                color: isActive ? '#ffffff' : 'var(--text-muted)',
+                boxShadow: isActive ? 'var(--shadow-sm)' : 'none',
               }}
             >
               <Icon size={12} color={isActive ? '#818cf8' : 'currentColor'} />

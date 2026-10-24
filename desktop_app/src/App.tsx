@@ -14,7 +14,6 @@ import {
 import { 
   checkBlenderConnection, 
   getSceneInfo, 
-  addPrimitive, 
   executeBlenderCommand, 
   launchBlenderApp,
   saveSceneCheckpoint 
@@ -43,7 +42,7 @@ export const App: React.FC = () => {
 
   const [blenderConnected, setBlenderConnected] = useState(false);
   const [sceneInfo, setSceneInfo] = useState<SceneInfo | null>(null);
-  const [isStudioOpen, setIsStudioOpen] = useState(false);
+  const [isStudioOpen, setIsStudioOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -99,18 +98,19 @@ export const App: React.FC = () => {
         tool.status = 'completed';
         tool.result = res.result;
       } else {
-        tool.status = 'failed';
-        tool.error = res.message || 'Operation failed in Blender';
+        tool.status = 'rejected';
+        tool.error = res.message || 'Operation failed';
       }
-    } catch (e: any) {
-      tool.status = 'failed';
-      tool.error = e.message || String(e);
+    } catch (err: any) {
+      tool.status = 'rejected';
+      tool.error = err.message || String(err);
     }
     await refreshScene();
   };
 
-  // Handle user sending a prompt
   const handleSendMessage = async (text: string, mode: 'build' | 'plan' | 'ask') => {
+    if (!text.trim() || isGenerating) return;
+
     const userMsg: ChatMessage = {
       id: Math.random().toString(36).substring(7),
       role: 'user',
@@ -123,11 +123,6 @@ export const App: React.FC = () => {
     setIsGenerating(true);
 
     try {
-      // Automatic pre-action checkpoint in build mode
-      if (mode === 'build' && blenderConnected) {
-        saveSceneCheckpoint(`Pre_${text.substring(0, 15)}`, settings.blenderHost, settings.blenderPort).catch(() => {});
-      }
-
       const res = await sendChatMessage(
         text,
         mode,
@@ -159,58 +154,52 @@ export const App: React.FC = () => {
         {
           id: Math.random().toString(36).substring(7),
           role: 'assistant',
-          content: `Error processing request: ${err.message || String(err)}`,
+          content: `Error communicating with model: ${err.message || String(err)}`,
           timestamp: Date.now(),
+          mode,
         },
       ]);
     } finally {
       setIsGenerating(false);
+      // Auto-save checkpoint if modified scene
+      if (blenderConnected && mode === 'build') {
+        saveSceneCheckpoint(`Turn_${messages.length + 1}`, settings.blenderHost, settings.blenderPort).catch(() => {});
+      }
     }
   };
 
   const handleApproveTool = async (messageId: string, toolId: string) => {
-    setMessages((prev) =>
-      prev.map((msg) => {
-        if (msg.id !== messageId || !msg.toolCalls) return msg;
-        const target = msg.toolCalls.find((t) => t.id === toolId);
-        if (target) {
-          runToolExecution(target).then(() => setMessages((m) => [...m]));
-        }
-        return msg;
-      })
-    );
+    const msg = messages.find((m) => m.id === messageId);
+    if (!msg || !msg.toolCalls) return;
+
+    const tool = msg.toolCalls.find((t) => t.id === toolId);
+    if (!tool || tool.status !== 'pending') return;
+
+    await runToolExecution(tool);
+    setMessages((prev) => [...prev]);
   };
 
   const handleRejectTool = (messageId: string, toolId: string) => {
-    setMessages((prev) =>
-      prev.map((msg) => {
-        if (msg.id !== messageId || !msg.toolCalls) return msg;
-        return {
-          ...msg,
-          toolCalls: msg.toolCalls.map((tc) =>
-            tc.id === toolId ? { ...tc, status: 'rejected' } : tc
-          ),
-        };
-      })
-    );
+    const msg = messages.find((m) => m.id === messageId);
+    if (!msg || !msg.toolCalls) return;
+
+    const tool = msg.toolCalls.find((t) => t.id === toolId);
+    if (!tool) return;
+
+    tool.status = 'rejected';
+    setMessages((prev) => [...prev]);
   };
 
   const handleApproveAll = async (messageId: string) => {
     const msg = messages.find((m) => m.id === messageId);
     if (!msg || !msg.toolCalls) return;
 
-    for (const tc of msg.toolCalls) {
-      if (tc.status === 'pending') {
-        await runToolExecution(tc);
+    for (const tool of msg.toolCalls) {
+      if (tool.status === 'pending') {
+        await runToolExecution(tool);
       }
     }
     setMessages((prev) => [...prev]);
-  };
-
-  const handleAddPrimitive = async (type: string) => {
-    if (!blenderConnected) return;
-    await addPrimitive(type, undefined, [0, 0, 1.0], settings.blenderHost, settings.blenderPort);
-    await refreshScene();
   };
 
   const handleLaunchBlender = async () => {
@@ -232,7 +221,7 @@ export const App: React.FC = () => {
       backgroundColor: 'var(--bg-app)',
       overflow: 'hidden',
     }}>
-      {/* Clean Top Navigation Bar */}
+      {/* Studio Top Navigation Bar */}
       <Header
         blenderConnected={blenderConnected}
         onOpenSettings={() => setIsSettingsOpen(true)}
@@ -242,20 +231,21 @@ export const App: React.FC = () => {
         onToggleStudio={() => setIsStudioOpen(!isStudioOpen)}
       />
 
-      {/* Main Workspace: Prominent Centered Chat with Collapsible Studio Drawer */}
+      {/* Main Studio Workbench */}
       <main style={{
         display: 'flex',
         flex: 1,
         overflow: 'hidden',
         position: 'relative',
       }}>
-        {/* Prominent Chat Stage (Centers conversation, takes 100% or remaining flex space) */}
+        {/* Central Action Stage */}
         <div style={{
           flex: 1,
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          backgroundColor: 'var(--bg-app)',
         }}>
           <ChatPanel
             messages={messages}
@@ -269,7 +259,7 @@ export const App: React.FC = () => {
           />
         </div>
 
-        {/* Collapsible 3D Studio & Viewport Drawer */}
+        {/* Docked Scene Inspector */}
         <StudioDrawer
           isOpen={isStudioOpen}
           onClose={() => setIsStudioOpen(false)}
@@ -280,7 +270,6 @@ export const App: React.FC = () => {
           onRefreshScene={refreshScene}
           checkpoints={checkpoints}
           onAddCheckpoint={(cp) => setCheckpoints((prev) => [cp, ...prev])}
-          onAddPrimitive={handleAddPrimitive}
         />
       </main>
 
