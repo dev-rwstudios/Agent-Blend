@@ -7,26 +7,23 @@ import { SettingsModal } from './components/SettingsModal';
 import { 
   SceneInfo, 
   ChatMessage, 
-  CheckpointItem, 
   AppSettings, 
   ToolCall 
 } from './types';
 import { 
   checkBlenderConnection, 
   getSceneInfo, 
-  addPrimitive, 
   executeBlenderCommand, 
-  launchBlenderApp,
-  saveSceneCheckpoint 
+  launchBlenderApp 
 } from './services/blender';
-import { sendChatMessage } from './services/llm';
+import { sendChatMessage, checkModelHealth } from './services/llm';
 import assetCatalog from './assets/asset_catalog.json';
 
 const DEFAULT_SETTINGS: AppSettings = {
   blenderHost: '127.0.0.1',
   blenderPort: 9876,
-  autoRefreshViewport: true,
-  requireApprovals: true,
+  assetsPath: '',
+  executionMode: 'autonomous',
   toolset: 'full',
   provider: 'ollama',
   model: 'llama3.1',
@@ -38,19 +35,36 @@ const DEFAULT_SETTINGS: AppSettings = {
 export const App: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings>(() => {
     const saved = localStorage.getItem('agent_blend_settings');
-    return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    if (!saved) return DEFAULT_SETTINGS;
+    try {
+      const parsed = JSON.parse(saved);
+      if (!parsed.executionMode) {
+        parsed.executionMode = 'autonomous';
+      }
+      if (parsed.provider === 'builtin') {
+        parsed.provider = 'ollama';
+        parsed.model = 'llama3.1';
+        parsed.apiBaseUrl = 'http://localhost:11434';
+      }
+      return { ...DEFAULT_SETTINGS, ...parsed };
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
   });
 
   const [blenderConnected, setBlenderConnected] = useState(false);
+  const [modelStatus, setModelStatus] = useState<{ ok: boolean; message: string }>({
+    ok: false,
+    message: 'Checking Model...',
+  });
   const [sceneInfo, setSceneInfo] = useState<SceneInfo | null>(null);
-  const [isStudioOpen, setIsStudioOpen] = useState(false);
+  const [isStudioOpen, setIsStudioOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [checkpoints, setCheckpoints] = useState<CheckpointItem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Sync connection and scene info
+  // Sync Blender connection and scene info
   const refreshScene = useCallback(async () => {
     const connected = await checkBlenderConnection(settings.blenderHost, settings.blenderPort);
     setBlenderConnected(connected);
@@ -60,11 +74,21 @@ export const App: React.FC = () => {
     }
   }, [settings.blenderHost, settings.blenderPort]);
 
+  // Sync AI model connection status
+  const refreshModelHealth = useCallback(async () => {
+    const status = await checkModelHealth(settings);
+    setModelStatus(status);
+  }, [settings]);
+
   useEffect(() => {
     refreshScene();
-    const interval = setInterval(refreshScene, 3500);
+    refreshModelHealth();
+    const interval = setInterval(() => {
+      refreshScene();
+      refreshModelHealth();
+    }, 3500);
     return () => clearInterval(interval);
-  }, [refreshScene]);
+  }, [refreshScene, refreshModelHealth]);
 
   // Execute a single tool call in Blender
   const runToolExecution = async (tool: ToolCall) => {
@@ -76,6 +100,9 @@ export const App: React.FC = () => {
       if (cmdName === 'execute_blender_code') {
         cmdName = 'execute_code';
       } else if (cmdName === 'import_asset') {
+        if (settings.assetsPath && !args.assets_path) {
+          args.assets_path = settings.assetsPath;
+        }
         if (!args.model_path && args.asset_id) {
           const found = (assetCatalog as any[]).find((a) => a.id === args.asset_id);
           if (found?.model_path) {
@@ -102,15 +129,22 @@ export const App: React.FC = () => {
         tool.status = 'failed';
         tool.error = res.message || 'Operation failed in Blender';
       }
-    } catch (e: any) {
+    } catch (err: any) {
       tool.status = 'failed';
-      tool.error = e.message || String(e);
+      tool.error = err.message || String(err);
     }
-    await refreshScene();
   };
 
-  // Handle user sending a prompt
   const handleSendMessage = async (text: string, mode: 'build' | 'plan' | 'ask') => {
+    if (!text.trim() || isGenerating) return;
+
+    // 1-Click quick actions
+    const lower = text.toLowerCase();
+    if (lower.includes('open settings')) {
+      setIsSettingsOpen(true);
+      return;
+    }
+
     const userMsg: ChatMessage = {
       id: Math.random().toString(36).substring(7),
       role: 'user',
@@ -123,11 +157,6 @@ export const App: React.FC = () => {
     setIsGenerating(true);
 
     try {
-      // Automatic pre-action checkpoint in build mode
-      if (mode === 'build' && blenderConnected) {
-        saveSceneCheckpoint(`Pre_${text.substring(0, 15)}`, settings.blenderHost, settings.blenderPort).catch(() => {});
-      }
-
       const res = await sendChatMessage(
         text,
         mode,
@@ -142,25 +171,36 @@ export const App: React.FC = () => {
         timestamp: Date.now(),
         mode,
         toolCalls: res.toolCalls,
+        plan: res.plan,
+        suggestions: res.suggestions,
       };
 
-      setMessages((prev) => [...prev, assistantMsg]);
-
-      // If mode is build and user doesn't require approvals, auto-execute
-      if (mode === 'build' && !settings.requireApprovals && res.toolCalls.length > 0) {
-        for (const tc of res.toolCalls) {
-          await runToolExecution(tc);
+      // AUTONOMOUS PRODUCTION ENGINE:
+      // In Build mode + autonomous setting, execute all safe constructive operations immediately!
+      if (mode === 'build' && res.toolCalls && res.toolCalls.length > 0) {
+        if (settings.executionMode === 'autonomous') {
+          for (const tc of res.toolCalls) {
+            if (!tc.isDestructive) {
+              await runToolExecution(tc);
+            } else {
+              // Destructive tools pause for explicit user confirmation
+              tc.status = 'pending';
+            }
+          }
         }
-        setMessages((prev) => [...prev]); // re-render
       }
+
+      setMessages((prev) => [...prev, assistantMsg]);
+      await refreshScene();
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
         {
           id: Math.random().toString(36).substring(7),
           role: 'assistant',
-          content: `Error processing request: ${err.message || String(err)}`,
+          content: `Notice: ${err.message || String(err)}`,
           timestamp: Date.now(),
+          mode,
         },
       ]);
     } finally {
@@ -169,47 +209,52 @@ export const App: React.FC = () => {
   };
 
   const handleApproveTool = async (messageId: string, toolId: string) => {
-    setMessages((prev) =>
-      prev.map((msg) => {
-        if (msg.id !== messageId || !msg.toolCalls) return msg;
-        const target = msg.toolCalls.find((t) => t.id === toolId);
-        if (target) {
-          runToolExecution(target).then(() => setMessages((m) => [...m]));
-        }
-        return msg;
-      })
-    );
+    const msg = messages.find((m) => m.id === messageId);
+    if (!msg || !msg.toolCalls) return;
+
+    const tool = msg.toolCalls.find((t) => t.id === toolId);
+    if (!tool || tool.status !== 'pending') return;
+
+    await runToolExecution(tool);
+    setMessages((prev) => [...prev]);
+    await refreshScene();
   };
 
   const handleRejectTool = (messageId: string, toolId: string) => {
-    setMessages((prev) =>
-      prev.map((msg) => {
-        if (msg.id !== messageId || !msg.toolCalls) return msg;
-        return {
-          ...msg,
-          toolCalls: msg.toolCalls.map((tc) =>
-            tc.id === toolId ? { ...tc, status: 'rejected' } : tc
-          ),
-        };
-      })
-    );
+    const msg = messages.find((m) => m.id === messageId);
+    if (!msg || !msg.toolCalls) return;
+
+    const tool = msg.toolCalls.find((t) => t.id === toolId);
+    if (!tool) return;
+
+    tool.status = 'rejected';
+    setMessages((prev) => [...prev]);
   };
 
   const handleApproveAll = async (messageId: string) => {
     const msg = messages.find((m) => m.id === messageId);
     if (!msg || !msg.toolCalls) return;
 
-    for (const tc of msg.toolCalls) {
-      if (tc.status === 'pending') {
-        await runToolExecution(tc);
+    for (const tool of msg.toolCalls) {
+      if (tool.status === 'pending') {
+        await runToolExecution(tool);
       }
     }
     setMessages((prev) => [...prev]);
+    await refreshScene();
   };
 
-  const handleAddPrimitive = async (type: string) => {
-    if (!blenderConnected) return;
-    await addPrimitive(type, undefined, [0, 0, 1.0], settings.blenderHost, settings.blenderPort);
+  const handleExecutePlan = async (messageId: string) => {
+    const msg = messages.find((m) => m.id === messageId);
+    if (!msg || !msg.toolCalls) return;
+
+    for (const tool of msg.toolCalls) {
+      await runToolExecution(tool);
+    }
+    if (msg.plan) {
+      msg.plan.canExecute = false; // Mark executed
+    }
+    setMessages((prev) => [...prev]);
     await refreshScene();
   };
 
@@ -221,6 +266,7 @@ export const App: React.FC = () => {
   const handleSaveSettings = (newSettings: AppSettings) => {
     setSettings(newSettings);
     localStorage.setItem('agent_blend_settings', JSON.stringify(newSettings));
+    refreshModelHealth();
   };
 
   return (
@@ -232,9 +278,10 @@ export const App: React.FC = () => {
       backgroundColor: 'var(--bg-app)',
       overflow: 'hidden',
     }}>
-      {/* Clean Top Navigation Bar */}
+      {/* Studio Top Navigation Bar */}
       <Header
         blenderConnected={blenderConnected}
+        modelStatus={modelStatus}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onLaunchBlender={handleLaunchBlender}
         onNewChat={() => setMessages([])}
@@ -242,20 +289,21 @@ export const App: React.FC = () => {
         onToggleStudio={() => setIsStudioOpen(!isStudioOpen)}
       />
 
-      {/* Main Workspace: Prominent Centered Chat with Collapsible Studio Drawer */}
+      {/* Main Studio Workbench */}
       <main style={{
         display: 'flex',
         flex: 1,
         overflow: 'hidden',
         position: 'relative',
       }}>
-        {/* Prominent Chat Stage (Centers conversation, takes 100% or remaining flex space) */}
+        {/* Central Action Stage */}
         <div style={{
           flex: 1,
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          backgroundColor: 'var(--bg-app)',
         }}>
           <ChatPanel
             messages={messages}
@@ -263,13 +311,14 @@ export const App: React.FC = () => {
             onApproveTool={handleApproveTool}
             onRejectTool={handleRejectTool}
             onApproveAll={handleApproveAll}
+            onExecutePlan={handleExecutePlan}
             isGenerating={isGenerating}
             settings={settings}
             onOpenSettings={() => setIsSettingsOpen(true)}
           />
         </div>
 
-        {/* Collapsible 3D Studio & Viewport Drawer */}
+        {/* Docked Scene Inspector (Viewport & Outliner) */}
         <StudioDrawer
           isOpen={isStudioOpen}
           onClose={() => setIsStudioOpen(false)}
@@ -278,9 +327,6 @@ export const App: React.FC = () => {
           blenderPort={settings.blenderPort}
           sceneInfo={sceneInfo}
           onRefreshScene={refreshScene}
-          checkpoints={checkpoints}
-          onAddCheckpoint={(cp) => setCheckpoints((prev) => [cp, ...prev])}
-          onAddPrimitive={handleAddPrimitive}
         />
       </main>
 

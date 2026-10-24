@@ -91,13 +91,13 @@ export async function getSceneInfo(host = '127.0.0.1', port = 9876): Promise<Sce
   return null;
 }
 
-export async function captureViewportScreenshot(host = '127.0.0.1', port = 9876): Promise<string | null> {
-  const res = await executeBlenderCommand('capture_viewport', { width: 800, height: 450, format: 'PNG' }, host, port);
-  const b64 = res.result?.base64 || res.result?.image_base64;
-  if (res.status === 'ok' && b64) {
-    return `data:image/png;base64,${b64}`;
-  }
-  return null;
+export async function setViewportShading(
+  mode: 'WIREFRAME' | 'SOLID' | 'MATERIAL' | 'RENDERED',
+  host = '127.0.0.1',
+  port = 9876
+): Promise<boolean> {
+  const res = await executeBlenderCommand('set_viewport_shading', { mode }, host, port);
+  return res.status === 'ok';
 }
 
 export async function focusObject(name: string, host = '127.0.0.1', port = 9876): Promise<boolean> {

@@ -8,6 +8,7 @@ export interface SceneObject {
   children: string[];
   visible: boolean;
   polycount?: number;
+  materials?: string[];
 }
 
 export interface SceneInfo {
@@ -24,32 +25,6 @@ export interface SceneInfo {
   use_gravity?: boolean;
 }
 
-export interface AssetSummary {
-  id: string;
-  name: string;
-  category: string;
-  subcategory: string;
-  room_types: string[];
-  style_tags: string[];
-  dimensions_m: {
-    width: number;
-    depth: number;
-    height: number;
-  };
-  surface: string;
-  relations: Array<Record<string, string>>;
-  polycount?: number;
-  model_path?: string;
-}
-
-export interface CheckpointItem {
-  id: string;
-  name: string;
-  timestamp: string;
-  action: string;
-  filepath?: string;
-}
-
 export interface ToolCall {
   id: string;
   name: string;
@@ -57,6 +32,14 @@ export interface ToolCall {
   status: 'pending' | 'approved' | 'rejected' | 'executing' | 'completed' | 'failed';
   result?: any;
   error?: string;
+  isDestructive?: boolean;
+  summary?: string;
+}
+
+export interface PlanData {
+  title: string;
+  steps: string[];
+  canExecute: boolean;
 }
 
 export interface ChatMessage {
@@ -66,6 +49,8 @@ export interface ChatMessage {
   timestamp: number;
   mode?: 'build' | 'plan' | 'ask';
   toolCalls?: ToolCall[];
+  plan?: PlanData;
+  suggestions?: string[];
 }
 
 export type LLMProvider = 
@@ -82,8 +67,9 @@ export type LLMProvider =
 export interface AppSettings {
   blenderHost: string;
   blenderPort: number;
-  autoRefreshViewport: boolean;
-  requireApprovals: boolean;
+  assetsPath: string;
+  executionMode: 'autonomous' | 'manual';
+  requireApprovals?: boolean; // legacy compatibility fallback
   toolset: 'core' | 'full';
   provider: LLMProvider;
   model: string;

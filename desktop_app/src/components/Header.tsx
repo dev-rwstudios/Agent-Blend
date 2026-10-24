@@ -4,12 +4,13 @@ import {
   Settings, 
   PanelRight, 
   PanelRightClose, 
-  PlusCircle,
+  Plus,
   Play
 } from 'lucide-react';
 
 interface HeaderProps {
   blenderConnected: boolean;
+  modelStatus: { ok: boolean; message: string };
   onOpenSettings: () => void;
   onLaunchBlender: () => void;
   onNewChat: () => void;
@@ -19,6 +20,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   blenderConnected,
+  modelStatus,
   onOpenSettings,
   onLaunchBlender,
   onNewChat,
@@ -30,100 +32,133 @@ export const Header: React.FC<HeaderProps> = ({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 20px',
-      height: '56px',
+      padding: '0 14px',
+      height: '44px',
       backgroundColor: 'var(--bg-primary)',
       borderBottom: '1px solid var(--border-subtle)',
       zIndex: 50,
       flexShrink: 0,
     }}>
       {/* Brand & Identity */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <div style={{
-          width: '32px',
-          height: '32px',
-          borderRadius: '9px',
-          background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
+          width: '24px',
+          height: '24px',
+          borderRadius: 'var(--radius-xs)',
+          backgroundColor: 'var(--bg-tertiary)',
+          border: '1px solid var(--border-medium)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 0 12px rgba(99, 102, 241, 0.35)',
         }}>
-          <Box size={18} color="#ffffff" />
+          <Box size={13} color="var(--text-primary)" />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '15px', fontWeight: '700', letterSpacing: '-0.02em', color: '#ffffff' }}>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '13px', fontWeight: '600', letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>
             Agent-Blend
           </span>
-          <span className="badge badge-indigo" style={{ fontSize: '10px', padding: '1px 6px' }}>
+          <span className="badge badge-zinc" style={{ fontSize: '10px', padding: '1px 5px' }}>
             Studio
           </span>
         </div>
       </div>
 
       {/* Right Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        {/* Connection status indicator */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {/* Blender Socket Connection status */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '7px',
-          padding: '4px 12px',
-          borderRadius: '999px',
-          backgroundColor: blenderConnected ? 'rgba(16, 185, 129, 0.08)' : 'rgba(244, 63, 94, 0.08)',
-          border: `1px solid ${blenderConnected ? 'rgba(16, 185, 129, 0.22)' : 'rgba(244, 63, 94, 0.22)'}`,
+          gap: '6px',
+          padding: '2px 8px',
+          borderRadius: 'var(--radius-xs)',
+          backgroundColor: blenderConnected ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+          border: `1px solid ${blenderConnected ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`,
         }}>
           <div 
             className={blenderConnected ? 'pulse-dot' : ''}
             style={{
-              width: '7px',
-              height: '7px',
+              width: '5px',
+              height: '5px',
               borderRadius: '50%',
-              backgroundColor: blenderConnected ? '#10b981' : '#f43f5e',
+              backgroundColor: blenderConnected ? '#10b981' : '#ef4444',
             }} 
           />
-          <span style={{ fontSize: '11px', fontWeight: '600', color: blenderConnected ? '#34d399' : '#fb7185' }}>
-            {blenderConnected ? 'Blender Connected' : 'Blender Disconnected'}
+          <span style={{ fontSize: '11px', fontWeight: '500', color: blenderConnected ? '#34d399' : '#f87171' }}>
+            {blenderConnected ? 'Blender 5.1 Connected' : 'Blender Offline'}
           </span>
           {!blenderConnected && (
             <button 
               onClick={onLaunchBlender}
               className="btn btn-primary btn-sm"
-              style={{ marginLeft: '4px', padding: '2px 8px', fontSize: '10px' }}
+              style={{ marginLeft: '4px', padding: '1px 6px', fontSize: '10px', height: '18px' }}
             >
-              <Play size={10} /> Start
+              <Play size={8} /> Start
             </button>
           )}
         </div>
 
-        {/* New Chat Button */}
+        {/* AI Model Status Indicator (Clickable to open settings) */}
+        <div 
+          onClick={onOpenSettings}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '2px 8px',
+            borderRadius: 'var(--radius-xs)',
+            backgroundColor: modelStatus.ok ? 'rgba(59, 130, 246, 0.08)' : 'rgba(245, 158, 11, 0.08)',
+            border: `1px solid ${modelStatus.ok ? 'rgba(59, 130, 246, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`,
+            cursor: 'pointer',
+          }}
+          title="AI Model Status (Click to configure)"
+        >
+          <div 
+            style={{
+              width: '5px',
+              height: '5px',
+              borderRadius: '50%',
+              backgroundColor: modelStatus.ok ? '#3b82f6' : '#f59e0b',
+            }} 
+          />
+          <span style={{ fontSize: '11px', fontWeight: '500', color: modelStatus.ok ? '#60a5fa' : '#fbbf24' }}>
+            {modelStatus.message}
+          </span>
+        </div>
+
+        <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--border-subtle)', margin: '0 2px' }} />
+
+        {/* New Session Button */}
         <button 
           onClick={onNewChat}
           className="btn btn-secondary btn-sm"
-          title="Start New Chat"
+          style={{ gap: '4px' }}
+          title="New Scene Chat"
         >
-          <PlusCircle size={14} /> New Chat
+          <Plus size={12} />
+          <span>New Chat</span>
         </button>
 
-        {/* Toggle 3D Studio Panel Button */}
-        <button 
+        {/* Studio Inspector Toggle */}
+        <button
           onClick={onToggleStudio}
           className={`btn btn-sm ${isStudioOpen ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ gap: '6px' }}
-          title={isStudioOpen ? 'Close 3D Viewport & Studio' : 'Open 3D Viewport & Studio'}
+          style={{ gap: '4px' }}
+          title={isStudioOpen ? 'Hide Scene Panel' : 'Show Scene Panel'}
         >
-          {isStudioOpen ? <PanelRightClose size={14} /> : <PanelRight size={14} />}
-          <span>3D Studio</span>
+          {isStudioOpen ? <PanelRightClose size={12} /> : <PanelRight size={12} />}
+          <span>Scene</span>
         </button>
 
         {/* Settings Button */}
-        <button 
+        <button
           onClick={onOpenSettings}
           className="btn btn-ghost btn-sm"
-          style={{ padding: '6px' }}
-          title="Settings"
+          style={{ padding: '5px', color: 'var(--text-secondary)' }}
+          title="Studio Settings"
         >
-          <Settings size={16} />
+          <Settings size={13} />
         </button>
       </div>
     </header>

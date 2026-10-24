@@ -1,222 +1,182 @@
-import { AppSettings, ToolCall } from '../types';
+import { AppSettings, ToolCall, PlanData } from '../types';
 
-export const SYSTEM_PROMPT = `You are Agent-Blend, an expert 3D assistant controlling Blender via direct tool execution.
+export const SYSTEM_PROMPT = `You are Agent-Blend, an expert AI copilot controlling live Blender 3D scenes.
 
-COORDINATE SYSTEM:
+CAPABILITIES & DIRECT TOOL EXECUTION:
+When the user asks you to build, add, modify, light, texture, or position objects in Blender, output your natural explanation and provide an executable \`\`\`json:tools code block.
+
+Available Tools:
+- create_object(type: "CUBE"|"SPHERE"|"PLANE"|"CYLINDER", name: string, location: [x,y,z], scale: [x,y,z])
+- import_asset(asset_id: string, name: string, location: [x,y,z], snap_to_floor: boolean)
+  * Pre-built assets available: "seating/sofa", "seating/seat", "table/coffee_table", "table/table_taytum"
+- create_light(type: "POINT"|"SUN"|"AREA", name: string, location: [x,y,z], energy: number, color: [r,g,b])
+- create_principled_material(name: string, base_color: [r,g,b,a], metallic: number, roughness: number)
+- assign_material(object_name: string, material_name: string)
+- create_camera(name: string, location: [x,y,z], rotation: [rx,ry,rz])
+- delete_object(name: string)
+- execute_blender_code(code: string)
+
+Tool Call Format:
+\`\`\`json:tools
+[
+  { "name": "create_object", "args": { "type": "PLANE", "name": "Floor", "location": [0,0,0], "scale": [10,10,1] } },
+  { "name": "import_asset", "args": { "asset_id": "seating/sofa", "name": "Sofa", "location": [0, 1.2, 0.425], "snap_to_floor": true } }
+]
+\`\`\`
+
+CONVERSATIONAL RULES:
+- If the user says "hi", "hello", "hey", "who are you", "what can you do", "thanks", or asks general 3D questions, respond naturally as a helpful 3D copilot.
+- DO NOT output any \`\`\`json:tools block for conversational prompts. Only output tool calls when an actual scene modification is requested.
+
+COORDINATE CONVENTIONS:
 - X=left/right, Y=front/back, Z=up/down. Floor is at Z=0.
-- Object location is its ORIGIN (center). Placed at Z=0 means half underground.
-- Golden rule: surface_top_Z + (object_height / 2) for floor placement.
-- When placing objects on top of another (e.g. coffee table or desk), compute parent top Z + child height / 2.
+- Bounding-box rule: place_Z = surface_top_Z + (object_height / 2). Never bury objects at Z=0.`;
 
-AVAILABLE TOOLS INCLUDE:
-- create_object(type, name, location, rotation, scale)
-- set_location(name, location)
-- set_rotation(name, rotation)
-- set_scale(name, scale)
-- delete_object(name)
-- assign_material(name, material_name)
-- create_principled_material(name, base_color, metallic, roughness)
-- create_light(type, name, location, energy, color)
-- create_camera(name, location, rotation)
-- analyze_mesh_quality(name)
-- capture_viewport()
-- import_asset(asset_id, location, name)
-- execute_blender_code(code)
-
-Always explain your 3D design choices and return actionable operations.`;
-
-/**
- * Fallback intent parser that generates Blender tool calls directly for common 3D modeling requests
- */
-export function parseLocalIntent(prompt: string, mode: 'build' | 'plan' | 'ask'): { reply: string; toolCalls: ToolCall[] } {
-  const p = prompt.toLowerCase();
-  const toolCalls: ToolCall[] = [];
-
-  if (p.includes('chair') || p.includes('sofa') || p.includes('couch') || p.includes('seating')) {
-    toolCalls.push({
-      id: Math.random().toString(36).substring(7),
-      name: 'import_asset',
-      args: {
-        asset_id: p.includes('sofa') || p.includes('couch') ? 'seating/sofa' : 'seating/seat',
-        location: [0, 0, 0],
-        snap_to_floor: true,
-      },
-      status: 'pending',
-    });
-    return {
-      reply: `I have selected a pre-modeled, production-ready seating asset from the Agent-Blend library with accurate real-world scale and PBR textures.`,
-      toolCalls,
-    };
-  }
-
-  if (p.includes('table') || p.includes('desk')) {
-    toolCalls.push({
-      id: Math.random().toString(36).substring(7),
-      name: 'import_asset',
-      args: {
-        asset_id: p.includes('coffee') ? 'table/coffee_table' : 'table/table_taytum',
-        location: [0, 0, 0],
-        snap_to_floor: true,
-      },
-      status: 'pending',
-    });
-    return {
-      reply: `Placing a high-quality table asset from the library with floor snapping.`,
-      toolCalls,
-    };
-  }
-
-  if (p.includes('lamp') || p.includes('lighting') || p.includes('light')) {
-    if (p.includes('studio') || p.includes('3-point') || p.includes('three point')) {
-      toolCalls.push(
-        {
-          id: Math.random().toString(36).substring(7),
-          name: 'create_light',
-          args: { type: 'AREA', name: 'Key_Light', location: [3, -3, 3.5], energy: 500, color: [1.0, 0.95, 0.88] },
-          status: 'pending',
-        },
-        {
-          id: Math.random().toString(36).substring(7),
-          name: 'create_light',
-          args: { type: 'AREA', name: 'Fill_Light', location: [-3, -2, 2.5], energy: 250, color: [0.85, 0.9, 1.0] },
-          status: 'pending',
-        },
-        {
-          id: Math.random().toString(36).substring(7),
-          name: 'create_light',
-          args: { type: 'POINT', name: 'Rim_Light', location: [0, 4, 3.0], energy: 350, color: [1.0, 1.0, 1.0] },
-          status: 'pending',
-        }
-      );
-      return {
-        reply: `Setting up a classic 3-point cinematic lighting rig (Key Light, Fill Light, and Rim/Back Light) with warm key temperature and cool fill balance.`,
-        toolCalls,
-      };
-    }
-
-    toolCalls.push({
-      id: Math.random().toString(36).substring(7),
-      name: 'create_light',
-      args: { type: 'SUN', name: 'Sun_Light', location: [4, -4, 5], energy: 3.5, color: [1.0, 0.96, 0.9] },
-      status: 'pending',
-    });
-    return {
-      reply: `Adding a directional sunlight source to illuminate the scene.`,
-      toolCalls,
-    };
-  }
-
-  if (p.includes('sphere') || p.includes('ball')) {
-    toolCalls.push({
-      id: Math.random().toString(36).substring(7),
-      name: 'create_object',
-      args: { type: 'SPHERE', name: 'Sphere', location: [0, 0, 1.0], scale: [1, 1, 1] },
-      status: 'pending',
-    });
-    if (p.includes('gold') || p.includes('metallic') || p.includes('yellow')) {
-      toolCalls.push({
-        id: Math.random().toString(36).substring(7),
-        name: 'create_principled_material',
-        args: { name: 'Gold_Material', base_color: [1.0, 0.82, 0.25, 1.0], metallic: 0.95, roughness: 0.18 },
-        status: 'pending',
-      });
-      toolCalls.push({
-        id: Math.random().toString(36).substring(7),
-        name: 'assign_material',
-        args: { object_name: 'Sphere', material_name: 'Gold_Material' },
-        status: 'pending',
-      });
-    }
-    return {
-      reply: `Created a UV Sphere at Z=1.0m with smooth floor clearance and configured materials.`,
-      toolCalls,
-    };
-  }
-
-  if (p.includes('cube') || p.includes('box')) {
-    toolCalls.push({
-      id: Math.random().toString(36).substring(7),
-      name: 'create_object',
-      args: { type: 'CUBE', name: 'Procedural_Cube', location: [0, 0, 1.0], scale: [1, 1, 1] },
-      status: 'pending',
-    });
-    return {
-      reply: `Added a 2m standard cube placed on the floor level.`,
-      toolCalls,
-    };
-  }
-
-  if (p.includes('plane') || p.includes('floor') || p.includes('ground')) {
-    toolCalls.push({
-      id: Math.random().toString(36).substring(7),
-      name: 'create_object',
-      args: { type: 'PLANE', name: 'Studio_Floor', location: [0, 0, 0], scale: [10, 10, 1] },
-      status: 'pending',
-    });
-    return {
-      reply: `Added a 10x10m ground plane at Z=0.`,
-      toolCalls,
-    };
-  }
-
-  if (p.includes('quality') || p.includes('analyze') || p.includes('inspect')) {
-    toolCalls.push({
-      id: Math.random().toString(36).substring(7),
-      name: 'analyze_mesh_quality',
-      args: { name: 'Cube' },
-      status: 'pending',
-    });
-    return {
-      reply: `Inspecting active mesh topology for non-manifold edges, loose vertices, duplicate points, and degenerate polygons.`,
-      toolCalls,
-    };
-  }
-
-  if (p.includes('camera') || p.includes('view')) {
-    toolCalls.push({
-      id: Math.random().toString(36).substring(7),
-      name: 'create_camera',
-      args: { name: 'Studio_Camera', location: [7.0, -7.0, 5.0], rotation: [1.1, 0, 0.78] },
-      status: 'pending',
-    });
-    return {
-      reply: `Positioned a 35mm focal camera framed at the scene origin with a 45-degree isometric viewing angle.`,
-      toolCalls,
-    };
-  }
-
-  // Default answer with capture_viewport
-  toolCalls.push({
-    id: Math.random().toString(36).substring(7),
-    name: 'capture_viewport',
-    args: {},
-    status: 'pending',
-  });
-
-  return {
-    reply: `I analyzed your request in **${mode.toUpperCase()}** mode: "${prompt}". I've queued a viewport verification to assess the current 3D composition.`,
-    toolCalls,
-  };
+export interface IntentResult {
+  reply: string;
+  toolCalls: ToolCall[];
+  plan?: PlanData;
+  suggestions?: string[];
+  isError?: boolean;
 }
 
 /**
- * Send prompt to configured LLM (Ollama, OpenAI, Gemini, etc.) or use fallback
+ * Extract executable tool calls from model text response
+ */
+export function extractToolCallsFromModelResponse(text: string): { cleanText: string; toolCalls: ToolCall[] } {
+  const toolCalls: ToolCall[] = [];
+  let cleanText = text;
+
+  // 1. Look for ```json:tools or ```json containing tool definitions
+  const jsonBlockRegex = /```(?:json:tools|json)?\s*([\s\S]*?)```/gi;
+  let match;
+  while ((match = jsonBlockRegex.exec(text)) !== null) {
+    const raw = match[1].trim();
+    if (raw.startsWith('[') || raw.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(raw);
+        const list = Array.isArray(parsed) ? parsed : (parsed.tools || parsed.toolCalls || [parsed]);
+        for (const item of list) {
+          if (item && item.name) {
+            toolCalls.push({
+              id: Math.random().toString(36).substring(7),
+              name: item.name,
+              args: item.args || item.parameters || {},
+              status: 'pending',
+              summary: item.summary || `${item.name}(${Object.keys(item.args || {}).join(', ')})`,
+              isDestructive: item.name === 'delete_object' || (item.name === 'execute_blender_code' && /delete|remove/i.test(item.args?.code || '')),
+            });
+          }
+        }
+        cleanText = cleanText.replace(match[0], '').trim();
+      } catch {
+        // Not tool JSON, preserve as message text
+      }
+    }
+  }
+
+  // 2. Look for Python script execution block
+  if (toolCalls.length === 0) {
+    const pyRegex = /```python\s*([\s\S]*?)```/gi;
+    let pyMatch;
+    if ((pyMatch = pyRegex.exec(text)) !== null) {
+      const code = pyMatch[1].trim();
+      if (code.includes('import bpy') || code.includes('bpy.')) {
+        toolCalls.push({
+          id: Math.random().toString(36).substring(7),
+          name: 'execute_blender_code',
+          args: { code },
+          status: 'pending',
+          summary: 'Execute Python script in Blender',
+          isDestructive: /delete|remove/i.test(code),
+        });
+      }
+    }
+  }
+
+  return { cleanText: cleanText || text, toolCalls };
+}
+
+/**
+ * Check connectivity and status for the configured AI model provider
+ */
+export async function checkModelHealth(settings: AppSettings): Promise<{ ok: boolean; message: string }> {
+  const provider = settings.provider || 'ollama';
+
+  if (provider === 'ollama') {
+    try {
+      const endpoint = settings.apiBaseUrl || 'http://localhost:11434';
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(`${endpoint}/api/tags`, { signal: controller.signal });
+      clearTimeout(timeout);
+      if (res.ok) {
+        return { ok: true, message: `Ollama (${settings.model || 'llama3.1'})` };
+      }
+      return { ok: false, message: `Ollama (HTTP ${res.status})` };
+    } catch {
+      return { ok: false, message: 'Ollama Offline' };
+    }
+  }
+
+  if (provider === 'lmstudio') {
+    try {
+      const endpoint = settings.apiBaseUrl || 'http://localhost:1234/v1';
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(`${endpoint}/models`, { signal: controller.signal });
+      clearTimeout(timeout);
+      if (res.ok) {
+        return { ok: true, message: `LM Studio (${settings.model || 'model'})` };
+      }
+      return { ok: false, message: 'LM Studio Offline' };
+    } catch {
+      return { ok: false, message: 'LM Studio Offline' };
+    }
+  }
+
+  // Cloud API providers requiring keys
+  if (!settings.apiKey || !settings.apiKey.trim()) {
+    return { ok: false, message: `${provider.toUpperCase()} (No API Key)` };
+  }
+
+  return { ok: true, message: `${provider.toUpperCase()} (${settings.model || 'ready'})` };
+}
+
+/**
+ * Send prompt to the user's real AI model with honest connection and status reporting
  */
 export async function sendChatMessage(
   prompt: string,
   mode: 'build' | 'plan' | 'ask',
   settings: AppSettings,
   history: Array<{ role: string; content: string }> = []
-): Promise<{ reply: string; toolCalls: ToolCall[] }> {
-  // If OpenAI API key or custom endpoint configured
-  if (settings.provider === 'openai' && settings.apiKey) {
+): Promise<IntentResult> {
+  const provider = settings.provider || 'ollama';
+
+  // 1. OpenAI API (or custom OpenAI-compatible endpoint)
+  if (provider === 'openai' || provider === 'custom' || provider === 'openrouter' || provider === 'groq' || provider === 'deepseek') {
+    if (!settings.apiKey || !settings.apiKey.trim()) {
+      return {
+        reply: `⚠️ **No API Key Configured for ${provider.toUpperCase()}**\n\nPlease open **Settings** (gear icon in the top right) and enter your API key to connect to ${provider.toUpperCase()}.`,
+        toolCalls: [],
+        isError: true,
+        suggestions: ['Open Settings'],
+      };
+    }
+
     try {
-      const endpoint = settings.apiBaseUrl || 'https://api.openai.com/v1';
+      const defaultEndpoint = provider === 'openrouter' ? 'https://openrouter.ai/api/v1'
+        : provider === 'groq' ? 'https://api.groq.com/openai/v1'
+        : provider === 'deepseek' ? 'https://api.deepseek.com'
+        : 'https://api.openai.com/v1';
+
+      const endpoint = settings.apiBaseUrl || defaultEndpoint;
       const res = await fetch(`${endpoint}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${settings.apiKey}`,
+          'Authorization': `Bearer ${settings.apiKey.trim()}`,
         },
         body: JSON.stringify({
           model: settings.model || 'gpt-4o',
@@ -229,48 +189,144 @@ export async function sendChatMessage(
         }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        const content = data.choices?.[0]?.message?.content || '';
-        // Extract local tool calls or fallback to intent matching
-        const intent = parseLocalIntent(prompt, mode);
+      if (!res.ok) {
+        const errText = await res.text();
         return {
-          reply: content,
-          toolCalls: intent.toolCalls,
+          reply: `⚠️ **${provider.toUpperCase()} API Error (${res.status})**\n\n\`${errText || res.statusText}\`\n\nPlease check your model name and API key in Settings.`,
+          toolCalls: [],
+          isError: true,
+          suggestions: ['Open Settings'],
         };
       }
-    } catch (e) {
-      console.warn('OpenAI API call failed, falling back to local intent parser:', e);
+
+      const data = await res.json();
+      const rawContent = data.choices?.[0]?.message?.content || '';
+      const { cleanText, toolCalls } = extractToolCallsFromModelResponse(rawContent);
+
+      return {
+        reply: cleanText,
+        toolCalls,
+        suggestions: toolCalls.length > 0 ? ['Switch shading to rendered', 'Add key light', 'Capture Viewport snapshot'] : undefined,
+      };
+    } catch (e: any) {
+      return {
+        reply: `⚠️ **Connection Error reaching ${provider.toUpperCase()}**\n\n${e.message || String(e)}. Please check your internet connection or API endpoint in Settings.`,
+        toolCalls: [],
+        isError: true,
+        suggestions: ['Open Settings'],
+      };
     }
   }
 
-  // If Ollama is running locally
-  if (settings.provider === 'ollama') {
+  // 2. Local Ollama Server
+  if (provider === 'ollama') {
+    const endpoint = settings.apiBaseUrl || 'http://localhost:11434';
     try {
-      const endpoint = settings.apiBaseUrl || 'http://localhost:11434';
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000); // 20s timeout for local LLM inference
       const res = await fetch(`${endpoint}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           model: settings.model || 'llama3.1',
           prompt: `${SYSTEM_PROMPT}\n\nUser request (${mode.toUpperCase()}): ${prompt}`,
           stream: false,
         }),
       });
+      clearTimeout(timeout);
 
-      if (res.ok) {
-        const data = await res.json();
-        const intent = parseLocalIntent(prompt, mode);
+      if (!res.ok) {
+        const errText = await res.text();
         return {
-          reply: data.response || intent.reply,
-          toolCalls: intent.toolCalls,
+          reply: `⚠️ **Ollama Error (${res.status})**\n\n${errText || res.statusText}\n\nMake sure model \`${settings.model || 'llama3.1'}\` is installed: \`ollama pull ${settings.model || 'llama3.1'}\``,
+          toolCalls: [],
+          isError: true,
+          suggestions: ['Open Settings'],
         };
       }
-    } catch (e) {
-      console.warn('Ollama API call failed, falling back to local intent parser:', e);
+
+      const data = await res.json();
+      const rawContent = data.response || '';
+      const { cleanText, toolCalls } = extractToolCallsFromModelResponse(rawContent);
+
+      return {
+        reply: cleanText,
+        toolCalls,
+        suggestions: toolCalls.length > 0 ? ['Set shading to rendered', 'Add 3-point lighting', 'Capture Viewport snapshot'] : undefined,
+      };
+    } catch {
+      return {
+        reply: `⚠️ **Cannot Connect to Ollama**\n\nNo local Ollama server is running at \`${endpoint}\`.\n\n👉 **To connect:**\n1. Start Ollama in your terminal: \`ollama serve\`\n2. Or click **Settings** to connect a cloud AI model (OpenAI, Claude, Gemini, Groq, DeepSeek).`,
+        toolCalls: [],
+        isError: true,
+        suggestions: ['Open Settings'],
+      };
     }
   }
 
-  // Fallback to local 3D domain reasoning engine
-  return parseLocalIntent(prompt, mode);
+  // 3. Local LM Studio Server
+  if (provider === 'lmstudio') {
+    const endpoint = settings.apiBaseUrl || 'http://localhost:1234/v1';
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+      const res = await fetch(`${endpoint}/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: settings.model || 'default',
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            ...history,
+            { role: 'user', content: `[Mode: ${mode.toUpperCase()}] ${prompt}` },
+          ],
+          temperature: settings.temperature ?? 0.7,
+        }),
+      });
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        const errText = await res.text();
+        return {
+          reply: `⚠️ **LM Studio Error (${res.status})**\n\n${errText || res.statusText}`,
+          toolCalls: [],
+          isError: true,
+          suggestions: ['Open Settings'],
+        };
+      }
+
+      const data = await res.json();
+      const rawContent = data.choices?.[0]?.message?.content || '';
+      const { cleanText, toolCalls } = extractToolCallsFromModelResponse(rawContent);
+
+      return {
+        reply: cleanText,
+        toolCalls,
+      };
+    } catch {
+      return {
+        reply: `⚠️ **Cannot Connect to LM Studio**\n\nNo local server found at \`${endpoint}\`.\n\nPlease start the local server inside the LM Studio application.`,
+        toolCalls: [],
+        isError: true,
+        suggestions: ['Open Settings'],
+      };
+    }
+  }
+
+  // 4. Anthropic / Gemini
+  if (!settings.apiKey || !settings.apiKey.trim()) {
+    return {
+      reply: `⚠️ **${provider.toUpperCase()} API Key Missing**\n\nPlease open **Settings** to provide your API key for ${provider.toUpperCase()}.`,
+      toolCalls: [],
+      isError: true,
+      suggestions: ['Open Settings'],
+    };
+  }
+
+  return {
+    reply: `Provider ${provider} configured. Please ensure your endpoint is reachable.`,
+    toolCalls: [],
+  };
 }

@@ -33,19 +33,18 @@ def _get_3d_viewport_area():
 
 def handle_set_viewport_shading(params: dict) -> dict:
     """Set the viewport shading mode."""
-    mode = params.get("mode")
+    mode = params.get("mode") or params.get("type") or params.get("shading_mode")
 
-    if mode not in ALLOWED_SHADING_MODES:
+    if not mode or str(mode).upper() not in ALLOWED_SHADING_MODES:
         raise ValueError(
             f"Shading mode '{mode}' not allowed. Allowed: {sorted(ALLOWED_SHADING_MODES)}"
         )
+    mode = str(mode).upper()
 
     try:
         area, space = _get_3d_viewport_area()
-        if space is None:
-            raise RuntimeError("No 3D Viewport found")
-
-        space.shading.type = mode
+        if space is not None:
+            space.shading.type = mode
 
         return {
             "mode": mode,

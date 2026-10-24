@@ -12,7 +12,12 @@ import {
   Box, 
   Cpu, 
   Sun, 
-  ShieldCheck 
+  ShieldCheck,
+  ChevronDown,
+  ChevronRight,
+  CheckCircle2,
+  AlertTriangle,
+  Play
 } from 'lucide-react';
 import { ChatMessage, AppSettings } from '../types';
 
@@ -22,6 +27,7 @@ interface ChatPanelProps {
   onApproveTool: (messageId: string, toolId: string) => void;
   onRejectTool: (messageId: string, toolId: string) => void;
   onApproveAll: (messageId: string) => void;
+  onExecutePlan: (messageId: string) => void;
   isGenerating: boolean;
   settings: AppSettings;
   onOpenSettings: () => void;
@@ -33,18 +39,24 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   onApproveTool,
   onRejectTool,
   onApproveAll,
+  onExecutePlan,
   isGenerating,
   settings,
   onOpenSettings,
 }) => {
   const [inputText, setInputText] = useState('');
   const [currentMode, setCurrentMode] = useState<'build' | 'plan' | 'ask'>('build');
+  const [expandedMessageTools, setExpandedMessageTools] = useState<Record<string, boolean>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isGenerating]);
+
+  const toggleMessageTools = (messageId: string) => {
+    setExpandedMessageTools(prev => ({ ...prev, [messageId]: !prev[messageId] }));
+  };
 
   const handleSend = () => {
     if (!inputText.trim() || isGenerating) return;
@@ -63,24 +75,24 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     {
       icon: Box,
       title: 'Furnish Living Room',
-      desc: 'Add a modern sofa, coffee table, and area rug',
-      prompt: 'Furnish a living room scene with a modern sofa, coffee table, and rug snapped to the floor.',
+      desc: 'Add sofa, coffee table, and area rug snapped to floor',
+      prompt: 'Furnish a modern living room scene with a sofa, coffee table, and area rug snapped to the floor.',
     },
     {
       icon: Sun,
-      title: '3-Point Lighting Rig',
-      desc: 'Key, fill, and rim lights with warm/cool balance',
+      title: '3-Point Studio Lighting',
+      desc: 'Balanced key, fill, and rim lights with warm/cool tone',
       prompt: 'Set up a three-point studio lighting rig with key, fill, and rim lights.',
     },
     {
       icon: Sparkles,
       title: 'Gold Metallic Sphere',
-      desc: 'Smooth PBR sphere with high reflectance',
+      desc: 'PBR material with high metallic and low roughness',
       prompt: 'Create a smooth gold metallic sphere on the floor with high metallic and low roughness.',
     },
     {
       icon: ShieldCheck,
-      title: 'Inspect Mesh Topology',
+      title: 'Audit Mesh Topology',
       desc: 'Check for non-manifold edges and loose vertices',
       prompt: 'Analyze mesh quality and check the active scene objects for defects.',
     },
@@ -100,70 +112,69 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '24px 20px',
+        padding: '20px',
         display: 'flex',
         flexDirection: 'column',
       }}>
         <div style={{
           width: '100%',
-          maxWidth: '840px',
+          maxWidth: '820px',
           margin: '0 auto',
           display: 'flex',
           flexDirection: 'column',
-          gap: '24px',
+          gap: '16px',
           flex: 1,
         }}>
           {messages.length === 0 ? (
-            /* Empty State Hero (ChatGPT / Chainlit style) */
+            /* Empty State Hero */
             <div style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               margin: 'auto 0',
-              padding: '40px 0',
+              padding: '36px 0',
               textAlign: 'center',
             }}>
               <div style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '16px',
-                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(6, 182, 212, 0.25) 100%)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
+                width: '36px',
+                height: '36px',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--border-medium)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginBottom: '18px',
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
+                marginBottom: '14px',
               }}>
-                <Sparkles size={28} color="#818cf8" />
+                <Sparkles size={18} color="var(--text-primary)" />
               </div>
 
               <h2 style={{
-                fontSize: '22px',
-                fontWeight: '700',
-                color: '#ffffff',
-                letterSpacing: '-0.02em',
-                marginBottom: '8px',
+                fontSize: '18px',
+                fontWeight: '600',
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.01em',
+                marginBottom: '6px',
               }}>
-                What would you like to build?
+                What would you like to build in Blender?
               </h2>
 
               <p style={{
-                fontSize: '14px',
+                fontSize: '13px',
                 color: 'var(--text-secondary)',
                 maxWidth: '460px',
                 lineHeight: '1.5',
-                marginBottom: '32px',
+                marginBottom: '24px',
               }}>
-                Control your live Blender session through natural language. Describe models, materials, lighting, or full scene layouts.
+                Autonomous natural language 3D creation. Describe models, materials, lights, or full room sets.
               </p>
 
-              {/* Starter Grid */}
+              {/* Starter Prompt Grid */}
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
+                gap: '8px',
                 width: '100%',
               }}>
                 {starters.map((item, idx) => {
@@ -174,22 +185,24 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                       onClick={() => onSendMessage(item.prompt, currentMode)}
                       className="glass-card"
                       style={{
-                        padding: '16px',
+                        padding: '12px 14px',
                         textAlign: 'left',
                         cursor: 'pointer',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '6px',
-                        backgroundColor: 'var(--bg-secondary)',
+                        gap: '3px',
+                        backgroundColor: 'var(--bg-primary)',
+                        border: '1px solid var(--border-subtle)',
+                        borderRadius: 'var(--radius-sm)',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Icon size={16} color="#818cf8" />
-                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#f8fafc' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                        <Icon size={14} color="var(--text-secondary)" />
+                        <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
                           {item.title}
                         </span>
                       </div>
-                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+                      <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
                         {item.desc}
                       </p>
                     </button>
@@ -199,179 +212,317 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             </div>
           ) : (
             /* Message List */
-            messages.map((msg) => (
-              <div 
-                key={msg.id} 
-                className="animate-fade-in"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                  width: '100%',
-                }}
-              >
-                {/* User Message Bubble */}
-                {msg.role === 'user' ? (
-                  <div style={{
-                    maxWidth: '85%',
-                    backgroundColor: 'var(--bg-tertiary)',
-                    border: '1px solid var(--border-medium)',
-                    borderRadius: '16px',
-                    borderBottomRightRadius: '4px',
-                    padding: '12px 18px',
-                    color: '#ffffff',
-                    fontSize: '14px',
-                    lineHeight: '1.5',
-                    boxShadow: 'var(--shadow-sm)',
-                  }}>
-                    {msg.content}
-                  </div>
-                ) : (
-                  /* Assistant Message Card */
-                  <div style={{
-                    width: '100%',
+            messages.map((msg) => {
+              const pendingTools = (msg.toolCalls || []).filter(t => t.status === 'pending');
+              const completedTools = (msg.toolCalls || []).filter(t => t.status === 'completed');
+              const failedTools = (msg.toolCalls || []).filter(t => t.status === 'failed' || t.status === 'rejected');
+              const isToolsExpanded = !!expandedMessageTools[msg.id];
+
+              return (
+                <div 
+                  key={msg.id} 
+                  className="animate-fade-in"
+                  style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '12px',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{
-                        width: '24px',
-                        height: '24px',
-                        borderRadius: '6px',
-                        background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}>
-                        <Sparkles size={13} color="#ffffff" />
-                      </div>
-                      <span style={{ fontSize: '13px', fontWeight: '600', color: '#e2e8f0' }}>
-                        Agent-Blend
-                      </span>
-                      {msg.mode && (
-                        <span className={`badge ${
-                          msg.mode === 'build' ? 'badge-indigo' : msg.mode === 'plan' ? 'badge-warning' : 'badge-cyan'
-                        }`} style={{ fontSize: '10px' }}>
-                          {msg.mode.toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-
+                    alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                    width: '100%',
+                  }}
+                >
+                  {/* User Message Bubble */}
+                  {msg.role === 'user' ? (
                     <div style={{
-                      backgroundColor: 'var(--bg-secondary)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: '14px',
-                      padding: '16px 20px',
+                      maxWidth: '82%',
+                      backgroundColor: 'var(--bg-tertiary)',
+                      border: '1px solid var(--border-medium)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '8px 14px',
                       color: 'var(--text-primary)',
-                      fontSize: '14px',
-                      lineHeight: '1.6',
-                      whiteSpace: 'pre-wrap',
-                      boxShadow: 'var(--shadow-sm)',
+                      fontSize: '13px',
+                      lineHeight: '1.5',
                     }}>
                       {msg.content}
                     </div>
-
-                    {/* Tool Calls & Approvals Cards */}
-                    {msg.toolCalls && msg.toolCalls.length > 0 && (
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '10px',
-                        marginTop: '4px',
-                      }}>
-                        {msg.toolCalls.filter(t => t.status === 'pending').length > 1 && (
-                          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <button 
-                              onClick={() => onApproveAll(msg.id)}
-                              className="btn btn-primary btn-sm"
-                            >
-                              <Check size={12} /> Approve All Actions ({msg.toolCalls.filter(t => t.status === 'pending').length})
-                            </button>
-                          </div>
+                  ) : (
+                    /* Assistant Message Card */
+                    <div style={{
+                      width: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                    }}>
+                      {/* Identity & Mode Badge */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: 'var(--radius-xs)',
+                          backgroundColor: 'var(--bg-tertiary)',
+                          border: '1px solid var(--border-medium)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                          <Sparkles size={11} color="var(--text-primary)" />
+                        </div>
+                        <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                          Agent-Blend
+                        </span>
+                        {msg.mode && (
+                          <span className="badge badge-zinc" style={{ fontSize: '10px', textTransform: 'uppercase' }}>
+                            {msg.mode}
+                          </span>
                         )}
+                      </div>
 
-                        {msg.toolCalls.map((tc) => (
-                          <div
-                            key={tc.id}
-                            className="glass-card"
-                            style={{
-                              padding: '12px 16px',
-                              backgroundColor: tc.status === 'pending' ? 'rgba(30, 40, 65, 0.8)' : 'var(--bg-secondary)',
-                              borderLeft: `3px solid ${
-                                tc.status === 'completed' ? '#10b981' :
-                                tc.status === 'pending' ? '#f59e0b' :
-                                tc.status === 'rejected' ? '#f43f5e' : '#6366f1'
-                              }`,
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <Terminal size={13} color="#818cf8" />
-                                <span className="font-mono" style={{ fontSize: '12px', fontWeight: '600', color: '#f1f5f9' }}>
-                                  {tc.name}
-                                </span>
-                              </div>
-                              <span className={`badge ${
-                                tc.status === 'completed' ? 'badge-success' :
-                                tc.status === 'pending' ? 'badge-warning' :
-                                tc.status === 'rejected' ? 'badge-danger' : 'badge-indigo'
-                              }`} style={{ fontSize: '10px' }}>
-                                {tc.status.toUpperCase()}
+                      {/* Main Markdown Response Content */}
+                      <div style={{
+                        backgroundColor: 'var(--bg-primary)',
+                        border: '1px solid var(--border-subtle)',
+                        borderRadius: 'var(--radius-md)',
+                        padding: '12px 14px',
+                        color: 'var(--text-primary)',
+                        fontSize: '13px',
+                        lineHeight: '1.6',
+                        whiteSpace: 'pre-wrap',
+                      }}>
+                        {msg.content}
+                      </div>
+
+                      {/* Plan First Blueprint Card */}
+                      {msg.plan && (
+                        <div style={{
+                          backgroundColor: 'var(--bg-secondary)',
+                          border: '1px solid var(--border-medium)',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: '12px 14px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px',
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <ListOrdered size={14} color="var(--text-primary)" />
+                              <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                                {msg.plan.title}
                               </span>
                             </div>
-
-                            <pre className="font-mono" style={{
-                              fontSize: '11px',
-                              color: 'var(--text-secondary)',
-                              backgroundColor: 'rgba(0, 0, 0, 0.35)',
-                              padding: '8px 12px',
-                              borderRadius: '8px',
-                              overflowX: 'auto',
-                              margin: 0,
-                            }}>
-                              {JSON.stringify(tc.args, null, 2)}
-                            </pre>
-
-                            {/* Human-in-the-loop Approval Card */}
-                            {tc.status === 'pending' && (
-                              <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                                <button
-                                  onClick={() => onApproveTool(msg.id, tc.id)}
-                                  className="btn btn-primary btn-sm"
-                                  style={{ flex: 1, backgroundColor: '#10b981' }}
-                                >
-                                  <Check size={12} /> Approve Action
-                                </button>
-                                <button
-                                  onClick={() => onRejectTool(msg.id, tc.id)}
-                                  className="btn btn-secondary btn-sm"
-                                  style={{ flex: 1, color: '#fb7185' }}
-                                >
-                                  <X size={12} /> Reject
-                                </button>
-                              </div>
-                            )}
-
-                            {tc.error && (
-                              <div style={{ fontSize: '12px', color: '#fb7185', marginTop: '6px' }}>
-                                Error: {tc.error}
-                              </div>
-                            )}
+                            <span className="badge badge-zinc" style={{ fontSize: '10px' }}>
+                              {msg.plan.steps.length} Steps
+                            </span>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', margin: '4px 0' }}>
+                            {msg.plan.steps.map((st, i) => (
+                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '11px', width: '16px' }}>{i + 1}.</span>
+                                <span>{st}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {msg.plan.canExecute ? (
+                            <button
+                              onClick={() => onExecutePlan(msg.id)}
+                              className="btn btn-primary btn-sm"
+                              style={{ alignSelf: 'flex-start', marginTop: '4px', gap: '5px' }}
+                            >
+                              <Play size={11} fill="currentColor" /> Execute Blueprint in Blender
+                            </button>
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#34d399', fontSize: '11px', marginTop: '2px' }}>
+                              <CheckCircle2 size={13} />
+                              <span>Blueprint executed successfully into Blender scene</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Tool Executions Presentation */}
+                      {msg.toolCalls && msg.toolCalls.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {/* 1. Autonomous Completed Operations (Clean Collapsible Summary) */}
+                          {completedTools.length > 0 && (
+                            <div style={{
+                              backgroundColor: 'var(--bg-secondary)',
+                              border: '1px solid var(--border-subtle)',
+                              borderRadius: 'var(--radius-sm)',
+                              overflow: 'hidden',
+                            }}>
+                              <div
+                                onClick={() => toggleMessageTools(msg.id)}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  padding: '7px 10px',
+                                  cursor: 'pointer',
+                                  userSelect: 'none',
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <CheckCircle2 size={13} color="#10b981" />
+                                  <span style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-primary)' }}>
+                                    Executed {completedTools.length} {completedTools.length === 1 ? 'operation' : 'operations'} into Blender
+                                  </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
+                                  <span style={{ fontSize: '10px' }}>{isToolsExpanded ? 'Hide details' : 'View details'}</span>
+                                  {isToolsExpanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+                                </div>
+                              </div>
+
+                              {/* Expanded detailed command logs */}
+                              {isToolsExpanded && (
+                                <div style={{
+                                  borderTop: '1px solid var(--border-subtle)',
+                                  padding: '8px 10px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '4px',
+                                  backgroundColor: 'var(--bg-primary)',
+                                }}>
+                                  {completedTools.map((tc) => (
+                                    <div key={tc.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <Terminal size={11} color="var(--text-muted)" />
+                                        <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{tc.name}</span>
+                                        <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>
+                                          {tc.summary || JSON.stringify(tc.args)}
+                                        </span>
+                                      </div>
+                                      <span className="badge badge-success" style={{ fontSize: '9px' }}>OK</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* 2. Guarded Confirmation Card (ONLY for Destructive Actions or Manual Review) */}
+                          {pendingTools.length > 0 && (
+                            <div style={{
+                              backgroundColor: 'var(--bg-secondary)',
+                              border: '1px solid rgba(245, 158, 11, 0.3)',
+                              borderRadius: 'var(--radius-sm)',
+                              padding: '10px 12px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '8px',
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <AlertTriangle size={14} color="#f59e0b" />
+                                  <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                                    {pendingTools.some(t => t.isDestructive) 
+                                      ? 'Confirm Destructive Operation' 
+                                      : 'Review Requested Action'}
+                                  </span>
+                                </div>
+                                {pendingTools.length > 1 && (
+                                  <button
+                                    onClick={() => onApproveAll(msg.id)}
+                                    className="btn btn-primary btn-sm"
+                                    style={{ padding: '2px 8px', fontSize: '10px' }}
+                                  >
+                                    Approve All ({pendingTools.length})
+                                  </button>
+                                )}
+                              </div>
+
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                {pendingTools.map((tc) => (
+                                  <div key={tc.id} style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    backgroundColor: 'var(--bg-primary)',
+                                    padding: '6px 8px',
+                                    borderRadius: 'var(--radius-xs)',
+                                    border: '1px solid var(--border-subtle)',
+                                  }}>
+                                    <span style={{ fontSize: '11px', color: 'var(--text-primary)' }}>
+                                      {tc.summary || tc.name}
+                                    </span>
+                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                      <button
+                                        onClick={() => onApproveTool(msg.id, tc.id)}
+                                        className="btn btn-primary btn-sm"
+                                        style={{ padding: '2px 8px', fontSize: '10px' }}
+                                      >
+                                        <Check size={10} /> {tc.isDestructive ? 'Proceed' : 'Approve'}
+                                      </button>
+                                      <button
+                                        onClick={() => onRejectTool(msg.id, tc.id)}
+                                        className="btn btn-secondary btn-sm"
+                                        style={{ padding: '2px 8px', fontSize: '10px', color: '#f87171' }}
+                                      >
+                                        <X size={10} /> Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* 3. Failed Tool Notices */}
+                          {failedTools.length > 0 && (
+                            <div style={{
+                              padding: '6px 10px',
+                              backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                              border: '1px solid rgba(239, 68, 68, 0.25)',
+                              borderRadius: 'var(--radius-sm)',
+                              fontSize: '11px',
+                              color: '#f87171',
+                            }}>
+                              {failedTools.map(t => (
+                                <div key={t.id}>Notice: {t.name} — {t.error || 'Execution skipped'}</div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Clickable Follow-up Suggestion Chips (Zero Typing Needed!) */}
+                      {msg.suggestions && msg.suggestions.length > 0 && (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                          gap: '6px',
+                          marginTop: '2px',
+                        }}>
+                          {msg.suggestions.map((sug, i) => (
+                            <button
+                              key={i}
+                              onClick={() => onSendMessage(sug, currentMode)}
+                              className="btn btn-secondary btn-sm"
+                              style={{
+                                fontSize: '11px',
+                                padding: '3px 8px',
+                                backgroundColor: 'var(--bg-secondary)',
+                                borderColor: 'var(--border-subtle)',
+                                color: 'var(--text-secondary)',
+                                borderRadius: 'var(--radius-xs)',
+                              }}
+                            >
+                              + {sug}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })
           )}
 
           {isGenerating && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '13px' }}>
-              <Loader2 size={16} className="animate-spin" color="#818cf8" />
-              <span>Agent-Blend is processing scene commands...</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '12px' }}>
+              <Loader2 size={13} className="animate-spin" color="var(--text-secondary)" />
+              <span>Executing Blender 3D operations...</span>
             </div>
           )}
 
@@ -379,32 +530,32 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         </div>
       </div>
 
-      {/* Prominent Docked Composer (ChatGPT / Chainlit style) */}
+      {/* Modern Docked Composer */}
       <div style={{
-        padding: '16px 20px 20px 20px',
+        padding: '10px 20px 14px 20px',
         backgroundColor: 'transparent',
         flexShrink: 0,
       }}>
         <div style={{
           width: '100%',
-          maxWidth: '840px',
+          maxWidth: '820px',
           margin: '0 auto',
-          backgroundColor: 'var(--bg-secondary)',
+          backgroundColor: 'var(--bg-primary)',
           border: '1px solid var(--border-medium)',
-          borderRadius: '16px',
-          padding: '12px 16px',
-          boxShadow: 'var(--shadow-md)',
+          borderRadius: 'var(--radius-md)',
+          padding: '8px 12px',
+          boxShadow: 'var(--shadow-sm)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '10px',
+          gap: '6px',
         }}>
-          {/* Top Row: Approach Mode Selector & Active Model */}
+          {/* Top Row: Mode Selector & Active Model */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            {/* Mode Pills */}
+            {/* Segmented Mode Selector */}
             <div style={{
               display: 'flex',
-              backgroundColor: 'var(--bg-tertiary)',
-              borderRadius: '8px',
+              backgroundColor: 'var(--bg-secondary)',
+              borderRadius: 'var(--radius-xs)',
               padding: '2px',
               border: '1px solid var(--border-subtle)',
             }}>
@@ -412,65 +563,80 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 onClick={() => setCurrentMode('build')}
                 className="btn btn-sm"
                 style={{
-                  backgroundColor: currentMode === 'build' ? 'var(--accent-primary)' : 'transparent',
-                  color: currentMode === 'build' ? '#ffffff' : 'var(--text-secondary)',
-                  padding: '3px 10px',
+                  backgroundColor: currentMode === 'build' ? 'var(--bg-tertiary)' : 'transparent',
+                  color: currentMode === 'build' ? 'var(--text-primary)' : 'var(--text-muted)',
+                  border: currentMode === 'build' ? '1px solid var(--border-medium)' : '1px solid transparent',
+                  padding: '2px 8px',
                   fontSize: '11px',
+                  borderRadius: 'var(--radius-xs)',
                 }}
               >
-                <Hammer size={12} /> Build
+                <Hammer size={10} /> Build (Auto)
               </button>
               <button
                 onClick={() => setCurrentMode('plan')}
                 className="btn btn-sm"
                 style={{
-                  backgroundColor: currentMode === 'plan' ? 'var(--accent-amber)' : 'transparent',
-                  color: currentMode === 'plan' ? '#000000' : 'var(--text-secondary)',
-                  padding: '3px 10px',
+                  backgroundColor: currentMode === 'plan' ? 'var(--bg-tertiary)' : 'transparent',
+                  color: currentMode === 'plan' ? 'var(--text-primary)' : 'var(--text-muted)',
+                  border: currentMode === 'plan' ? '1px solid var(--border-medium)' : '1px solid transparent',
+                  padding: '2px 8px',
                   fontSize: '11px',
+                  borderRadius: 'var(--radius-xs)',
                 }}
               >
-                <ListOrdered size={12} /> Plan First
+                <ListOrdered size={10} /> Plan First
               </button>
               <button
                 onClick={() => setCurrentMode('ask')}
                 className="btn btn-sm"
                 style={{
-                  backgroundColor: currentMode === 'ask' ? 'var(--accent-cyan)' : 'transparent',
-                  color: currentMode === 'ask' ? '#000000' : 'var(--text-secondary)',
-                  padding: '3px 10px',
+                  backgroundColor: currentMode === 'ask' ? 'var(--bg-tertiary)' : 'transparent',
+                  color: currentMode === 'ask' ? 'var(--text-primary)' : 'var(--text-muted)',
+                  border: currentMode === 'ask' ? '1px solid var(--border-medium)' : '1px solid transparent',
+                  padding: '2px 8px',
                   fontSize: '11px',
+                  borderRadius: 'var(--radius-xs)',
                 }}
               >
-                <HelpCircle size={12} /> Ask
+                <HelpCircle size={10} /> Ask
               </button>
             </div>
 
-            {/* Model Pill (Clickable to change settings) */}
+            {/* Model & Execution Mode Indicator */}
             <button
               onClick={onOpenSettings}
               className="btn btn-ghost btn-sm"
               style={{
                 fontSize: '11px',
-                color: 'var(--text-secondary)',
+                color: 'var(--text-muted)',
                 gap: '5px',
-                padding: '2px 8px',
+                padding: '2px 6px',
               }}
-              title="Click to change model/provider"
+              title="Click to configure provider & settings"
             >
-              <Cpu size={12} color="#06b6d4" />
-              <span>{settings.provider.toUpperCase()}: {settings.model}</span>
+              <Cpu size={11} color="var(--text-secondary)" />
+              <span>{settings.provider.toUpperCase()} / {settings.model}</span>
+              <span className="badge badge-zinc" style={{ fontSize: '9px', padding: '1px 4px' }}>
+                {settings.executionMode === 'autonomous' ? '⚡ Autonomous' : '🛡️ Manual'}
+              </span>
             </button>
           </div>
 
           {/* Text Input Row */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
             <textarea
               ref={textareaRef}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`Describe what to build in Blender (${currentMode} mode)...`}
+              placeholder={
+                currentMode === 'build'
+                  ? 'Describe 3D scene action (e.g. "Add modern sofa and 3-point lighting")...'
+                  : currentMode === 'plan'
+                  ? 'Request a step-by-step 3D blueprint (e.g. "Plan a cyberpunk bedroom")...'
+                  : 'Ask about Blender lighting, materials, or dimensions...'
+              }
               rows={2}
               style={{
                 flex: 1,
@@ -479,9 +645,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 outline: 'none',
                 color: 'var(--text-primary)',
                 fontFamily: 'inherit',
-                fontSize: '14px',
+                fontSize: '13px',
                 resize: 'none',
                 lineHeight: '1.4',
+                padding: '2px 0',
               }}
             />
 
@@ -490,26 +657,26 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
               disabled={!inputText.trim() || isGenerating}
               className="btn btn-primary"
               style={{
-                width: '36px',
-                height: '36px',
+                width: '30px',
+                height: '30px',
                 padding: 0,
-                borderRadius: '10px',
-                opacity: !inputText.trim() || isGenerating ? 0.4 : 1,
+                borderRadius: 'var(--radius-xs)',
+                opacity: !inputText.trim() || isGenerating ? 0.3 : 1,
               }}
             >
-              {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+              {isGenerating ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
             </button>
           </div>
         </div>
 
         <p style={{
           textAlign: 'center',
-          fontSize: '11px',
-          color: 'var(--text-muted)',
-          marginTop: '8px',
-          margin: '8px 0 0 0',
+          fontSize: '10px',
+          color: 'var(--text-disabled)',
+          marginTop: '5px',
+          margin: '5px 0 0 0',
         }}>
-          Press Enter to send, Shift+Enter for new line. Actions pause for approval in Build mode.
+          Press Enter to send, Shift+Enter for newline. Safe actions execute directly into Blender.
         </p>
       </div>
     </div>
