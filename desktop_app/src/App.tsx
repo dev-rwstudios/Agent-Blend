@@ -24,7 +24,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   blenderPort: 9876,
   assetsPath: '',
   autoRefreshViewport: true,
-  requireApprovals: true,
+  executionMode: 'autonomous', // Autonomous production flow by default
   toolset: 'full',
   provider: 'ollama',
   model: 'llama3.1',
@@ -36,7 +36,17 @@ const DEFAULT_SETTINGS: AppSettings = {
 export const App: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings>(() => {
     const saved = localStorage.getItem('agent_blend_settings');
-    return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    if (!saved) return DEFAULT_SETTINGS;
+    try {
+      const parsed = JSON.parse(saved);
+      // Automatically migrate legacy requireApprovals: true to autonomous
+      if (!parsed.executionMode) {
+        parsed.executionMode = 'autonomous';
+      }
+      return { ...DEFAULT_SETTINGS, ...parsed };
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
   });
 
   const [blenderConnected, setBlenderConnected] = useState(false);
@@ -99,14 +109,13 @@ export const App: React.FC = () => {
         tool.status = 'completed';
         tool.result = res.result;
       } else {
-        tool.status = 'rejected';
-        tool.error = res.message || 'Operation failed';
+        tool.status = 'failed';
+        tool.error = res.message || 'Operation failed in Blender';
       }
     } catch (err: any) {
-      tool.status = 'rejected';
+      tool.status = 'failed';
       tool.error = err.message || String(err);
     }
-    await refreshScene();
   };
 
   const handleSendMessage = async (text: string, mode: 'build' | 'plan' | 'ask') => {
@@ -138,24 +147,34 @@ export const App: React.FC = () => {
         timestamp: Date.now(),
         mode,
         toolCalls: res.toolCalls,
+        plan: res.plan,
+        suggestions: res.suggestions,
       };
 
-      setMessages((prev) => [...prev, assistantMsg]);
-
-      // If mode is build and user doesn't require approvals, auto-execute
-      if (mode === 'build' && !settings.requireApprovals && res.toolCalls.length > 0) {
-        for (const tc of res.toolCalls) {
-          await runToolExecution(tc);
+      // AUTONOMOUS PRODUCTION ENGINE:
+      // In Build mode + autonomous setting, execute all safe constructive operations immediately!
+      if (mode === 'build' && res.toolCalls && res.toolCalls.length > 0) {
+        if (settings.executionMode === 'autonomous') {
+          for (const tc of res.toolCalls) {
+            if (!tc.isDestructive) {
+              await runToolExecution(tc);
+            } else {
+              // Destructive tools pause for explicit user confirmation
+              tc.status = 'pending';
+            }
+          }
         }
-        setMessages((prev) => [...prev]);
       }
+
+      setMessages((prev) => [...prev, assistantMsg]);
+      await refreshScene();
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
         {
           id: Math.random().toString(36).substring(7),
           role: 'assistant',
-          content: `Error communicating with model: ${err.message || String(err)}`,
+          content: `Connection notice: ${err.message || String(err)}`,
           timestamp: Date.now(),
           mode,
         },
@@ -174,6 +193,7 @@ export const App: React.FC = () => {
 
     await runToolExecution(tool);
     setMessages((prev) => [...prev]);
+    await refreshScene();
   };
 
   const handleRejectTool = (messageId: string, toolId: string) => {
@@ -197,6 +217,21 @@ export const App: React.FC = () => {
       }
     }
     setMessages((prev) => [...prev]);
+    await refreshScene();
+  };
+
+  const handleExecutePlan = async (messageId: string) => {
+    const msg = messages.find((m) => m.id === messageId);
+    if (!msg || !msg.toolCalls) return;
+
+    for (const tool of msg.toolCalls) {
+      await runToolExecution(tool);
+    }
+    if (msg.plan) {
+      msg.plan.canExecute = false; // Mark executed
+    }
+    setMessages((prev) => [...prev]);
+    await refreshScene();
   };
 
   const handleLaunchBlender = async () => {
@@ -250,6 +285,7 @@ export const App: React.FC = () => {
             onApproveTool={handleApproveTool}
             onRejectTool={handleRejectTool}
             onApproveAll={handleApproveAll}
+            onExecutePlan={handleExecutePlan}
             isGenerating={isGenerating}
             settings={settings}
             onOpenSettings={() => setIsSettingsOpen(true)}

@@ -31,6 +31,14 @@ export interface ToolCall {
   status: 'pending' | 'approved' | 'rejected' | 'executing' | 'completed' | 'failed';
   result?: any;
   error?: string;
+  isDestructive?: boolean;
+  summary?: string;
+}
+
+export interface PlanData {
+  title: string;
+  steps: string[];
+  canExecute: boolean;
 }
 
 export interface ChatMessage {
@@ -40,6 +48,8 @@ export interface ChatMessage {
   timestamp: number;
   mode?: 'build' | 'plan' | 'ask';
   toolCalls?: ToolCall[];
+  plan?: PlanData;
+  suggestions?: string[];
 }
 
 export type LLMProvider = 
@@ -58,7 +68,8 @@ export interface AppSettings {
   blenderPort: number;
   assetsPath: string;
   autoRefreshViewport: boolean;
-  requireApprovals: boolean;
+  executionMode: 'autonomous' | 'manual';
+  requireApprovals?: boolean; // legacy compatibility fallback
   toolset: 'core' | 'full';
   provider: LLMProvider;
   model: string;

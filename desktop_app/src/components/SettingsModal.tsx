@@ -4,7 +4,9 @@ import {
   Settings, 
   Save, 
   Check,
-  Folder
+  Folder,
+  Zap,
+  ShieldCheck
 } from 'lucide-react';
 import { AppSettings, LLMProvider } from '../types';
 
@@ -72,7 +74,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }}>
       <div 
         style={{
-          width: '500px',
+          width: '520px',
           maxHeight: '85vh',
           backgroundColor: 'var(--bg-primary)',
           border: '1px solid var(--border-medium)',
@@ -130,6 +132,64 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '3px', display: 'block' }}>
               Local directory where the AI copilot pulls 3D furniture, decor, and models.
             </span>
+          </div>
+
+          <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)' }} />
+
+          {/* Execution Engine Mode (Autonomous vs Manual Review) */}
+          <div>
+            <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+              Copilot Execution Mode
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div 
+                onClick={() => setFormData({ ...formData, executionMode: 'autonomous' })}
+                style={{
+                  padding: '10px',
+                  borderRadius: 'var(--radius-sm)',
+                  backgroundColor: formData.executionMode === 'autonomous' ? 'var(--bg-active)' : 'var(--bg-secondary)',
+                  border: `1px solid ${formData.executionMode === 'autonomous' ? 'var(--border-focus)' : 'var(--border-subtle)'}`,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Zap size={13} color={formData.executionMode === 'autonomous' ? '#34d399' : 'var(--text-muted)'} />
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                    Autonomous (Pro)
+                  </span>
+                </div>
+                <p style={{ fontSize: '10px', color: 'var(--text-muted)', lineHeight: '1.4', margin: 0 }}>
+                  Safe 3D operations execute instantly. Only destructive actions (clear scene) pause for confirmation.
+                </p>
+              </div>
+
+              <div 
+                onClick={() => setFormData({ ...formData, executionMode: 'manual' })}
+                style={{
+                  padding: '10px',
+                  borderRadius: 'var(--radius-sm)',
+                  backgroundColor: formData.executionMode === 'manual' ? 'var(--bg-active)' : 'var(--bg-secondary)',
+                  border: `1px solid ${formData.executionMode === 'manual' ? 'var(--border-focus)' : 'var(--border-subtle)'}`,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ShieldCheck size={13} color={formData.executionMode === 'manual' ? '#60a5fa' : 'var(--text-muted)'} />
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                    Manual Review
+                  </span>
+                </div>
+                <p style={{ fontSize: '10px', color: 'var(--text-muted)', lineHeight: '1.4', margin: 0 }}>
+                  Every single tool execution pauses and requires manual approval before running into Blender.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)' }} />
