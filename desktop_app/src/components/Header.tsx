@@ -10,6 +10,7 @@ import {
 
 interface HeaderProps {
   blenderConnected: boolean;
+  modelStatus: { ok: boolean; message: string };
   onOpenSettings: () => void;
   onLaunchBlender: () => void;
   onNewChat: () => void;
@@ -19,6 +20,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   blenderConnected,
+  modelStatus,
   onOpenSettings,
   onLaunchBlender,
   onNewChat,
@@ -64,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        {/* Connection status indicator */}
+        {/* Blender Socket Connection status */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -95,6 +97,34 @@ export const Header: React.FC<HeaderProps> = ({
               <Play size={8} /> Start
             </button>
           )}
+        </div>
+
+        {/* AI Model Status Indicator (Clickable to open settings) */}
+        <div 
+          onClick={onOpenSettings}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '2px 8px',
+            borderRadius: 'var(--radius-xs)',
+            backgroundColor: modelStatus.ok ? 'rgba(59, 130, 246, 0.08)' : 'rgba(245, 158, 11, 0.08)',
+            border: `1px solid ${modelStatus.ok ? 'rgba(59, 130, 246, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`,
+            cursor: 'pointer',
+          }}
+          title="AI Model Status (Click to configure)"
+        >
+          <div 
+            style={{
+              width: '5px',
+              height: '5px',
+              borderRadius: '50%',
+              backgroundColor: modelStatus.ok ? '#3b82f6' : '#f59e0b',
+            }} 
+          />
+          <span style={{ fontSize: '11px', fontWeight: '500', color: modelStatus.ok ? '#60a5fa' : '#fbbf24' }}>
+            {modelStatus.message}
+          </span>
         </div>
 
         <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--border-subtle)', margin: '0 2px' }} />

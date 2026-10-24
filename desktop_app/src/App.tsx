@@ -16,7 +16,7 @@ import {
   executeBlenderCommand, 
   launchBlenderApp 
 } from './services/blender';
-import { sendChatMessage } from './services/llm';
+import { sendChatMessage, checkModelHealth } from './services/llm';
 import assetCatalog from './assets/asset_catalog.json';
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -26,10 +26,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoRefreshViewport: true,
   executionMode: 'autonomous', // Autonomous production flow by default
   toolset: 'full',
-  provider: 'ollama',
-  model: 'llama3.1',
+  provider: 'builtin', // Default to built-in 3D engine so it works immediately out of the box!
+  model: '3d-director-v1',
   apiKey: '',
-  apiBaseUrl: 'http://localhost:11434',
+  apiBaseUrl: '',
   temperature: 0.7,
 };
 
@@ -39,7 +39,6 @@ export const App: React.FC = () => {
     if (!saved) return DEFAULT_SETTINGS;
     try {
       const parsed = JSON.parse(saved);
-      // Automatically migrate legacy requireApprovals: true to autonomous
       if (!parsed.executionMode) {
         parsed.executionMode = 'autonomous';
       }
@@ -50,6 +49,10 @@ export const App: React.FC = () => {
   });
 
   const [blenderConnected, setBlenderConnected] = useState(false);
+  const [modelStatus, setModelStatus] = useState<{ ok: boolean; message: string }>({
+    ok: true,
+    message: 'Built-in 3D Engine',
+  });
   const [sceneInfo, setSceneInfo] = useState<SceneInfo | null>(null);
   const [isStudioOpen, setIsStudioOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -57,7 +60,7 @@ export const App: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Sync connection and scene info
+  // Sync Blender connection and scene info
   const refreshScene = useCallback(async () => {
     const connected = await checkBlenderConnection(settings.blenderHost, settings.blenderPort);
     setBlenderConnected(connected);
@@ -67,11 +70,21 @@ export const App: React.FC = () => {
     }
   }, [settings.blenderHost, settings.blenderPort]);
 
+  // Sync AI model connection status
+  const refreshModelHealth = useCallback(async () => {
+    const status = await checkModelHealth(settings);
+    setModelStatus(status);
+  }, [settings]);
+
   useEffect(() => {
     refreshScene();
-    const interval = setInterval(refreshScene, 3500);
+    refreshModelHealth();
+    const interval = setInterval(() => {
+      refreshScene();
+      refreshModelHealth();
+    }, 3500);
     return () => clearInterval(interval);
-  }, [refreshScene]);
+  }, [refreshScene, refreshModelHealth]);
 
   // Execute a single tool call in Blender
   const runToolExecution = async (tool: ToolCall) => {
@@ -120,6 +133,39 @@ export const App: React.FC = () => {
 
   const handleSendMessage = async (text: string, mode: 'build' | 'plan' | 'ask') => {
     if (!text.trim() || isGenerating) return;
+
+    // Fast 1-click recovery actions
+    const lower = text.toLowerCase();
+    if (lower.includes('switch to built-in') || lower.includes('switch to builtin')) {
+      const updated: AppSettings = { ...settings, provider: 'builtin', model: '3d-director-v1' };
+      setSettings(updated);
+      localStorage.setItem('agent_blend_settings', JSON.stringify(updated));
+      setModelStatus({ ok: true, message: 'Built-in 3D Engine' });
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Math.random().toString(36).substring(7),
+          role: 'user',
+          content: text,
+          timestamp: Date.now(),
+          mode,
+        },
+        {
+          id: Math.random().toString(36).substring(7),
+          role: 'assistant',
+          content: `⚡ Switched to **Built-in 3D Engine**. You can now create objects, setup lights, and apply materials instantly without needing external model servers or API keys!`,
+          timestamp: Date.now(),
+          mode,
+          suggestions: ['Furnish a modern living room', 'Set up 3-point lighting', 'Create gold sphere'],
+        },
+      ]);
+      return;
+    }
+
+    if (lower.includes('open settings')) {
+      setIsSettingsOpen(true);
+      return;
+    }
 
     const userMsg: ChatMessage = {
       id: Math.random().toString(36).substring(7),
@@ -174,7 +220,7 @@ export const App: React.FC = () => {
         {
           id: Math.random().toString(36).substring(7),
           role: 'assistant',
-          content: `Connection notice: ${err.message || String(err)}`,
+          content: `Notice: ${err.message || String(err)}`,
           timestamp: Date.now(),
           mode,
         },
@@ -242,6 +288,7 @@ export const App: React.FC = () => {
   const handleSaveSettings = (newSettings: AppSettings) => {
     setSettings(newSettings);
     localStorage.setItem('agent_blend_settings', JSON.stringify(newSettings));
+    refreshModelHealth();
   };
 
   return (
@@ -256,6 +303,7 @@ export const App: React.FC = () => {
       {/* Studio Top Navigation Bar */}
       <Header
         blenderConnected={blenderConnected}
+        modelStatus={modelStatus}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onLaunchBlender={handleLaunchBlender}
         onNewChat={() => setMessages([])}
