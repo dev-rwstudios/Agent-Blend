@@ -195,7 +195,7 @@ def handle_save_checkpoint(params: dict) -> dict:
         clean_name = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in name)
         filepath = os.path.join(tempfile.gettempdir(), f"blend_ai_cp_{clean_name}_{int(time.time())}.blend")
     elif not filepath.endswith(".blend"):
-        filepath = f"{filepath}.blend"
+        raise ValueError("Checkpoint path must end in .blend")
 
     try:
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
@@ -215,10 +215,12 @@ def handle_import_asset(params: dict) -> dict:
 
     if not filepath and asset_id:
         parts = asset_id.split("/")
-        candidates = [
-            os.path.join(r"C:\Users\admin\Desktop\Agent-Blend\Agent-Blend\asset_library", *parts, "model.glb"),
-            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "asset_library", *parts, "model.glb"),
-        ]
+        candidates = []
+        env_assets = os.environ.get("AGENT_BLEND_ASSETS_PATH")
+        if env_assets:
+            candidates.append(os.path.join(env_assets, *parts, "model.glb"))
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        candidates.append(os.path.join(project_root, "asset_library", *parts, "model.glb"))
         for c in candidates:
             if os.path.exists(c):
                 filepath = c

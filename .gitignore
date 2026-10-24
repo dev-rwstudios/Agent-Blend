@@ -27,3 +27,12 @@ CLAUDE.md
 README.html
 chat_app/.data/
 chat_app/.files/
+
+# Added project ignores
+*.blend
+.files/
+/.chainlit/
+desktop_app/dist/
+desktop_app/node_modules/
+desktop_app/src-tauri/target/
+desktop_app/src-tauri/gen/
