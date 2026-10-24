@@ -24,32 +24,6 @@ export interface SceneInfo {
   use_gravity?: boolean;
 }
 
-export interface AssetSummary {
-  id: string;
-  name: string;
-  category: string;
-  subcategory: string;
-  room_types: string[];
-  style_tags: string[];
-  dimensions_m: {
-    width: number;
-    depth: number;
-    height: number;
-  };
-  surface: string;
-  relations: Array<Record<string, string>>;
-  polycount?: number;
-  model_path?: string;
-}
-
-export interface CheckpointItem {
-  id: string;
-  name: string;
-  timestamp: string;
-  action: string;
-  filepath?: string;
-}
-
 export interface ToolCall {
   id: string;
   name: string;
@@ -82,6 +56,7 @@ export type LLMProvider =
 export interface AppSettings {
   blenderHost: string;
   blenderPort: number;
+  assetsPath: string;
   autoRefreshViewport: boolean;
   requireApprovals: boolean;
   toolset: 'core' | 'full';

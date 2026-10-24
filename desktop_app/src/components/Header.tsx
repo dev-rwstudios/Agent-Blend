@@ -30,83 +30,83 @@ export const Header: React.FC<HeaderProps> = ({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 16px',
-      height: '50px',
+      padding: '0 14px',
+      height: '44px',
       backgroundColor: 'var(--bg-primary)',
       borderBottom: '1px solid var(--border-subtle)',
       zIndex: 50,
       flexShrink: 0,
     }}>
       {/* Brand & Identity */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <div style={{
-          width: '28px',
-          height: '28px',
-          borderRadius: '7px',
-          background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+          width: '24px',
+          height: '24px',
+          borderRadius: 'var(--radius-xs)',
+          backgroundColor: 'var(--bg-tertiary)',
+          border: '1px solid var(--border-medium)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 1px 8px rgba(99, 102, 241, 0.4)',
         }}>
-          <Box size={16} color="#ffffff" />
+          <Box size={13} color="var(--text-primary)" />
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '14px', fontWeight: '700', letterSpacing: '-0.02em', color: '#ffffff' }}>
+          <span style={{ fontSize: '13px', fontWeight: '600', letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>
             Agent-Blend
           </span>
           <span className="badge badge-zinc" style={{ fontSize: '10px', padding: '1px 5px' }}>
-            v1.2.1
+            Studio
           </span>
         </div>
       </div>
 
       {/* Right Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
         {/* Connection status indicator */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '7px',
-          padding: '3px 10px',
-          borderRadius: '999px',
-          backgroundColor: blenderConnected ? 'rgba(16, 185, 129, 0.08)' : 'rgba(244, 63, 94, 0.08)',
-          border: `1px solid ${blenderConnected ? 'rgba(16, 185, 129, 0.22)' : 'rgba(244, 63, 94, 0.22)'}`,
+          gap: '6px',
+          padding: '2px 8px',
+          borderRadius: 'var(--radius-xs)',
+          backgroundColor: blenderConnected ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+          border: `1px solid ${blenderConnected ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`,
         }}>
           <div 
             className={blenderConnected ? 'pulse-dot' : ''}
             style={{
-              width: '6px',
-              height: '6px',
+              width: '5px',
+              height: '5px',
               borderRadius: '50%',
-              backgroundColor: blenderConnected ? '#10b981' : '#f43f5e',
+              backgroundColor: blenderConnected ? '#10b981' : '#ef4444',
             }} 
           />
-          <span style={{ fontSize: '11px', fontWeight: '600', color: blenderConnected ? '#34d399' : '#fb7185' }}>
-            {blenderConnected ? 'Blender 5.1' : 'Blender Offline'}
+          <span style={{ fontSize: '11px', fontWeight: '500', color: blenderConnected ? '#34d399' : '#f87171' }}>
+            {blenderConnected ? 'Blender 5.1 Connected' : 'Blender Offline'}
           </span>
           {!blenderConnected && (
             <button 
               onClick={onLaunchBlender}
               className="btn btn-primary btn-sm"
-              style={{ marginLeft: '4px', padding: '1px 7px', fontSize: '10px', height: '20px' }}
+              style={{ marginLeft: '4px', padding: '1px 6px', fontSize: '10px', height: '18px' }}
             >
-              <Play size={9} /> Start
+              <Play size={8} /> Start
             </button>
           )}
         </div>
 
-        <div style={{ width: '1px', height: '18px', backgroundColor: 'var(--border-subtle)', margin: '0 2px' }} />
+        <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--border-subtle)', margin: '0 2px' }} />
 
         {/* New Session Button */}
         <button 
           onClick={onNewChat}
           className="btn btn-secondary btn-sm"
-          style={{ gap: '4px', fontSize: '11px' }}
-          title="New Scene Conversation"
+          style={{ gap: '4px' }}
+          title="New Scene Chat"
         >
-          <Plus size={13} />
+          <Plus size={12} />
           <span>New Chat</span>
         </button>
 
@@ -114,21 +114,21 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onToggleStudio}
           className={`btn btn-sm ${isStudioOpen ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ gap: '5px', fontSize: '11px' }}
-          title={isStudioOpen ? 'Hide Studio Inspector' : 'Show Studio Inspector'}
+          style={{ gap: '4px' }}
+          title={isStudioOpen ? 'Hide Scene Panel' : 'Show Scene Panel'}
         >
-          {isStudioOpen ? <PanelRightClose size={13} /> : <PanelRight size={13} />}
-          <span>Inspector</span>
+          {isStudioOpen ? <PanelRightClose size={12} /> : <PanelRight size={12} />}
+          <span>Scene</span>
         </button>
 
         {/* Settings Button */}
         <button
           onClick={onOpenSettings}
           className="btn btn-ghost btn-sm"
-          style={{ padding: '6px', color: 'var(--text-secondary)' }}
+          style={{ padding: '5px', color: 'var(--text-secondary)' }}
           title="Studio Settings"
         >
-          <Settings size={14} />
+          <Settings size={13} />
         </button>
       </div>
     </header>

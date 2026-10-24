@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Camera, 
   RefreshCw, 
-  Eye 
+  Radio
 } from 'lucide-react';
 import { captureViewportScreenshot, executeBlenderCommand } from '../services/blender';
 
@@ -61,9 +61,9 @@ export const ViewportTab: React.FC<ViewportTabProps> = ({
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-      backgroundColor: 'var(--bg-secondary)',
-      padding: '16px',
-      gap: '14px',
+      backgroundColor: 'var(--bg-primary)',
+      padding: '12px',
+      gap: '10px',
     }}>
       {/* Viewport Control Bar */}
       <div style={{
@@ -71,24 +71,33 @@ export const ViewportTab: React.FC<ViewportTabProps> = ({
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '8px',
-        backgroundColor: 'var(--bg-tertiary)',
-        padding: '8px 12px',
-        borderRadius: '10px',
+        gap: '6px',
+        backgroundColor: 'var(--bg-secondary)',
+        padding: '6px 10px',
+        borderRadius: 'var(--radius-sm)',
         border: '1px solid var(--border-subtle)',
       }}>
         {/* Shading mode selector */}
-        <div style={{ display: 'flex', gap: '4px' }}>
+        <div style={{
+          display: 'flex',
+          backgroundColor: 'var(--bg-tertiary)',
+          borderRadius: 'var(--radius-xs)',
+          padding: '2px',
+          gap: '2px',
+        }}>
           {(['SOLID', 'MATERIAL', 'RENDERED', 'WIREFRAME'] as const).map((m) => (
             <button
               key={m}
               onClick={() => changeShading(m)}
               className="btn btn-sm"
               style={{
-                fontSize: '11px',
-                padding: '4px 8px',
-                backgroundColor: shadingMode === m ? 'var(--accent-primary)' : 'transparent',
-                color: shadingMode === m ? '#ffffff' : 'var(--text-secondary)',
+                fontSize: '10px',
+                padding: '2px 6px',
+                fontWeight: shadingMode === m ? '600' : '400',
+                backgroundColor: shadingMode === m ? 'var(--bg-elevated)' : 'transparent',
+                color: shadingMode === m ? 'var(--text-primary)' : 'var(--text-secondary)',
+                border: shadingMode === m ? '1px solid var(--border-medium)' : '1px solid transparent',
+                borderRadius: 'var(--radius-xs)',
               }}
             >
               {m.charAt(0) + m.slice(1).toLowerCase()}
@@ -97,45 +106,48 @@ export const ViewportTab: React.FC<ViewportTabProps> = ({
         </div>
 
         {/* View Angles & Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <button
             onClick={() => setAutoRefresh(!autoRefresh)}
             className="btn btn-sm"
             style={{
-              fontSize: '11px',
-              backgroundColor: autoRefresh ? 'rgba(16, 185, 129, 0.2)' : 'var(--bg-hover)',
+              fontSize: '10px',
+              padding: '2px 7px',
+              gap: '4px',
+              backgroundColor: autoRefresh ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-tertiary)',
               color: autoRefresh ? '#34d399' : 'var(--text-secondary)',
-              border: `1px solid ${autoRefresh ? 'rgba(16, 185, 129, 0.4)' : 'transparent'}`,
+              border: `1px solid ${autoRefresh ? 'rgba(16, 185, 129, 0.25)' : 'var(--border-subtle)'}`,
             }}
           >
-            <Eye size={12} /> Auto-Sync {autoRefresh ? 'ON' : 'OFF'}
+            <Radio size={11} className={autoRefresh ? 'pulse-dot' : ''} />
+            <span>{autoRefresh ? 'Live Syncing' : 'Live Sync'}</span>
           </button>
 
           <button
             onClick={fetchScreenshot}
             disabled={loading || !blenderConnected}
             className="btn btn-secondary btn-sm"
+            style={{ fontSize: '10px', padding: '2px 7px', gap: '4px' }}
             title="Capture Viewport Screenshot"
           >
-            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} /> Snapshot
+            <RefreshCw size={11} className={loading ? 'animate-spin' : ''} />
+            <span>Snapshot</span>
           </button>
         </div>
       </div>
 
       {/* Main Viewport Display Canvas */}
       <div 
-        className="glass-card"
         style={{
           flex: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
-          backgroundColor: '#05070a',
+          backgroundColor: '#0c0c0f',
           position: 'relative',
-          borderRadius: '12px',
+          borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--border-subtle)',
-          boxShadow: 'inset 0 0 30px rgba(0,0,0,0.8)',
         }}
       >
         {screenshotUrl ? (
@@ -146,7 +158,7 @@ export const ViewportTab: React.FC<ViewportTabProps> = ({
               maxWidth: '100%',
               maxHeight: '100%',
               objectFit: 'contain',
-              borderRadius: '8px',
+              userSelect: 'none',
             }}
           />
         ) : (
@@ -154,36 +166,40 @@ export const ViewportTab: React.FC<ViewportTabProps> = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '12px',
+            gap: '10px',
             color: 'var(--text-muted)',
             textAlign: 'center',
-            padding: '24px',
+            padding: '20px',
           }}>
             <div style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '14px',
-              backgroundColor: 'rgba(255, 255, 255, 0.04)',
+              width: '40px',
+              height: '40px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'var(--bg-secondary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               border: '1px solid var(--border-subtle)',
             }}>
-              <Camera size={28} color="#64748b" />
+              <Camera size={20} color="var(--text-secondary)" />
             </div>
             <div>
-              <h4 style={{ fontSize: '14px', color: 'var(--text-primary)', marginBottom: '4px' }}>
-                {blenderConnected ? 'No Viewport Snapshot Yet' : 'Blender Not Connected'}
+              <h4 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '3px' }}>
+                {blenderConnected ? 'Viewport Preview' : 'Blender Offline'}
               </h4>
-              <p style={{ fontSize: '12px', maxWidth: '300px' }}>
+              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', maxWidth: '260px', lineHeight: '1.4' }}>
                 {blenderConnected
-                  ? 'Click "Snapshot" above or enable Auto-Sync to stream real-time OpenGL renders from Blender.'
-                  : 'Start the blend-ai server in Blender (Port 9876) to view the live 3D scene.'}
+                  ? 'Click Snapshot or enable Live Sync to view the active Blender scene.'
+                  : 'Start Blender and connect to port 9876 to stream live 3D viewports.'}
               </p>
             </div>
             {blenderConnected && (
-              <button onClick={fetchScreenshot} className="btn btn-primary btn-sm">
-                <RefreshCw size={12} /> Capture Viewport
+              <button 
+                onClick={fetchScreenshot} 
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: '11px', marginTop: '4px' }}
+              >
+                <RefreshCw size={11} /> Capture Viewport
               </button>
             )}
           </div>
@@ -193,15 +209,15 @@ export const ViewportTab: React.FC<ViewportTabProps> = ({
         {screenshotUrl && (
           <div style={{
             position: 'absolute',
-            bottom: '12px',
-            left: '12px',
+            bottom: '8px',
+            left: '8px',
             display: 'flex',
-            gap: '6px',
+            gap: '4px',
           }}>
-            <span className="badge badge-indigo" style={{ backdropFilter: 'blur(8px)', backgroundColor: 'rgba(15,20,32,0.8)' }}>
+            <span className="badge badge-zinc" style={{ fontSize: '10px' }}>
               OpenGL Viewport
             </span>
-            <span className="badge badge-cyan" style={{ backdropFilter: 'blur(8px)', backgroundColor: 'rgba(15,20,32,0.8)' }}>
+            <span className="badge badge-zinc" style={{ fontSize: '10px' }}>
               {shadingMode}
             </span>
           </div>

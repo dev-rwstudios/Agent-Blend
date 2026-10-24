@@ -70,7 +70,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     {
       icon: Box,
       title: 'Furnish Living Room',
-      desc: 'Sofa, coffee table, and area rug snapped to floor',
+      desc: 'Add sofa, coffee table, and area rug snapped to floor',
       prompt: 'Furnish a living room scene with a modern sofa, coffee table, and rug snapped to the floor.',
     },
     {
@@ -107,70 +107,69 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '24px 20px',
+        padding: '20px',
         display: 'flex',
         flexDirection: 'column',
       }}>
         <div style={{
           width: '100%',
-          maxWidth: '820px',
+          maxWidth: '800px',
           margin: '0 auto',
           display: 'flex',
           flexDirection: 'column',
-          gap: '20px',
+          gap: '16px',
           flex: 1,
         }}>
           {messages.length === 0 ? (
-            /* Empty State Hero (Linear / Cursor style) */
+            /* Empty State Hero */
             <div style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               margin: 'auto 0',
-              padding: '40px 0',
+              padding: '36px 0',
               textAlign: 'center',
             }}>
               <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                width: '36px',
+                height: '36px',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--border-medium)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginBottom: '16px',
-                boxShadow: 'var(--shadow-sm)',
+                marginBottom: '14px',
               }}>
-                <Sparkles size={22} color="#818cf8" />
+                <Sparkles size={18} color="var(--text-primary)" />
               </div>
 
               <h2 style={{
-                fontSize: '20px',
-                fontWeight: '700',
-                color: '#ffffff',
-                letterSpacing: '-0.02em',
+                fontSize: '18px',
+                fontWeight: '600',
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.01em',
                 marginBottom: '6px',
               }}>
-                What would you like to build?
+                What would you like to build in Blender?
               </h2>
 
               <p style={{
                 fontSize: '13px',
                 color: 'var(--text-secondary)',
-                maxWidth: '460px',
+                maxWidth: '440px',
                 lineHeight: '1.5',
-                marginBottom: '28px',
+                marginBottom: '24px',
               }}>
-                Control your live Blender session through natural language. Describe models, materials, lighting, or full scene layouts.
+                Natural language 3D creation. Describe models, materials, lights, or entire interior scenes.
               </p>
 
               {/* Starter Prompt Grid */}
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '10px',
+                gap: '8px',
                 width: '100%',
               }}>
                 {starters.map((item, idx) => {
@@ -181,18 +180,20 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                       onClick={() => onSendMessage(item.prompt, currentMode)}
                       className="glass-card"
                       style={{
-                        padding: '14px',
+                        padding: '12px 14px',
                         textAlign: 'left',
                         cursor: 'pointer',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '4px',
-                        backgroundColor: 'var(--bg-secondary)',
+                        gap: '3px',
+                        backgroundColor: 'var(--bg-primary)',
+                        border: '1px solid var(--border-subtle)',
+                        borderRadius: 'var(--radius-sm)',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Icon size={15} color="#818cf8" />
-                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#f8fafc' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                        <Icon size={14} color="var(--text-secondary)" />
+                        <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
                           {item.title}
                         </span>
                       </div>
@@ -220,16 +221,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 {/* User Message Bubble */}
                 {msg.role === 'user' ? (
                   <div style={{
-                    maxWidth: '85%',
+                    maxWidth: '82%',
                     backgroundColor: 'var(--bg-tertiary)',
                     border: '1px solid var(--border-medium)',
-                    borderRadius: '14px',
-                    borderBottomRightRadius: '4px',
-                    padding: '10px 16px',
-                    color: '#ffffff',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '9px 14px',
+                    color: 'var(--text-primary)',
                     fontSize: '13px',
                     lineHeight: '1.5',
-                    boxShadow: 'var(--shadow-sm)',
                   }}>
                     {msg.content}
                   </div>
@@ -239,42 +238,40 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                     width: '100%',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '10px',
+                    gap: '8px',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <div style={{
-                        width: '22px',
-                        height: '22px',
-                        borderRadius: '6px',
-                        background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: 'var(--radius-xs)',
+                        backgroundColor: 'var(--bg-tertiary)',
+                        border: '1px solid var(--border-medium)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}>
-                        <Sparkles size={12} color="#ffffff" />
+                        <Sparkles size={11} color="var(--text-primary)" />
                       </div>
-                      <span style={{ fontSize: '12px', fontWeight: '600', color: '#e2e8f0' }}>
+                      <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
                         Agent-Blend
                       </span>
                       {msg.mode && (
-                        <span className={`badge ${
-                          msg.mode === 'build' ? 'badge-indigo' : msg.mode === 'plan' ? 'badge-warning' : 'badge-cyan'
-                        }`} style={{ fontSize: '9px', padding: '1px 5px' }}>
-                          {msg.mode.toUpperCase()}
+                        <span className="badge badge-zinc" style={{ fontSize: '10px', textTransform: 'uppercase' }}>
+                          {msg.mode}
                         </span>
                       )}
                     </div>
 
                     <div style={{
-                      backgroundColor: 'var(--bg-secondary)',
+                      backgroundColor: 'var(--bg-primary)',
                       border: '1px solid var(--border-subtle)',
-                      borderRadius: '12px',
-                      padding: '14px 16px',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '12px 14px',
                       color: 'var(--text-primary)',
                       fontSize: '13px',
                       lineHeight: '1.6',
                       whiteSpace: 'pre-wrap',
-                      boxShadow: 'var(--shadow-sm)',
                     }}>
                       {msg.content}
                     </div>
@@ -284,7 +281,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                       <div style={{
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '8px',
+                        gap: '6px',
                         marginTop: '2px',
                       }}>
                         {msg.toolCalls.filter(t => t.status === 'pending').length > 1 && (
@@ -292,7 +289,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                             <button 
                               onClick={() => onApproveAll(msg.id)}
                               className="btn btn-primary btn-sm"
-                              style={{ backgroundColor: '#10b981' }}
                             >
                               <Check size={12} /> Approve All Actions ({msg.toolCalls.filter(t => t.status === 'pending').length})
                             </button>
@@ -304,14 +300,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                           return (
                             <div
                               key={tc.id}
-                              className="glass-card"
                               style={{
-                                padding: '10px 14px',
-                                backgroundColor: tc.status === 'pending' ? 'rgba(25, 30, 48, 0.7)' : 'var(--bg-secondary)',
+                                padding: '8px 12px',
+                                backgroundColor: 'var(--bg-secondary)',
+                                border: '1px solid var(--border-subtle)',
+                                borderRadius: 'var(--radius-sm)',
                                 borderLeft: `3px solid ${
                                   tc.status === 'completed' ? '#10b981' :
                                   tc.status === 'pending' ? '#f59e0b' :
-                                  tc.status === 'rejected' ? '#f43f5e' : '#6366f1'
+                                  tc.status === 'rejected' ? '#ef4444' : '#3b82f6'
                                 }`,
                               }}
                             >
@@ -323,13 +320,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                               }}
                               onClick={() => toggleToolExpanded(tc.id)}
                               >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                                  {isExpanded ? <ChevronDown size={13} color="#94a3b8" /> : <ChevronRight size={13} color="#94a3b8" />}
-                                  <Terminal size={12} color="#818cf8" />
-                                  <span className="font-mono" style={{ fontSize: '12px', fontWeight: '600', color: '#f1f5f9' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  {isExpanded ? <ChevronDown size={12} color="var(--text-muted)" /> : <ChevronRight size={12} color="var(--text-muted)" />}
+                                  <Terminal size={12} color="var(--text-secondary)" />
+                                  <span className="font-mono" style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-primary)' }}>
                                     {tc.name}
                                   </span>
-                                  {/* Quick summary tags of arguments */}
+                                  {/* Compact parameter summary */}
                                   <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                                     ({Object.keys(tc.args || {}).slice(0, 3).map(k => `${k}=${JSON.stringify(tc.args[k])}`).join(', ')})
                                   </span>
@@ -337,9 +334,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                                 <span className={`badge ${
                                   tc.status === 'completed' ? 'badge-success' :
                                   tc.status === 'pending' ? 'badge-warning' :
-                                  tc.status === 'rejected' ? 'badge-danger' : 'badge-indigo'
-                                }`} style={{ fontSize: '9px', padding: '1px 5px' }}>
-                                  {tc.status.toUpperCase()}
+                                  tc.status === 'rejected' ? 'badge-danger' : 'badge-blue'
+                                }`} style={{ fontSize: '9px', textTransform: 'uppercase' }}>
+                                  {tc.status}
                                 </span>
                               </div>
 
@@ -348,9 +345,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                                 <pre className="font-mono" style={{
                                   fontSize: '11px',
                                   color: 'var(--text-secondary)',
-                                  backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                                  backgroundColor: 'var(--bg-app)',
+                                  border: '1px solid var(--border-subtle)',
                                   padding: '8px 10px',
-                                  borderRadius: '6px',
+                                  borderRadius: 'var(--radius-xs)',
                                   overflowX: 'auto',
                                   marginTop: '8px',
                                   marginBottom: 0,
@@ -359,28 +357,28 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                                 </pre>
                               )}
 
-                              {/* Human-in-the-loop Approval Card */}
+                              {/* Approval Actions */}
                               {tc.status === 'pending' && (
-                                <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                                <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
                                   <button
                                     onClick={(e) => { e.stopPropagation(); onApproveTool(msg.id, tc.id); }}
                                     className="btn btn-primary btn-sm"
-                                    style={{ flex: 1, backgroundColor: '#10b981' }}
+                                    style={{ flex: 1 }}
                                   >
-                                    <Check size={12} /> Approve Action
+                                    <Check size={11} /> Approve
                                   </button>
                                   <button
                                     onClick={(e) => { e.stopPropagation(); onRejectTool(msg.id, tc.id); }}
                                     className="btn btn-secondary btn-sm"
-                                    style={{ flex: 1, color: '#fb7185' }}
+                                    style={{ flex: 1, color: '#f87171' }}
                                   >
-                                    <X size={12} /> Reject
+                                    <X size={11} /> Reject
                                   </button>
                                 </div>
                               )}
 
                               {tc.error && (
-                                <div style={{ fontSize: '11px', color: '#fb7185', marginTop: '6px' }}>
+                                <div style={{ fontSize: '11px', color: '#f87171', marginTop: '6px' }}>
                                   Error: {tc.error}
                                 </div>
                               )}
@@ -396,9 +394,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           )}
 
           {isGenerating && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '12px' }}>
-              <Loader2 size={14} className="animate-spin" color="#818cf8" />
-              <span>Agent-Blend is processing scene commands...</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '12px' }}>
+              <Loader2 size={13} className="animate-spin" color="var(--text-secondary)" />
+              <span>Executing Blender operations...</span>
             </div>
           )}
 
@@ -406,32 +404,32 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         </div>
       </div>
 
-      {/* Modern Docked Composer (Cursor / Spline style) */}
+      {/* Modern Docked Composer */}
       <div style={{
-        padding: '12px 20px 16px 20px',
+        padding: '10px 20px 14px 20px',
         backgroundColor: 'transparent',
         flexShrink: 0,
       }}>
         <div style={{
           width: '100%',
-          maxWidth: '820px',
+          maxWidth: '800px',
           margin: '0 auto',
-          backgroundColor: 'var(--bg-secondary)',
+          backgroundColor: 'var(--bg-primary)',
           border: '1px solid var(--border-medium)',
-          borderRadius: '14px',
-          padding: '10px 14px',
-          boxShadow: 'var(--shadow-md)',
+          borderRadius: 'var(--radius-md)',
+          padding: '8px 12px',
+          boxShadow: 'var(--shadow-sm)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '8px',
+          gap: '6px',
         }}>
-          {/* Top Row: Approach Mode Selector & Active Model */}
+          {/* Top Row: Mode Selector & Active Model */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            {/* Segmented Mode Pills */}
+            {/* Segmented Mode Selector */}
             <div style={{
               display: 'flex',
-              backgroundColor: 'var(--bg-tertiary)',
-              borderRadius: '7px',
+              backgroundColor: 'var(--bg-secondary)',
+              borderRadius: 'var(--radius-xs)',
               padding: '2px',
               border: '1px solid var(--border-subtle)',
             }}>
@@ -439,57 +437,60 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 onClick={() => setCurrentMode('build')}
                 className="btn btn-sm"
                 style={{
-                  backgroundColor: currentMode === 'build' ? 'var(--accent-primary)' : 'transparent',
-                  color: currentMode === 'build' ? '#ffffff' : 'var(--text-secondary)',
-                  padding: '3px 8px',
+                  backgroundColor: currentMode === 'build' ? 'var(--bg-tertiary)' : 'transparent',
+                  color: currentMode === 'build' ? 'var(--text-primary)' : 'var(--text-muted)',
+                  border: currentMode === 'build' ? '1px solid var(--border-medium)' : '1px solid transparent',
+                  padding: '2px 7px',
                   fontSize: '11px',
-                  borderRadius: '5px',
+                  borderRadius: 'var(--radius-xs)',
                 }}
               >
-                <Hammer size={11} /> Build
+                <Hammer size={10} /> Build
               </button>
               <button
                 onClick={() => setCurrentMode('plan')}
                 className="btn btn-sm"
                 style={{
-                  backgroundColor: currentMode === 'plan' ? 'var(--accent-amber)' : 'transparent',
-                  color: currentMode === 'plan' ? '#000000' : 'var(--text-secondary)',
-                  padding: '3px 8px',
+                  backgroundColor: currentMode === 'plan' ? 'var(--bg-tertiary)' : 'transparent',
+                  color: currentMode === 'plan' ? 'var(--text-primary)' : 'var(--text-muted)',
+                  border: currentMode === 'plan' ? '1px solid var(--border-medium)' : '1px solid transparent',
+                  padding: '2px 7px',
                   fontSize: '11px',
-                  borderRadius: '5px',
+                  borderRadius: 'var(--radius-xs)',
                 }}
               >
-                <ListOrdered size={11} /> Plan First
+                <ListOrdered size={10} /> Plan First
               </button>
               <button
                 onClick={() => setCurrentMode('ask')}
                 className="btn btn-sm"
                 style={{
-                  backgroundColor: currentMode === 'ask' ? 'var(--accent-cyan)' : 'transparent',
-                  color: currentMode === 'ask' ? '#000000' : 'var(--text-secondary)',
-                  padding: '3px 8px',
+                  backgroundColor: currentMode === 'ask' ? 'var(--bg-tertiary)' : 'transparent',
+                  color: currentMode === 'ask' ? 'var(--text-primary)' : 'var(--text-muted)',
+                  border: currentMode === 'ask' ? '1px solid var(--border-medium)' : '1px solid transparent',
+                  padding: '2px 7px',
                   fontSize: '11px',
-                  borderRadius: '5px',
+                  borderRadius: 'var(--radius-xs)',
                 }}
               >
-                <HelpCircle size={11} /> Ask
+                <HelpCircle size={10} /> Ask
               </button>
             </div>
 
-            {/* Model Pill (Clickable to change settings) */}
+            {/* Model Indicator */}
             <button
               onClick={onOpenSettings}
               className="btn btn-ghost btn-sm"
               style={{
                 fontSize: '11px',
-                color: 'var(--text-secondary)',
-                gap: '5px',
+                color: 'var(--text-muted)',
+                gap: '4px',
                 padding: '2px 6px',
               }}
-              title="Click to change model/provider"
+              title="Click to configure provider & settings"
             >
-              <Cpu size={12} color="#06b6d4" />
-              <span>{settings.provider.toUpperCase()}: {settings.model}</span>
+              <Cpu size={11} color="var(--text-secondary)" />
+              <span>{settings.provider.toUpperCase()} / {settings.model}</span>
             </button>
           </div>
 
@@ -511,7 +512,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 fontFamily: 'inherit',
                 fontSize: '13px',
                 resize: 'none',
-                lineHeight: '1.45',
+                lineHeight: '1.4',
+                padding: '2px 0',
               }}
             />
 
@@ -520,14 +522,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
               disabled={!inputText.trim() || isGenerating}
               className="btn btn-primary"
               style={{
-                width: '32px',
-                height: '32px',
+                width: '30px',
+                height: '30px',
                 padding: 0,
-                borderRadius: '8px',
-                opacity: !inputText.trim() || isGenerating ? 0.35 : 1,
+                borderRadius: 'var(--radius-xs)',
+                opacity: !inputText.trim() || isGenerating ? 0.3 : 1,
               }}
             >
-              {isGenerating ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+              {isGenerating ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
             </button>
           </div>
         </div>
@@ -535,11 +537,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         <p style={{
           textAlign: 'center',
           fontSize: '10px',
-          color: 'var(--text-muted)',
-          marginTop: '6px',
-          margin: '6px 0 0 0',
+          color: 'var(--text-disabled)',
+          marginTop: '5px',
+          margin: '5px 0 0 0',
         }}>
-          Press Enter to send, Shift+Enter for newline. Actions pause for approval in Build mode.
+          Press Enter to send, Shift+Enter for newline.
         </p>
       </div>
     </div>

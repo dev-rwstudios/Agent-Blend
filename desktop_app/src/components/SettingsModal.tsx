@@ -3,7 +3,8 @@ import {
   X, 
   Settings, 
   Save, 
-  Check 
+  Check,
+  Folder
 } from 'lucide-react';
 import { AppSettings, LLMProvider } from '../types';
 
@@ -53,7 +54,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setTimeout(() => {
       setSavedToast(false);
       onClose();
-    }, 800);
+    }, 600);
   };
 
   return (
@@ -63,23 +64,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.75)',
-      backdropFilter: 'blur(8px)',
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 1000,
     }}>
       <div 
-        className="glass-panel"
         style={{
-          width: '540px',
-          maxHeight: '90vh',
-          borderRadius: '16px',
+          width: '500px',
+          maxHeight: '85vh',
+          backgroundColor: 'var(--bg-primary)',
+          border: '1px solid var(--border-medium)',
+          borderRadius: 'var(--radius-lg)',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: 'var(--shadow-lg)',
+          boxShadow: 'var(--shadow-md)',
         }}
       >
         {/* Header */}
@@ -87,31 +88,55 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '16px 20px',
+          padding: '12px 16px',
           borderBottom: '1px solid var(--border-subtle)',
+          backgroundColor: 'var(--bg-secondary)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Settings size={18} color="#818cf8" />
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#f8fafc' }}>
-              Agent-Blend Studio Settings
-            </h3>
+            <Settings size={15} color="var(--text-secondary)" />
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+              Studio Settings
+            </span>
           </div>
-          <button onClick={onClose} className="btn btn-ghost btn-sm" style={{ padding: '4px' }}>
-            <X size={16} />
+          <button onClick={onClose} className="btn btn-ghost btn-sm" style={{ padding: '3px' }}>
+            <X size={15} />
           </button>
         </div>
 
         {/* Content Body */}
         <div style={{
-          padding: '20px',
+          padding: '16px',
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          gap: '14px',
         }}>
+          {/* Permanent Asset Library Path */}
+          <div>
+            <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px' }}>
+              <Folder size={12} color="var(--text-muted)" />
+              Permanent Asset Library Directory
+            </label>
+            <input
+              type="text"
+              value={formData.assetsPath || ''}
+              onChange={(e) => setFormData({ ...formData, assetsPath: e.target.value })}
+              placeholder="e.g. C:\Users\admin\Desktop\Agent-Blend\Agent-Blend\asset_library"
+              style={{
+                width: '100%',
+                padding: '6px 10px',
+              }}
+            />
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '3px', display: 'block' }}>
+              Local directory where the AI copilot pulls 3D furniture, decor, and models.
+            </span>
+          </div>
+
+          <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)' }} />
+
           {/* Provider Selection */}
           <div>
-            <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
+            <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
               AI LLM Provider
             </label>
             <select
@@ -119,17 +144,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onChange={(e) => handleProviderChange(e.target.value as LLMProvider)}
               style={{
                 width: '100%',
-                backgroundColor: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: '8px',
-                padding: '8px 12px',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-                outline: 'none',
+                padding: '6px 10px',
               }}
             >
               {providers.map((p) => (
-                <option key={p.id} value={p.id} style={{ backgroundColor: '#0f1420' }}>
+                <option key={p.id} value={p.id} style={{ backgroundColor: 'var(--bg-secondary)' }}>
                   {p.name}
                 </option>
               ))}
@@ -138,7 +157,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* Model Name */}
           <div>
-            <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+            <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
               Model Identifier
             </label>
             <input
@@ -148,13 +167,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               placeholder="e.g. gpt-4o, llama3.1, claude-3-5-sonnet..."
               style={{
                 width: '100%',
-                backgroundColor: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: '8px',
-                padding: '8px 12px',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-                outline: 'none',
+                padding: '6px 10px',
               }}
             />
           </div>
@@ -162,8 +175,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* API Key */}
           {formData.provider !== 'ollama' && (
             <div>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-                API Key (Stored locally in memory)
+              <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                API Key
               </label>
               <input
                 type="password"
@@ -172,13 +185,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 placeholder="sk-..."
                 style={{
                   width: '100%',
-                  backgroundColor: 'var(--bg-tertiary)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  color: 'var(--text-primary)',
-                  fontSize: '13px',
-                  outline: 'none',
+                  padding: '6px 10px',
                 }}
               />
             </div>
@@ -186,8 +193,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* Base URL */}
           <div>
-            <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-              API Base URL / Endpoint
+            <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+              API Base URL
             </label>
             <input
               type="text"
@@ -195,21 +202,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onChange={(e) => setFormData({ ...formData, apiBaseUrl: e.target.value })}
               style={{
                 width: '100%',
-                backgroundColor: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: '8px',
-                padding: '8px 12px',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-                outline: 'none',
+                padding: '6px 10px',
               }}
             />
           </div>
 
+          <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)' }} />
+
           {/* Blender Socket Settings */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '10px' }}>
             <div>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+              <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                 Blender Host
               </label>
               <input
@@ -218,18 +221,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, blenderHost: e.target.value })}
                 style={{
                   width: '100%',
-                  backgroundColor: 'var(--bg-tertiary)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  color: 'var(--text-primary)',
-                  fontSize: '13px',
-                  outline: 'none',
+                  padding: '6px 10px',
                 }}
               />
             </div>
             <div>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+              <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                 Port
               </label>
               <input
@@ -238,13 +235,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, blenderPort: parseInt(e.target.value) || 9876 })}
                 style={{
                   width: '100%',
-                  backgroundColor: 'var(--bg-tertiary)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  color: 'var(--text-primary)',
-                  fontSize: '13px',
-                  outline: 'none',
+                  padding: '6px 10px',
                 }}
               />
             </div>
@@ -256,15 +247,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           display: 'flex',
           justifyContent: 'flex-end',
           alignItems: 'center',
-          gap: '10px',
-          padding: '16px 20px',
+          gap: '8px',
+          padding: '10px 16px',
           borderTop: '1px solid var(--border-subtle)',
+          backgroundColor: 'var(--bg-secondary)',
         }}>
           <button onClick={onClose} className="btn btn-secondary btn-sm">
             Cancel
           </button>
           <button onClick={handleSave} className="btn btn-primary btn-sm">
-            {savedToast ? <Check size={14} /> : <Save size={14} />} Save Settings
+            {savedToast ? <Check size={13} /> : <Save size={13} />} Save
           </button>
         </div>
       </div>

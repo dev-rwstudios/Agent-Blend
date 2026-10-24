@@ -7,7 +7,6 @@ import { SettingsModal } from './components/SettingsModal';
 import { 
   SceneInfo, 
   ChatMessage, 
-  CheckpointItem, 
   AppSettings, 
   ToolCall 
 } from './types';
@@ -15,8 +14,7 @@ import {
   checkBlenderConnection, 
   getSceneInfo, 
   executeBlenderCommand, 
-  launchBlenderApp,
-  saveSceneCheckpoint 
+  launchBlenderApp 
 } from './services/blender';
 import { sendChatMessage } from './services/llm';
 import assetCatalog from './assets/asset_catalog.json';
@@ -24,6 +22,7 @@ import assetCatalog from './assets/asset_catalog.json';
 const DEFAULT_SETTINGS: AppSettings = {
   blenderHost: '127.0.0.1',
   blenderPort: 9876,
+  assetsPath: '',
   autoRefreshViewport: true,
   requireApprovals: true,
   toolset: 'full',
@@ -46,7 +45,6 @@ export const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [checkpoints, setCheckpoints] = useState<CheckpointItem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Sync connection and scene info
@@ -75,6 +73,9 @@ export const App: React.FC = () => {
       if (cmdName === 'execute_blender_code') {
         cmdName = 'execute_code';
       } else if (cmdName === 'import_asset') {
+        if (settings.assetsPath && !args.assets_path) {
+          args.assets_path = settings.assetsPath;
+        }
         if (!args.model_path && args.asset_id) {
           const found = (assetCatalog as any[]).find((a) => a.id === args.asset_id);
           if (found?.model_path) {
@@ -146,7 +147,7 @@ export const App: React.FC = () => {
         for (const tc of res.toolCalls) {
           await runToolExecution(tc);
         }
-        setMessages((prev) => [...prev]); // re-render
+        setMessages((prev) => [...prev]);
       }
     } catch (err: any) {
       setMessages((prev) => [
@@ -161,10 +162,6 @@ export const App: React.FC = () => {
       ]);
     } finally {
       setIsGenerating(false);
-      // Auto-save checkpoint if modified scene
-      if (blenderConnected && mode === 'build') {
-        saveSceneCheckpoint(`Turn_${messages.length + 1}`, settings.blenderHost, settings.blenderPort).catch(() => {});
-      }
     }
   };
 
@@ -259,7 +256,7 @@ export const App: React.FC = () => {
           />
         </div>
 
-        {/* Docked Scene Inspector */}
+        {/* Docked Scene Inspector (Viewport & Outliner) */}
         <StudioDrawer
           isOpen={isStudioOpen}
           onClose={() => setIsStudioOpen(false)}
@@ -268,8 +265,6 @@ export const App: React.FC = () => {
           blenderPort={settings.blenderPort}
           sceneInfo={sceneInfo}
           onRefreshScene={refreshScene}
-          checkpoints={checkpoints}
-          onAddCheckpoint={(cp) => setCheckpoints((prev) => [cp, ...prev])}
         />
       </main>
 

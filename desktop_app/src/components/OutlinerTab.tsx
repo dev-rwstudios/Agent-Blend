@@ -8,7 +8,8 @@ import {
   Trash2, 
   Target, 
   Search, 
-  Layers
+  Layers,
+  X
 } from 'lucide-react';
 import { SceneObject } from '../types';
 import { setObjectVisibility, deleteObject, focusObject } from '../services/blender';
@@ -32,13 +33,13 @@ export const OutlinerTab: React.FC<OutlinerTabProps> = ({
   const getObjectIcon = (type: string) => {
     switch (type.toUpperCase()) {
       case 'LIGHT':
-        return <Sun size={14} color="#f59e0b" />;
+        return <Sun size={13} color="#f59e0b" />;
       case 'CAMERA':
-        return <Camera size={14} color="#06b6d4" />;
+        return <Camera size={13} color="#06b6d4" />;
       case 'MESH':
-        return <Box size={14} color="#818cf8" />;
+        return <Box size={13} color="var(--text-primary)" />;
       default:
-        return <Layers size={14} color="#94a3b8" />;
+        return <Layers size={13} color="var(--text-muted)" />;
     }
   };
 
@@ -50,7 +51,10 @@ export const OutlinerTab: React.FC<OutlinerTabProps> = ({
 
   const handleDelete = async (obj: SceneObject, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm(`Delete object "${obj.name}" from Blender scene?`)) {
+    if (confirm(`Delete "${obj.name}" from Blender scene?`)) {
+      if (selectedObj?.name === obj.name) {
+        setSelectedObj(null);
+      }
       await deleteObject(obj.name, blenderHost, blenderPort);
       onRefresh();
     }
@@ -71,21 +75,21 @@ export const OutlinerTab: React.FC<OutlinerTabProps> = ({
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-      backgroundColor: 'var(--bg-secondary)',
-      padding: '16px',
-      gap: '12px',
+      backgroundColor: 'var(--bg-primary)',
+      padding: '12px',
+      gap: '10px',
     }}>
       {/* Search Header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
-        backgroundColor: 'var(--bg-tertiary)',
+        gap: '6px',
+        backgroundColor: 'var(--bg-secondary)',
         border: '1px solid var(--border-subtle)',
-        borderRadius: '8px',
-        padding: '6px 12px',
+        borderRadius: 'var(--radius-sm)',
+        padding: '5px 10px',
       }}>
-        <Search size={14} color="var(--text-muted)" />
+        <Search size={13} color="var(--text-muted)" />
         <input
           type="text"
           value={search}
@@ -98,55 +102,66 @@ export const OutlinerTab: React.FC<OutlinerTabProps> = ({
             outline: 'none',
             color: 'var(--text-primary)',
             fontSize: '12px',
+            padding: 0,
           }}
         />
-        <span className="badge badge-indigo" style={{ fontSize: '10px' }}>
+        <span className="badge badge-zinc" style={{ fontSize: '10px', padding: '1px 5px' }}>
           {filtered.length}
         </span>
       </div>
 
-      {/* Split view: Object List & Inspector */}
-      <div style={{ display: 'flex', gap: '12px', flex: 1, overflow: 'hidden' }}>
-        {/* Objects Tree */}
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '4px',
-          paddingRight: '4px',
-        }}>
-          {filtered.length === 0 ? (
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              color: 'var(--text-muted)',
-              fontSize: '12px',
-            }}>
-              No objects found in active scene.
-            </div>
-          ) : (
-            filtered.map((obj) => (
+      {/* Objects Tree List */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '3px',
+      }}>
+        {filtered.length === 0 ? (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            color: 'var(--text-muted)',
+            fontSize: '12px',
+            textAlign: 'center',
+            padding: '24px 0',
+          }}>
+            <Box size={24} color="var(--text-disabled)" style={{ marginBottom: '8px' }} />
+            <span>{search ? 'No matching objects' : 'Scene is empty'}</span>
+          </div>
+        ) : (
+          filtered.map((obj) => {
+            const isSelected = selectedObj?.name === obj.name;
+            return (
               <div
                 key={obj.name}
-                onClick={() => setSelectedObj(obj)}
-                className="glass-card"
+                onClick={() => setSelectedObj(isSelected ? null : obj)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '8px 12px',
+                  padding: '6px 10px',
                   cursor: 'pointer',
-                  backgroundColor: selectedObj?.name === obj.name ? 'var(--bg-active)' : 'var(--bg-card)',
-                  borderColor: selectedObj?.name === obj.name ? 'var(--accent-primary)' : 'var(--border-subtle)',
+                  backgroundColor: isSelected ? 'var(--bg-active)' : 'var(--bg-secondary)',
+                  border: `1px solid ${isSelected ? 'var(--border-focus)' : 'var(--border-subtle)'}`,
+                  borderRadius: 'var(--radius-sm)',
+                  transition: 'background-color 0.1s ease',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
                   {getObjectIcon(obj.type)}
-                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#e2e8f0' }}>
+                  <span style={{
+                    fontSize: '12px',
+                    fontWeight: isSelected ? '600' : '500',
+                    color: isSelected ? 'var(--text-primary)' : 'var(--text-primary)',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                    overflow: 'hidden',
+                  }}>
                     {obj.name}
                   </span>
                   <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
@@ -154,107 +169,149 @@ export const OutlinerTab: React.FC<OutlinerTabProps> = ({
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
                   <button
                     onClick={(e) => handleFocus(obj, e)}
                     className="btn btn-ghost btn-sm"
-                    style={{ padding: '3px 6px' }}
-                    title="Frame / Focus in Viewport"
+                    style={{ padding: '3px', color: 'var(--text-muted)' }}
+                    title="Frame in Viewport"
                   >
                     <Target size={12} />
                   </button>
                   <button
                     onClick={(e) => handleToggleVisibility(obj, e)}
                     className="btn btn-ghost btn-sm"
-                    style={{ padding: '3px 6px', color: obj.visible ? '#34d399' : '#64748b' }}
-                    title="Toggle Visibility"
+                    style={{ padding: '3px', color: obj.visible ? '#34d399' : 'var(--text-disabled)' }}
+                    title={obj.visible ? 'Hide Object' : 'Show Object'}
                   >
                     {obj.visible ? <Eye size={12} /> : <EyeOff size={12} />}
                   </button>
                   <button
                     onClick={(e) => handleDelete(obj, e)}
                     className="btn btn-ghost btn-sm"
-                    style={{ padding: '3px 6px', color: '#fb7185' }}
+                    style={{ padding: '3px', color: 'var(--text-muted)' }}
                     title="Delete Object"
                   >
                     <Trash2 size={12} />
                   </button>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            );
+          })
+        )}
+      </div>
 
-        {/* Selected Object Details Inspector */}
-        {selectedObj && (
-          <div 
-            className="glass-panel"
-            style={{
-              width: '280px',
-              padding: '14px',
-              borderRadius: '12px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              overflowY: 'auto',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
+      {/* Selected Object Detail Inspector Drawer */}
+      {selectedObj && (
+        <div style={{
+          backgroundColor: 'var(--bg-secondary)',
+          border: '1px solid var(--border-medium)',
+          borderRadius: 'var(--radius-sm)',
+          padding: '10px 12px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          flexShrink: 0,
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               {getObjectIcon(selectedObj.type)}
-              <div>
-                <h4 style={{ fontSize: '13px', fontWeight: '700', color: '#ffffff' }}>
-                  {selectedObj.name}
-                </h4>
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                  Type: {selectedObj.type}
-                </p>
-              </div>
-            </div>
-
-            {/* Transform coordinates */}
-            <div>
-              <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                World Location (Meters)
+              <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                {selectedObj.name}
               </span>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '6px' }}>
-                {['X', 'Y', 'Z'].map((axis, i) => (
-                  <div key={axis} style={{
-                    backgroundColor: 'rgba(0,0,0,0.3)',
-                    padding: '6px',
-                    borderRadius: '6px',
-                    textAlign: 'center',
+              <span className="badge badge-zinc" style={{ fontSize: '9px', padding: '1px 4px' }}>
+                {selectedObj.type}
+              </span>
+            </div>
+            <button
+              onClick={() => setSelectedObj(null)}
+              className="btn btn-ghost btn-sm"
+              style={{ padding: '2px', color: 'var(--text-muted)' }}
+            >
+              <X size={12} />
+            </button>
+          </div>
+
+          {/* Transform World Coordinates */}
+          <div>
+            <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Location (Meters)
+            </span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginTop: '4px' }}>
+              {['X', 'Y', 'Z'].map((axis, i) => (
+                <div key={axis} style={{
+                  backgroundColor: 'var(--bg-tertiary)',
+                  padding: '4px 6px',
+                  borderRadius: 'var(--radius-xs)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  border: '1px solid var(--border-subtle)',
+                }}>
+                  <span style={{
+                    fontSize: '10px',
+                    fontWeight: '700',
+                    color: i === 0 ? '#f87171' : i === 1 ? '#34d399' : '#60a5fa'
+                  }}>
+                    {axis}
+                  </span>
+                  <span className="font-mono" style={{ fontSize: '11px', color: 'var(--text-primary)' }}>
+                    {selectedObj.location ? selectedObj.location[i]?.toFixed(2) : '0.00'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Dimensions if available */}
+          {selectedObj.dimensions && (
+            <div>
+              <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Dimensions (W x D x H)
+              </span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginTop: '4px' }}>
+                {['W', 'D', 'H'].map((dim, i) => (
+                  <div key={dim} style={{
+                    backgroundColor: 'var(--bg-tertiary)',
+                    padding: '4px 6px',
+                    borderRadius: 'var(--radius-xs)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
                     border: '1px solid var(--border-subtle)',
                   }}>
-                    <span style={{ fontSize: '10px', color: i === 0 ? '#fb7185' : i === 1 ? '#34d399' : '#60a5fa', fontWeight: 'bold' }}>
-                      {axis}:
+                    <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)' }}>
+                      {dim}
                     </span>
-                    <div style={{ fontSize: '11px', fontFamily: 'monospace' }}>
-                      {selectedObj.location ? selectedObj.location[i]?.toFixed(2) : '0.00'}
-                    </div>
+                    <span className="font-mono" style={{ fontSize: '11px', color: 'var(--text-primary)' }}>
+                      {selectedObj.dimensions ? selectedObj.dimensions[i]?.toFixed(2) : '0.00'}m
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
+          )}
 
-            {/* Quick Actions */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: 'auto' }}>
-              <button
-                onClick={(e) => handleFocus(selectedObj, e)}
-                className="btn btn-primary btn-sm"
-              >
-                <Target size={12} /> Focus Object
-              </button>
-              <button
-                onClick={(e) => handleDelete(selectedObj, e)}
-                className="btn btn-secondary btn-sm"
-                style={{ color: '#fb7185' }}
-              >
-                <Trash2 size={12} /> Delete from Scene
-              </button>
-            </div>
+          {/* Quick Actions */}
+          <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
+            <button
+              onClick={(e) => handleFocus(selectedObj, e)}
+              className="btn btn-secondary btn-sm"
+              style={{ flex: 1, fontSize: '11px', gap: '4px' }}
+            >
+              <Target size={11} /> Focus
+            </button>
+            <button
+              onClick={(e) => handleDelete(selectedObj, e)}
+              className="btn btn-secondary btn-sm"
+              style={{ flex: 1, fontSize: '11px', color: '#f87171', gap: '4px' }}
+            >
+              <Trash2 size={11} /> Delete
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

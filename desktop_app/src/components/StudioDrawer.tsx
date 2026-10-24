@@ -3,17 +3,11 @@ import {
   X, 
   Camera, 
   Layers, 
-  Package, 
-  Bookmark, 
-  Activity,
   RefreshCw
 } from 'lucide-react';
 import { ViewportTab } from './ViewportTab';
 import { OutlinerTab } from './OutlinerTab';
-import { AssetLibraryTab } from './AssetLibraryTab';
-import { CheckpointsTab } from './CheckpointsTab';
-import { DiagnosticsTab } from './DiagnosticsTab';
-import { SceneInfo, CheckpointItem } from '../types';
+import { SceneInfo } from '../types';
 
 interface StudioDrawerProps {
   isOpen: boolean;
@@ -23,8 +17,6 @@ interface StudioDrawerProps {
   blenderPort: number;
   sceneInfo: SceneInfo | null;
   onRefreshScene: () => void;
-  checkpoints: CheckpointItem[];
-  onAddCheckpoint: (item: CheckpointItem) => void;
 }
 
 export const StudioDrawer: React.FC<StudioDrawerProps> = ({
@@ -35,10 +27,8 @@ export const StudioDrawer: React.FC<StudioDrawerProps> = ({
   blenderPort,
   sceneInfo,
   onRefreshScene,
-  checkpoints,
-  onAddCheckpoint,
 }) => {
-  const [activeTab, setActiveTab] = useState<'viewport' | 'outliner' | 'assets' | 'checkpoints' | 'diagnostics'>('viewport');
+  const [activeTab, setActiveTab] = useState<'viewport' | 'outliner'>('viewport');
 
   if (!isOpen) return null;
 
@@ -58,121 +48,94 @@ export const StudioDrawer: React.FC<StudioDrawerProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '10px 14px',
+        padding: '8px 12px',
         borderBottom: '1px solid var(--border-subtle)',
         backgroundColor: 'var(--bg-primary)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>
-            Scene Inspector
-          </span>
-          {sceneInfo && (
-            <span className="badge badge-zinc" style={{ fontSize: '10px' }}>
-              {sceneInfo.object_count} objects
-            </span>
-          )}
+        {/* Segmented Switcher for Viewport & Outliner */}
+        <div style={{
+          display: 'flex',
+          backgroundColor: 'var(--bg-secondary)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-sm)',
+          padding: '2px',
+          gap: '2px',
+        }}>
+          <button
+            onClick={() => setActiveTab('viewport')}
+            className="btn btn-sm"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              padding: '3px 9px',
+              fontSize: '11px',
+              fontWeight: activeTab === 'viewport' ? '600' : '400',
+              backgroundColor: activeTab === 'viewport' ? 'var(--bg-tertiary)' : 'transparent',
+              color: activeTab === 'viewport' ? 'var(--text-primary)' : 'var(--text-secondary)',
+              borderRadius: 'var(--radius-xs)',
+              border: activeTab === 'viewport' ? '1px solid var(--border-medium)' : '1px solid transparent',
+            }}
+          >
+            <Camera size={12} />
+            <span>Viewport</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('outliner')}
+            className="btn btn-sm"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              padding: '3px 9px',
+              fontSize: '11px',
+              fontWeight: activeTab === 'outliner' ? '600' : '400',
+              backgroundColor: activeTab === 'outliner' ? 'var(--bg-tertiary)' : 'transparent',
+              color: activeTab === 'outliner' ? 'var(--text-primary)' : 'var(--text-secondary)',
+              borderRadius: 'var(--radius-xs)',
+              border: activeTab === 'outliner' ? '1px solid var(--border-medium)' : '1px solid transparent',
+            }}
+          >
+            <Layers size={12} />
+            <span>Outliner {sceneInfo ? `(${sceneInfo.object_count})` : ''}</span>
+          </button>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        {/* Action Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
           <button
             onClick={onRefreshScene}
             className="btn btn-ghost btn-sm"
-            style={{ padding: '4px', color: 'var(--text-secondary)' }}
-            title="Refresh Scene State"
+            style={{ padding: '4px', color: 'var(--text-muted)' }}
+            title="Refresh Scene"
           >
-            <RefreshCw size={13} />
+            <RefreshCw size={12} />
           </button>
 
           <button
             onClick={onClose}
             className="btn btn-ghost btn-sm"
-            style={{ padding: '4px', color: 'var(--text-secondary)' }}
-            title="Close Inspector"
+            style={{ padding: '4px', color: 'var(--text-muted)' }}
+            title="Hide Panel"
           >
-            <X size={14} />
+            <X size={13} />
           </button>
         </div>
       </div>
 
-      {/* Segmented Tabs Bar */}
-      <div style={{
-        display: 'flex',
-        borderBottom: '1px solid var(--border-subtle)',
-        backgroundColor: 'var(--bg-secondary)',
-        padding: '3px 6px',
-        gap: '2px',
-      }}>
-        {[
-          { id: 'viewport', label: 'Viewport', icon: Camera },
-          { id: 'outliner', label: 'Outliner', icon: Layers },
-          { id: 'assets', label: 'Assets', icon: Package },
-          { id: 'checkpoints', label: 'History', icon: Bookmark },
-          { id: 'diagnostics', label: 'Console', icon: Activity },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className="btn btn-sm"
-              style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '4px',
-                padding: '5px 4px',
-                fontSize: '11px',
-                fontWeight: isActive ? '600' : '500',
-                borderRadius: 'var(--radius-xs)',
-                backgroundColor: isActive ? 'var(--bg-tertiary)' : 'transparent',
-                color: isActive ? '#ffffff' : 'var(--text-muted)',
-                boxShadow: isActive ? 'var(--shadow-sm)' : 'none',
-              }}
-            >
-              <Icon size={12} color={isActive ? '#818cf8' : 'currentColor'} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Tab Content */}
+      {/* Tab Content Area */}
       <div style={{ flex: 1, overflow: 'hidden' }}>
-        {activeTab === 'viewport' && (
+        {activeTab === 'viewport' ? (
           <ViewportTab
             blenderConnected={blenderConnected}
             blenderHost={blenderHost}
             blenderPort={blenderPort}
           />
-        )}
-        {activeTab === 'outliner' && (
+        ) : (
           <OutlinerTab
             objects={sceneInfo?.objects || []}
             onRefresh={onRefreshScene}
-            blenderHost={blenderHost}
-            blenderPort={blenderPort}
-          />
-        )}
-        {activeTab === 'assets' && (
-          <AssetLibraryTab
-            onRefreshScene={onRefreshScene}
-            blenderHost={blenderHost}
-            blenderPort={blenderPort}
-          />
-        )}
-        {activeTab === 'checkpoints' && (
-          <CheckpointsTab
-            checkpoints={checkpoints}
-            onAddCheckpoint={onAddCheckpoint}
-            onRefreshScene={onRefreshScene}
-            blenderHost={blenderHost}
-            blenderPort={blenderPort}
-          />
-        )}
-        {activeTab === 'diagnostics' && (
-          <DiagnosticsTab
             blenderHost={blenderHost}
             blenderPort={blenderPort}
           />
