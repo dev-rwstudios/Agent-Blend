@@ -232,9 +232,14 @@ def handle_import_asset(params: dict) -> dict:
     bpy.context.preferences.filepaths.use_scripts_auto_execute = False
     objects_before = set(bpy.data.objects.keys())
 
-    res = bpy.ops.import_scene.gltf(filepath=filepath)
+    ext = _get_extension(filepath, "")
+    import_op = IMPORT_OPERATORS.get(ext)
+    if import_op:
+        res = import_op(filepath)
+    else:
+        res = bpy.ops.import_scene.gltf(filepath=filepath)
     if res != {'FINISHED'}:
-        raise RuntimeError(f"GLTF import did not finish successfully: {res}")
+        raise RuntimeError(f"Import did not finish successfully: {res}")
 
     objects_after = set(bpy.data.objects.keys())
     new_objs = [bpy.data.objects[n] for n in (objects_after - objects_before) if n in bpy.data.objects]
@@ -299,10 +304,103 @@ def handle_list_recent_files(params: dict) -> list:
         raise RuntimeError(f"Failed to list recent files: {e}")
 
 
+def handle_scan_asset_library(params: dict) -> dict:
+    """Scan a directory for 3D model assets and return structured catalog entries."""
+    import json
+    library_path = params.get("path", "").strip()
+    if not library_path:
+        env_assets = os.environ.get("AGENT_BLEND_ASSETS_PATH")
+        if env_assets and os.path.isdir(env_assets):
+            library_path = env_assets
+        else:
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            candidate = os.path.join(project_root, "asset_library")
+            if os.path.isdir(candidate):
+                library_path = candidate
+
+    if not library_path or not os.path.isdir(library_path):
+        return {
+            "valid": False,
+            "path": library_path,
+            "message": f"Directory does not exist: '{library_path}'",
+            "total": 0,
+            "categories": [],
+            "assets": [],
+        }
+
+    valid_exts = {".glb", ".gltf", ".fbx", ".obj", ".blend", ".stl", ".usd", ".usdz", ".dae"}
+    scanned_assets = []
+    categories = set()
+
+    for root, dirs, files in os.walk(library_path):
+        model_files = [f for f in files if os.path.splitext(f)[1].lower() in valid_exts]
+        if not model_files:
+            continue
+
+        meta = {}
+        meta_path = os.path.join(root, "metadata.json")
+        if os.path.exists(meta_path):
+            try:
+                with open(meta_path, "r", encoding="utf-8") as mf:
+                    meta = json.load(mf)
+            except Exception:
+                meta = {}
+
+        for mf in model_files:
+            full_model_path = os.path.join(root, mf)
+            rel_dir = os.path.relpath(root, library_path)
+            stem = os.path.splitext(mf)[0]
+            ext = os.path.splitext(mf)[1].lower()
+
+            if meta:
+                cat = meta.get("classification", {}).get("category", "")
+                if not cat:
+                    parts = rel_dir.split(os.sep)
+                    cat = parts[0] if parts and parts[0] != "." else "general"
+                subcat = meta.get("classification", {}).get("subcategory", "")
+                name = meta.get("name", stem)
+                asset_id = meta.get("id") or rel_dir.replace("\\", "/")
+                geom = meta.get("geometry", {})
+                dims = None
+                if geom and "width_mm" in geom:
+                    dims = {
+                        "width": round(geom.get("width_mm", 0) / 1000.0, 3),
+                        "depth": round(geom.get("depth_mm", 0) / 1000.0, 3),
+                        "height": round(geom.get("height_mm", 0) / 1000.0, 3),
+                    }
+            else:
+                parts = rel_dir.split(os.sep)
+                cat = parts[0] if parts and parts[0] != "." else "general"
+                subcat = parts[1] if len(parts) > 1 else ""
+                name = stem.replace("_", " ").title()
+                asset_id = (os.path.join(rel_dir, stem) if rel_dir != "." else stem).replace("\\", "/")
+                dims = None
+
+            categories.add(cat)
+            scanned_assets.append({
+                "id": asset_id,
+                "name": name,
+                "category": cat,
+                "subcategory": subcat,
+                "dimensions_m": dims,
+                "model_path": full_model_path,
+                "format": ext.lstrip(".").upper(),
+            })
+
+    return {
+        "valid": True,
+        "path": library_path,
+        "total": len(scanned_assets),
+        "categories": sorted(list(categories)),
+        "assets": scanned_assets,
+    }
+
+
 def register():
     """Register file operations handlers with the dispatcher."""
     dispatcher.register_handler("import_file", handle_import_file)
     dispatcher.register_handler("import_asset", handle_import_asset)
+    dispatcher.register_handler("scan_asset_library", handle_scan_asset_library)
     dispatcher.register_handler("export_file", handle_export_file)
     dispatcher.register_handler("save_file", handle_save_file)
     dispatcher.register_handler("open_file", handle_open_file)

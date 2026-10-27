@@ -160,3 +160,67 @@ export async function importAssetToScene(
   }, host, port);
 }
 
+export interface ScannedAssetItem {
+  id: string;
+  name: string;
+  category: string;
+  subcategory?: string;
+  dimensions_m?: { width: number; depth: number; height: number };
+  model_path: string;
+  format: string;
+}
+
+export interface ScanAssetResult {
+  valid: boolean;
+  path: string;
+  total: number;
+  categories: string[];
+  assets: ScannedAssetItem[];
+  message?: string;
+}
+
+export async function scanAssetDirectory(
+  path: string,
+  blenderHost = '127.0.0.1',
+  blenderPort = 9876
+): Promise<ScanAssetResult> {
+  const cleanPath = path.trim().replace(/^["']|["']$/g, '');
+  if (!cleanPath) {
+    return {
+      valid: false,
+      path: '',
+      total: 0,
+      categories: [],
+      assets: [],
+      message: 'Please provide a directory path',
+    };
+  }
+
+  const invoke = await getInvoke();
+  if (invoke) {
+    try {
+      const resp = await invoke('scan_asset_directory', { path: cleanPath });
+      if (resp && typeof resp === 'object' && (resp as any).valid) {
+        return resp as ScanAssetResult;
+      }
+    } catch (e) {
+      console.warn('Tauri scan_asset_directory failed, trying Blender TCP socket:', e);
+    }
+  }
+
+  // Fallback to Blender TCP socket command
+  const res = await executeBlenderCommand('scan_asset_library', { path: cleanPath }, blenderHost, blenderPort);
+  if (res.status === 'ok' && res.result && res.result.valid) {
+    return res.result as ScanAssetResult;
+  }
+
+  return {
+    valid: false,
+    path: cleanPath,
+    total: 0,
+    categories: [],
+    assets: [],
+    message: res.message || res.result?.message || 'Could not scan directory or no 3D models found',
+  };
+}
+

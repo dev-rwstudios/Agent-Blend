@@ -42,6 +42,40 @@ export interface PlanData {
   canExecute: boolean;
 }
 
+export interface StagingItem {
+  id: string;
+  slot: string;
+  name: string;
+  assetId?: string;
+  category?: string;
+  subcategory?: string;
+  dimensions?: { width: number; depth: number; height: number };
+  status: 'available' | 'missing' | 'custom';
+  selected: boolean;
+  alternatives?: Array<{
+    id: string;
+    name: string;
+    assetId: string;
+    category: string;
+    subcategory?: string;
+    dimensions?: { width: number; depth: number; height: number };
+    modelPath?: string;
+  }>;
+  modelPath?: string;
+  customPath?: string;
+  note?: string;
+  suggestedLocation?: [number, number, number];
+}
+
+export interface StagingManifest {
+  id: string;
+  title: string;
+  roomType?: string;
+  style?: string;
+  items: StagingItem[];
+  isExecuted?: boolean;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -50,6 +84,7 @@ export interface ChatMessage {
   mode?: 'build' | 'plan' | 'ask';
   toolCalls?: ToolCall[];
   plan?: PlanData;
+  staging?: StagingManifest;
   suggestions?: string[];
 }
 
