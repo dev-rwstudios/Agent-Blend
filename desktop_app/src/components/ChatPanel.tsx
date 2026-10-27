@@ -19,7 +19,8 @@ import {
   AlertTriangle,
   Play
 } from 'lucide-react';
-import { ChatMessage, AppSettings } from '../types';
+import { ChatMessage, AppSettings, StagingManifest } from '../types';
+import { AssetStagingCard } from './AssetStagingCard';
 
 interface ChatPanelProps {
   messages: ChatMessage[];
@@ -28,6 +29,7 @@ interface ChatPanelProps {
   onRejectTool: (messageId: string, toolId: string) => void;
   onApproveAll: (messageId: string) => void;
   onExecutePlan: (messageId: string) => void;
+  onExecuteStaging?: (manifest: StagingManifest) => void;
   isGenerating: boolean;
   settings: AppSettings;
   onOpenSettings: () => void;
@@ -40,6 +42,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   onRejectTool,
   onApproveAll,
   onExecutePlan,
+  onExecuteStaging,
   isGenerating,
   settings,
   onOpenSettings,
@@ -336,6 +339,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                             </div>
                           )}
                         </div>
+                      )}
+
+                      {/* Asset Curator Interactive Staging Card */}
+                      {msg.staging && (
+                        <AssetStagingCard
+                          manifest={msg.staging}
+                          onExecute={(manifest) => onExecuteStaging?.(manifest)}
+                        />
                       )}
 
                       {/* Tool Executions Presentation */}

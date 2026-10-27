@@ -8,7 +8,8 @@ import {
   SceneInfo, 
   ChatMessage, 
   AppSettings, 
-  ToolCall 
+  ToolCall,
+  StagingManifest
 } from './types';
 import { 
   checkBlenderConnection, 
@@ -17,6 +18,7 @@ import {
   launchBlenderApp 
 } from './services/blender';
 import { sendChatMessage, checkModelHealth } from './services/llm';
+import { isSceneGenerationPrompt, curateSceneAssets } from './services/curator';
 import assetCatalog from './assets/asset_catalog.json';
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -164,20 +166,29 @@ export const App: React.FC = () => {
         messages.map((m) => ({ role: m.role, content: m.content }))
       );
 
+      const stagingManifest = isSceneGenerationPrompt(text)
+        ? curateSceneAssets(text)
+        : undefined;
+
       const assistantMsg: ChatMessage = {
         id: Math.random().toString(36).substring(7),
         role: 'assistant',
-        content: res.reply,
+        content: stagingManifest
+          ? `I've analyzed your prompt and curated candidate assets from our local library. Review the staged models below — you can approve, remove, swap alternatives, or upload your own 3D models before we build the scene into Blender:`
+          : res.reply,
         timestamp: Date.now(),
         mode,
-        toolCalls: res.toolCalls,
+        toolCalls: stagingManifest ? undefined : res.toolCalls,
         plan: res.plan,
-        suggestions: res.suggestions,
+        staging: stagingManifest,
+        suggestions: stagingManifest
+          ? ['Approve & build scene', 'Add custom model', 'Search catalog']
+          : res.suggestions,
       };
 
       // AUTONOMOUS PRODUCTION ENGINE:
-      // In Build mode + autonomous setting, execute all safe constructive operations immediately!
-      if (mode === 'build' && res.toolCalls && res.toolCalls.length > 0) {
+      // In Build mode + autonomous setting, execute all safe constructive operations immediately (if not staging)
+      if (!stagingManifest && mode === 'build' && res.toolCalls && res.toolCalls.length > 0) {
         if (settings.executionMode === 'autonomous') {
           for (const tc of res.toolCalls) {
             if (!tc.isDestructive) {
@@ -258,6 +269,50 @@ export const App: React.FC = () => {
     await refreshScene();
   };
 
+  const handleExecuteStaging = async (manifest: StagingManifest) => {
+    setIsGenerating(true);
+    try {
+      const selectedItems = manifest.items.filter((it) => it.selected);
+      for (const item of selectedItems) {
+        let cmdName = 'import_asset';
+        let args: any = {
+          name: item.name,
+          location: item.suggestedLocation || [0, 0, 0],
+          snap_to_floor: true,
+        };
+
+        if (settings.assetsPath && !args.assets_path) {
+          args.assets_path = settings.assetsPath;
+        }
+
+        if (item.status === 'custom' && item.customPath) {
+          args.filepath = item.customPath;
+          args.model_path = item.customPath;
+        } else if (item.assetId) {
+          args.asset_id = item.assetId;
+          if (item.modelPath) {
+            args.model_path = item.modelPath;
+          }
+        }
+
+        await executeBlenderCommand(
+          cmdName,
+          args,
+          settings.blenderHost,
+          settings.blenderPort
+        );
+      }
+
+      manifest.isExecuted = true;
+      setMessages((prev) => [...prev]);
+      await refreshScene();
+    } catch (err: any) {
+      console.error('Failed to execute staged scene in Blender:', err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleLaunchBlender = async () => {
     await launchBlenderApp();
     setTimeout(refreshScene, 2000);
@@ -312,19 +367,22 @@ export const App: React.FC = () => {
             onRejectTool={handleRejectTool}
             onApproveAll={handleApproveAll}
             onExecutePlan={handleExecutePlan}
+            onExecuteStaging={handleExecuteStaging}
             isGenerating={isGenerating}
             settings={settings}
             onOpenSettings={() => setIsSettingsOpen(true)}
           />
         </div>
 
-        {/* Docked Scene Inspector (Viewport & Outliner) */}
+        {/* Docked Scene Inspector (Viewport, Outliner & Asset Library) */}
         <StudioDrawer
           isOpen={isStudioOpen}
           onClose={() => setIsStudioOpen(false)}
           blenderConnected={blenderConnected}
           blenderHost={settings.blenderHost}
           blenderPort={settings.blenderPort}
+          assetsPath={settings.assetsPath}
+          onSaveAssetsPath={(newPath) => handleSaveSettings({ ...settings, assetsPath: newPath })}
           sceneInfo={sceneInfo}
           onRefreshScene={refreshScene}
         />

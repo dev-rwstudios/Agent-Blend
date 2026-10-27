@@ -178,6 +178,116 @@ fn blender_launch(blender_path: Option<String>, script_path: Option<String>) -> 
     }
 }
 
+/// Recursively scan any directory on disk for 3D model assets and optional metadata.json
+#[tauri::command]
+fn scan_asset_directory(path: String) -> Result<serde_json::Value, String> {
+    let clean_path = path.trim().trim_matches('"').trim_matches('\'').to_string();
+    let root = std::path::Path::new(&clean_path);
+    if !root.exists() || !root.is_dir() {
+        return Err(format!("Directory not found: {}", clean_path));
+    }
+
+    let mut assets = Vec::new();
+    let mut categories = std::collections::BTreeSet::new();
+    let valid_exts = ["glb", "gltf", "fbx", "obj", "blend", "stl", "usd", "usdz", "dae"];
+
+    fn visit_dir(
+        dir: &std::path::Path,
+        root: &std::path::Path,
+        valid_exts: &[&str],
+        assets: &mut Vec<serde_json::Value>,
+        categories: &mut std::collections::BTreeSet<String>,
+    ) {
+        if let Ok(entries) = std::fs::read_dir(dir) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.is_dir() {
+                    visit_dir(&p, root, valid_exts, assets, categories);
+                } else if p.is_file() {
+                    if let Some(ext) = p.extension().and_then(|e| e.to_str()) {
+                        let ext_lower = ext.to_lowercase();
+                        if valid_exts.contains(&ext_lower.as_str()) {
+                            let file_stem = p.file_stem().and_then(|s| s.to_str()).unwrap_or("model");
+                            let rel = p.strip_prefix(root).unwrap_or(&p);
+                            let parent_name = p.parent()
+                                .and_then(|pa| pa.file_name())
+                                .and_then(|n| n.to_str())
+                                .unwrap_or("general");
+
+                            let category = if let Some(first_comp) = rel.components().next() {
+                                let c = first_comp.as_os_str().to_string_lossy().to_string();
+                                if c == p.file_name().unwrap_or_default().to_string_lossy() {
+                                    "general".to_string()
+                                } else {
+                                    c
+                                }
+                            } else {
+                                parent_name.to_string()
+                            };
+
+                            categories.insert(category.clone());
+
+                            // Check for metadata.json in same dir
+                            let meta_path = p.parent().map(|pa| pa.join("metadata.json"));
+                            let mut dims = None;
+                            let mut asset_name = file_stem.replace('_', " ");
+                            let mut asset_id = rel.to_string_lossy().replace('\\', "/");
+
+                            if let Some(mp) = meta_path {
+                                if mp.exists() {
+                                    if let Ok(content) = std::fs::read_to_string(mp) {
+                                        if let Ok(meta_json) = serde_json::from_str::<serde_json::Value>(&content) {
+                                            if let Some(n) = meta_json.get("name").and_then(|v| v.as_str()) {
+                                                asset_name = n.to_string();
+                                            }
+                                            if let Some(id) = meta_json.get("id").and_then(|v| v.as_str()) {
+                                                asset_id = id.to_string();
+                                            }
+                                            if let Some(geom) = meta_json.get("geometry") {
+                                                if let (Some(w), Some(d), Some(h)) = (
+                                                    geom.get("width_mm").and_then(|v| v.as_f64()),
+                                                    geom.get("depth_mm").and_then(|v| v.as_f64()),
+                                                    geom.get("height_mm").and_then(|v| v.as_f64()),
+                                                ) {
+                                                    dims = Some(serde_json::json!({
+                                                        "width": (w / 1000.0 * 1000.0).round() / 1000.0,
+                                                        "depth": (d / 1000.0 * 1000.0).round() / 1000.0,
+                                                        "height": (h / 1000.0 * 1000.0).round() / 1000.0,
+                                                    }));
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            assets.push(serde_json::json!({
+                                "id": asset_id,
+                                "name": asset_name,
+                                "category": category,
+                                "subcategory": parent_name,
+                                "dimensions_m": dims,
+                                "model_path": p.to_string_lossy().to_string(),
+                                "format": ext_lower.to_uppercase(),
+                            }));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    visit_dir(root, root, &valid_exts, &mut assets, &mut categories);
+
+    Ok(serde_json::json!({
+        "valid": true,
+        "path": clean_path,
+        "total": assets.len(),
+        "categories": categories.into_iter().collect::<Vec<_>>(),
+        "assets": assets
+    }))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -185,7 +295,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             blender_send_command,
             blender_check_connection,
-            blender_launch
+            blender_launch,
+            scan_asset_directory
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
