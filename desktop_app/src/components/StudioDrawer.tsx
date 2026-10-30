@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   X, 
   Layers, 
-  RefreshCw,
-  Box
+  RefreshCw 
 } from 'lucide-react';
 import { OutlinerTab } from './OutlinerTab';
-import { AssetsTab } from './AssetsTab';
 import { SceneInfo } from '../types';
 
 interface StudioDrawerProps {
@@ -26,13 +24,9 @@ export const StudioDrawer: React.FC<StudioDrawerProps> = ({
   onClose,
   blenderHost,
   blenderPort,
-  assetsPath,
-  onSaveAssetsPath,
   sceneInfo,
   onRefreshScene,
 }) => {
-  const [activeTab, setActiveTab] = useState<'outliner' | 'assets'>('outliner');
-
   if (!isOpen) return null;
 
   return (
@@ -88,75 +82,14 @@ export const StudioDrawer: React.FC<StudioDrawerProps> = ({
         </div>
       </div>
 
-      {/* Tabs Header */}
-      <div style={{
-        display: 'flex',
-        borderBottom: '1px solid var(--border-subtle)',
-        backgroundColor: 'var(--bg-secondary)',
-      }}>
-        <button
-          onClick={() => setActiveTab('outliner')}
-          style={{
-            flex: 1,
-            padding: '7px 10px',
-            fontSize: '11px',
-            fontWeight: '600',
-            color: activeTab === 'outliner' ? 'var(--text-primary)' : 'var(--text-muted)',
-            backgroundColor: activeTab === 'outliner' ? 'var(--bg-primary)' : 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'outliner' ? '2px solid var(--accent, #6366f1)' : '2px solid transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-          }}
-        >
-          <Layers size={12} />
-          <span>Outliner ({sceneInfo?.object_count || 0})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('assets')}
-          style={{
-            flex: 1,
-            padding: '7px 10px',
-            fontSize: '11px',
-            fontWeight: '600',
-            color: activeTab === 'assets' ? 'var(--text-primary)' : 'var(--text-muted)',
-            backgroundColor: activeTab === 'assets' ? 'var(--bg-primary)' : 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'assets' ? '2px solid var(--accent, #6366f1)' : '2px solid transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-          }}
-        >
-          <Box size={12} />
-          <span>Asset Library</span>
-        </button>
-      </div>
-
-      {/* Drawer Body */}
+      {/* Outliner Body */}
       <div style={{ flex: 1, overflow: 'hidden' }}>
-        {activeTab === 'outliner' ? (
-          <OutlinerTab
-            objects={sceneInfo?.objects || []}
-            onRefresh={onRefreshScene}
-            blenderHost={blenderHost}
-            blenderPort={blenderPort}
-          />
-        ) : (
-          <AssetsTab
-            onRefresh={onRefreshScene}
-            blenderHost={blenderHost}
-            blenderPort={blenderPort}
-            assetsPath={assetsPath}
-            onSaveAssetsPath={onSaveAssetsPath}
-          />
-        )}
+        <OutlinerTab
+          objects={sceneInfo?.objects || []}
+          onRefresh={onRefreshScene}
+          blenderHost={blenderHost}
+          blenderPort={blenderPort}
+        />
       </div>
     </aside>
   );

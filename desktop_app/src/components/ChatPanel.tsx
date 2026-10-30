@@ -19,11 +19,18 @@ import {
   AlertTriangle,
   Play
 } from 'lucide-react';
-import { ChatMessage, AppSettings, StagingManifest } from '../types';
+import { ChatMessage, AppSettings, StagingManifest, BucketAsset } from '../types';
 import { AssetStagingCard } from './AssetStagingCard';
+import { AssetBucket } from './AssetBucket';
 
 interface ChatPanelProps {
   messages: ChatMessage[];
+  bucketAssets: BucketAsset[];
+  onAddBucketAsset: (asset: BucketAsset) => void;
+  onRemoveBucketAsset: (id: string) => void;
+  onApproveBucketAsset: (id: string) => void;
+  onClearBucketAssets: () => void;
+  onBuildBucketScene: () => void;
   onSendMessage: (text: string, mode: 'build' | 'plan' | 'ask') => void;
   onApproveTool: (messageId: string, toolId: string) => void;
   onRejectTool: (messageId: string, toolId: string) => void;
@@ -37,6 +44,12 @@ interface ChatPanelProps {
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({
   messages,
+  bucketAssets,
+  onAddBucketAsset,
+  onRemoveBucketAsset,
+  onApproveBucketAsset,
+  onClearBucketAssets,
+  onBuildBucketScene,
   onSendMessage,
   onApproveTool,
   onRejectTool,
@@ -541,7 +554,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         </div>
       </div>
 
-      {/* Modern Docked Composer */}
+      {/* Modern Docked Composer & Asset Bucket Workspace */}
       <div style={{
         padding: '10px 20px 14px 20px',
         backgroundColor: 'transparent',
@@ -551,17 +564,35 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           width: '100%',
           maxWidth: '820px',
           margin: '0 auto',
-          backgroundColor: 'var(--bg-primary)',
-          border: '1px solid var(--border-medium)',
-          borderRadius: 'var(--radius-md)',
-          padding: '8px 12px',
-          boxShadow: 'var(--shadow-sm)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '6px',
+          gap: '8px',
         }}>
-          {/* Top Row: Mode Selector & Active Model */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Big Square Card: Scene Asset Bucket Workspace */}
+          <AssetBucket
+            assets={bucketAssets}
+            onAddAsset={onAddBucketAsset}
+            onRemoveAsset={onRemoveBucketAsset}
+            onApproveAsset={onApproveBucketAsset}
+            onClearAll={onClearBucketAssets}
+            onBuildScene={onBuildBucketScene}
+            isBuilding={isGenerating}
+          />
+
+          {/* Chat Composer Input Card */}
+          <div style={{
+            width: '100%',
+            backgroundColor: 'var(--bg-primary)',
+            border: '1px solid var(--border-medium)',
+            borderRadius: 'var(--radius-md)',
+            padding: '8px 12px',
+            boxShadow: 'var(--shadow-sm)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+          }}>
+            {/* Top Row: Mode Selector & Active Model */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             {/* Segmented Mode Selector */}
             <div style={{
               display: 'flex',
@@ -691,5 +722,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         </p>
       </div>
     </div>
+  </div>
   );
 };
