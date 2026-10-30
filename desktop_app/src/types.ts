@@ -42,6 +42,21 @@ export interface PlanData {
   canExecute: boolean;
 }
 
+export interface BucketAsset {
+  id: string;
+  name: string;
+  category: string;
+  subcategory?: string;
+  format?: string;
+  source: 'user' | 'agent';
+  modelPath: string;
+  assetId?: string;
+  dimensions_m?: { width: number; depth: number; height: number };
+  status: 'approved' | 'pending';
+  thumbnailUrl?: string;
+  suggestedLocation?: [number, number, number];
+}
+
 export interface StagingItem {
   id: string;
   slot: string;

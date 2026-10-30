@@ -9,7 +9,8 @@ import {
   ChatMessage, 
   AppSettings, 
   ToolCall,
-  StagingManifest
+  StagingManifest,
+  BucketAsset
 } from './types';
 import { 
   checkBlenderConnection, 
@@ -65,6 +66,104 @@ export const App: React.FC = () => {
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [bucketAssets, setBucketAssets] = useState<BucketAsset[]>([]);
+
+  const handleAddBucketAsset = (asset: BucketAsset) => {
+    setBucketAssets((prev) => [...prev, asset]);
+  };
+
+  const handleRemoveBucketAsset = (id: string) => {
+    setBucketAssets((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const handleApproveBucketAsset = (id: string) => {
+    setBucketAssets((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, status: 'approved' } : a))
+    );
+  };
+
+  const handleClearBucketAssets = () => {
+    setBucketAssets([]);
+  };
+
+  const handleBuildBucketScene = async () => {
+    const approved = bucketAssets.filter((a) => a.status === 'approved');
+    if (approved.length === 0) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Math.random().toString(36).substring(7),
+          role: 'assistant',
+          content:
+            '⚠️ There are no approved assets in your Asset Bucket! Please approve the proposed assets or import your own 3D models before building.',
+          timestamp: Date.now(),
+          mode: 'build',
+        },
+      ]);
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      for (const asset of approved) {
+        let cmdName = 'import_asset';
+        let args: any = {
+          name: asset.name,
+          location: asset.suggestedLocation || [0, 0, 0],
+          snap_to_floor: true,
+        };
+
+        if (settings.assetsPath && !args.assets_path) {
+          args.assets_path = settings.assetsPath;
+        }
+
+        if (asset.modelPath) {
+          args.filepath = asset.modelPath;
+          args.model_path = asset.modelPath;
+        }
+        if (asset.assetId) {
+          args.asset_id = asset.assetId;
+        }
+
+        await executeBlenderCommand(
+          cmdName,
+          args,
+          settings.blenderHost,
+          settings.blenderPort
+        );
+      }
+
+      await refreshScene();
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Math.random().toString(36).substring(7),
+          role: 'assistant',
+          content: `🎉 Successfully built scene into Blender using ONLY the ${approved.length} approved assets from your Asset Bucket:\n\n${approved
+            .map((a, i) => `${i + 1}. **${a.name}** (${a.source === 'user' ? 'Custom Upload' : 'Library Asset'})`)
+            .join('\n')}\n\nAll objects have been placed and snapped flat to the floor in Blender.`,
+          timestamp: Date.now(),
+          mode: 'build',
+          suggestions: ['Inspect scene tree', 'Set up 3-point lighting', 'Render viewport preview'],
+        },
+      ]);
+    } catch (err: any) {
+      console.error('Failed to build bucket scene in Blender:', err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Math.random().toString(36).substring(7),
+          role: 'assistant',
+          content: `❌ Error building scene from bucket: ${err.message || String(err)}`,
+          timestamp: Date.now(),
+          mode: 'build',
+        },
+      ]);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // Sync Blender connection and scene info
   const refreshScene = useCallback(async () => {
@@ -147,6 +246,18 @@ export const App: React.FC = () => {
       return;
     }
 
+    if (
+      lower === 'approve all & build' ||
+      lower === 'build scene with staged assets' ||
+      lower === 'build bucket'
+    ) {
+      setBucketAssets((prev) => prev.map((a) => ({ ...a, status: 'approved' })));
+      setTimeout(() => {
+        handleBuildBucketScene();
+      }, 60);
+      return;
+    }
+
     const userMsg: ChatMessage = {
       id: Math.random().toString(36).substring(7),
       role: 'user',
@@ -170,11 +281,49 @@ export const App: React.FC = () => {
         ? curateSceneAssets(text)
         : undefined;
 
+      if (stagingManifest) {
+        // Stage agent proposed assets into the Scene Asset Bucket awaiting user permission
+        const proposedBucketItems: BucketAsset[] = stagingManifest.items
+          .filter((it) => it.status !== 'missing')
+          .map((it) => {
+            const ext = (it.modelPath || '').split('.').pop()?.toUpperCase() || 'GLB';
+            return {
+              id: it.id || Math.random().toString(36).substring(7),
+              name: it.name,
+              category: it.category || 'general',
+              subcategory: it.subcategory,
+              format: ext,
+              source: 'agent' as const,
+              modelPath: it.modelPath || '',
+              assetId: it.assetId,
+              dimensions_m: it.dimensions,
+              status: 'pending' as const, // Awaits user permission!
+              suggestedLocation: it.suggestedLocation,
+            };
+          });
+
+        setBucketAssets((prev) => {
+          const existingNames = new Set(prev.map((a) => a.name.toLowerCase()));
+          const additions = proposedBucketItems.filter(
+            (a) => !existingNames.has(a.name.toLowerCase())
+          );
+          return [...prev, ...additions];
+        });
+      }
+
+      const missingItems = stagingManifest?.items.filter((it) => it.status === 'missing') || [];
+      const missingWarning =
+        missingItems.length > 0
+          ? `\n\n⚠️ **Notice:** Can't find relevant assets in the local library for: ${missingItems
+              .map((m) => `*${m.name}*`)
+              .join(', ')}. You can easily import your own 3D model using the **+ Import Model** button inside the Asset Bucket!`
+          : '';
+
       const assistantMsg: ChatMessage = {
         id: Math.random().toString(36).substring(7),
         role: 'assistant',
         content: stagingManifest
-          ? `I've analyzed your prompt and curated candidate assets from our local library. Review the staged models below — you can approve, remove, swap alternatives, or upload your own 3D models before we build the scene into Blender:`
+          ? `I've analyzed your prompt and added recommended assets into your **Scene Asset Bucket** above awaiting your permission.\n\nReview the bucket: you can approve, reject, or import your own 3D models. The scene will be built using **ONLY** the approved assets in your bucket!${missingWarning}`
           : res.reply,
         timestamp: Date.now(),
         mode,
@@ -182,7 +331,7 @@ export const App: React.FC = () => {
         plan: res.plan,
         staging: stagingManifest,
         suggestions: stagingManifest
-          ? ['Approve & build scene', 'Add custom model', 'Search catalog']
+          ? ['Approve all & build', '+ Import custom model', 'Browse library']
           : res.suggestions,
       };
 
@@ -362,6 +511,12 @@ export const App: React.FC = () => {
         }}>
           <ChatPanel
             messages={messages}
+            bucketAssets={bucketAssets}
+            onAddBucketAsset={handleAddBucketAsset}
+            onRemoveBucketAsset={handleRemoveBucketAsset}
+            onApproveBucketAsset={handleApproveBucketAsset}
+            onClearBucketAssets={handleClearBucketAssets}
+            onBuildBucketScene={handleBuildBucketScene}
             onSendMessage={handleSendMessage}
             onApproveTool={handleApproveTool}
             onRejectTool={handleRejectTool}
