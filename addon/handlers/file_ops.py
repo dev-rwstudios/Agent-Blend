@@ -96,6 +96,11 @@ def handle_import_file(params: dict) -> dict:
         objects_after = set(bpy.data.objects.keys())
         new_objects = list(objects_after - objects_before)
 
+        # Asset-library models keep the coordinates of the scene they were
+        # extracted from — never drop them at those stale positions.
+        if _is_library_asset(filepath):
+            _recenter_at_origin([bpy.data.objects[n] for n in new_objects if n in bpy.data.objects])
+
         return {
             "filepath": filepath,
             "format": ext.lstrip(".").upper(),
@@ -184,6 +189,37 @@ def handle_open_file(params: dict) -> dict:
         raise RuntimeError(f"Failed to open file '{filepath}': {e}")
 
 
+def handle_get_file_info(params: dict) -> dict:
+    """Report which .blend Blender has open — the desktop app compares this
+    against the active project's scene file before saving or switching."""
+    return {
+        "filepath": bpy.data.filepath,
+        "is_dirty": bool(bpy.data.is_dirty),
+        "object_count": len(bpy.data.objects),
+    }
+
+
+def handle_new_file(params: dict) -> dict:
+    """Replace the open file with an empty scene, optionally saving it to
+    `filepath` straight away so it becomes the file Blender has open.
+
+    Uses the user's home file with use_empty=True rather than factory
+    startup — factory startup would also disable add-ons, including this one.
+    """
+    filepath = params.get("filepath", "")
+    if filepath and not filepath.endswith(".blend"):
+        raise ValueError("New file path must end in .blend")
+
+    try:
+        bpy.ops.wm.read_homefile(use_empty=True)
+        if filepath:
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            bpy.ops.wm.save_as_mainfile(filepath=filepath)
+        return {"filepath": bpy.data.filepath, "success": True}
+    except Exception as e:
+        raise RuntimeError(f"Failed to create new file: {e}")
+
+
 def handle_save_checkpoint(params: dict) -> dict:
     """Write a copy of the current scene to `filepath` without changing the
     file Blender has open — the chat app's per-turn undo snapshots."""
@@ -205,13 +241,99 @@ def handle_save_checkpoint(params: dict) -> dict:
         raise RuntimeError(f"Failed to save checkpoint: {e}")
 
 
+def _mesh_world_bbox(objs) -> tuple[list[float], list[float]] | None:
+    """World-space bounding box over the vertices of the mesh objects in `objs`."""
+    from mathutils import Vector
+
+    lo = [float("inf")] * 3
+    hi = [float("-inf")] * 3
+    found = False
+    for obj in objs:
+        if obj.type != "MESH" or obj.data is None:
+            continue
+        mw = obj.matrix_world
+        coords = [mw @ v.co for v in obj.data.vertices] or [mw @ Vector(c) for c in obj.bound_box]
+        for co in coords:
+            found = True
+            for i in range(3):
+                lo[i] = min(lo[i], co[i])
+                hi[i] = max(hi[i], co[i])
+    return (lo, hi) if found else None
+
+
+def _import_roots(new_objs) -> list:
+    """Imported objects whose parent isn't part of the same import."""
+    new_set = set(new_objs)
+    return [o for o in new_objs if o.parent is None or o.parent not in new_set]
+
+
+def _translate(objs, delta) -> None:
+    for obj in objs:
+        obj.location.x += delta[0]
+        obj.location.y += delta[1]
+        obj.location.z += delta[2]
+
+
+def _recenter_at_origin(new_objs) -> None:
+    """Library asset files keep the coordinates of the scene they were cut
+    from; move the asset so its footprint is centered on the origin with its
+    bottom at z = 0."""
+    bpy.context.view_layer.update()
+    bbox = _mesh_world_bbox(new_objs)
+    if bbox is None:
+        return
+    lo, hi = bbox
+    _translate(_import_roots(new_objs), [-(lo[0] + hi[0]) / 2, -(lo[1] + hi[1]) / 2, -lo[2]])
+    bpy.context.view_layer.update()
+
+
+def _is_library_asset(filepath: str) -> bool:
+    return os.path.isfile(os.path.join(os.path.dirname(filepath), "metadata.json"))
+
+
+def _ensure_collection(name: str):
+    coll = bpy.data.collections.get(name)
+    if coll is None:
+        coll = bpy.data.collections.new(name)
+    if coll.name not in bpy.context.scene.collection.children and coll is not bpy.context.scene.collection:
+        try:
+            bpy.context.scene.collection.children.link(coll)
+        except RuntimeError:
+            pass  # already linked somewhere in the hierarchy
+    return coll
+
+
+def _move_to_collection(objs, coll) -> None:
+    for obj in objs:
+        for c in list(obj.users_collection):
+            if c is not coll:
+                c.objects.unlink(obj)
+        if obj.name not in coll.objects:
+            coll.objects.link(obj)
+
+
 def handle_import_asset(params: dict) -> dict:
-    """Import an asset model (.glb) and snap/position in the scene."""
+    """Import an asset model and place it as one unit.
+
+    The asset is re-centered (library files keep the coordinates of the scene
+    they were extracted from), grouped under a single named anchor Empty so it
+    moves/rotates as one object, then placed so its footprint is centered on
+    `location` x/y with its bottom at `location` z, and rotated by
+    `rotation_z` radians about its own center.
+
+    Optional: `collection` (put the asset there), `tags` (custom properties on
+    the anchor, e.g. which plan item it fulfils), `scale` (uniform).
+    """
     filepath = params.get("model_path") or params.get("filepath")
     asset_id = params.get("asset_id", "")
     name = params.get("name", "")
-    location = params.get("location", [0.0, 0.0, 0.0])
-    snap_to_floor = params.get("snap_to_floor", True)
+    location = list(params.get("location") or [0.0, 0.0, 0.0])
+    while len(location) < 3:
+        location.append(0.0)
+    rotation_z = float(params.get("rotation_z", 0.0) or 0.0)
+    scale = float(params.get("scale", 1.0) or 1.0)
+    collection_name = params.get("collection", "")
+    tags = params.get("tags") or {}
 
     if not filepath and asset_id:
         parts = asset_id.split("/")
@@ -242,54 +364,54 @@ def handle_import_asset(params: dict) -> dict:
         raise RuntimeError(f"Import did not finish successfully: {res}")
 
     objects_after = set(bpy.data.objects.keys())
-    new_objs = [bpy.data.objects[n] for n in (objects_after - objects_before) if n in bpy.data.objects]
-
+    new_objs = [bpy.data.objects[n] for n in sorted(objects_after - objects_before) if n in bpy.data.objects]
     if not new_objs:
         raise RuntimeError(f"Import of '{filepath}' produced no objects")
 
+    # 1. Re-center: footprint on the origin, bottom at z = 0.
+    _recenter_at_origin(new_objs)
+    roots = _import_roots(new_objs)
+
+    # 2. Group under one anchor at the origin so the asset is a single unit.
+    anchor_name = name or os.path.basename(os.path.dirname(filepath)) or os.path.splitext(os.path.basename(filepath))[0]
+    anchor = bpy.data.objects.new(anchor_name, None)
+    anchor.empty_display_type = "PLAIN_AXES"
+    anchor.empty_display_size = 0.25
+    bpy.context.scene.collection.objects.link(anchor)
+    for root in roots:
+        world = root.matrix_world.copy()
+        root.parent = anchor
+        root.matrix_world = world
+
+    # 3. Place: rotate/scale about the asset's own center, then move.
+    anchor.rotation_euler = (0.0, 0.0, rotation_z)
+    anchor.scale = (scale, scale, scale)
+    anchor.location = (float(location[0]), float(location[1]), float(location[2]))
+
+    if collection_name:
+        _move_to_collection([anchor, *new_objs], _ensure_collection(collection_name))
+
+    anchor["ab_role"] = "asset"
+    if asset_id:
+        anchor["ab_asset_id"] = asset_id
+    for key, value in tags.items():
+        if isinstance(value, (str, int, float, bool)):
+            anchor[f"ab_{key}"] = value
+
     bpy.context.view_layer.update()
-
-    all_verts = []
-    for obj in new_objs:
-        if obj.type == 'MESH' and obj.data:
-            all_verts.extend([obj.matrix_world @ v.co for v in obj.data.vertices])
-
-    if all_verts:
-        min_x = min(v.x for v in all_verts)
-        max_x = max(v.x for v in all_verts)
-        min_y = min(v.y for v in all_verts)
-        max_y = max(v.y for v in all_verts)
-        min_z = min(v.z for v in all_verts)
-        center_x = (min_x + max_x) / 2.0
-        center_y = (min_y + max_y) / 2.0
-
-        target_x = float(location[0]) if len(location) > 0 else 0.0
-        target_y = float(location[1]) if len(location) > 1 else 0.0
-        target_z = float(location[2]) if len(location) > 2 else 0.0
-
-        dx = target_x - center_x
-        dy = target_y - center_y
-        dz = (target_z - min_z) if snap_to_floor else target_z
-
-        for obj in new_objs:
-            if obj.parent is None or obj.parent not in new_objs:
-                obj.location.x += dx
-                obj.location.y += dy
-                obj.location.z += dz
-
-        bpy.context.view_layer.update()
-
-    root_name = new_objs[0].name
-    if name and name != root_name:
-        new_objs[0].name = name
-        root_name = name
+    bbox = _mesh_world_bbox(new_objs)
+    lo, hi = bbox if bbox else ([0.0] * 3, [0.0] * 3)
 
     return {
         "success": True,
         "asset_id": asset_id,
-        "name": root_name,
+        "name": anchor.name,
         "imported_objects": [o.name for o in new_objs],
-        "location": [float(location[0]), float(location[1]), float(location[2])] if len(location) >= 3 else [0, 0, 0],
+        "location": [float(v) for v in anchor.location],
+        "rotation_z": rotation_z,
+        "bbox_min": [round(v, 4) for v in lo],
+        "bbox_max": [round(v, 4) for v in hi],
+        "dimensions": [round(hi[i] - lo[i], 4) for i in range(3)],
     }
 
 
@@ -406,4 +528,6 @@ def register():
     dispatcher.register_handler("open_file", handle_open_file)
     dispatcher.register_handler("list_recent_files", handle_list_recent_files)
     dispatcher.register_handler("save_checkpoint", handle_save_checkpoint)
+    dispatcher.register_handler("get_file_info", handle_get_file_info)
+    dispatcher.register_handler("new_file", handle_new_file)
 

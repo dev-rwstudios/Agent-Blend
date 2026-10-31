@@ -114,9 +114,12 @@ class BlenderServer:
                         }
                     else:
                         # Execute on main thread via thread_safety
-                        response = thread_safety.execute_on_main_thread(
-                            dispatcher.dispatch, command, params
-                        )
+                        try:
+                            response = thread_safety.execute_on_main_thread(
+                                dispatcher.dispatch, command, params
+                            )
+                        except Exception as e:  # noqa: BLE001 — always answer the client
+                            response = {"status": "error", "result": f"{type(e).__name__}: {e}"}
 
                     response_data = json.dumps(response).encode("utf-8")
                     self._send_message(client, response_data)

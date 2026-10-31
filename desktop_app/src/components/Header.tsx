@@ -4,8 +4,12 @@ import {
   Settings, 
   PanelRight, 
   PanelRightClose, 
-  Plus,
-  Play
+  Play,
+  Save,
+  Loader2,
+  PanelLeft,
+  PanelLeftClose,
+  ChevronRight
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -13,9 +17,16 @@ interface HeaderProps {
   modelStatus: { ok: boolean; message: string };
   onOpenSettings: () => void;
   onLaunchBlender: () => void;
-  onNewChat: () => void;
   isStudioOpen: boolean;
   onToggleStudio: () => void;
+  isSidebarOpen: boolean;
+  onToggleSidebar: () => void;
+  /** Active project name, or null in a general chat. */
+  projectName: string | null;
+  chatTitle: string;
+  /** Saves the active project's scene; omitted outside projects. */
+  onSaveScene?: () => void;
+  isSaving?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -23,9 +34,14 @@ export const Header: React.FC<HeaderProps> = ({
   modelStatus,
   onOpenSettings,
   onLaunchBlender,
-  onNewChat,
   isStudioOpen,
   onToggleStudio,
+  isSidebarOpen,
+  onToggleSidebar,
+  projectName,
+  chatTitle,
+  onSaveScene,
+  isSaving,
 }) => {
   return (
     <header style={{
@@ -40,7 +56,15 @@ export const Header: React.FC<HeaderProps> = ({
       flexShrink: 0,
     }}>
       {/* Brand & Identity */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+        <button
+          onClick={onToggleSidebar}
+          className="btn btn-ghost btn-sm"
+          style={{ padding: '4px', color: 'var(--text-secondary)' }}
+          title={isSidebarOpen ? 'Hide projects & chats' : 'Show projects & chats'}
+        >
+          {isSidebarOpen ? <PanelLeftClose size={14} /> : <PanelLeft size={14} />}
+        </button>
         <div style={{
           width: '24px',
           height: '24px',
@@ -60,6 +84,26 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
           <span className="badge badge-zinc" style={{ fontSize: '10px', padding: '1px 5px' }}>
             Studio
+          </span>
+        </div>
+
+        {/* Where am I: Project › Chat, or General chat */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '10px', minWidth: 0,
+          fontSize: '12px', color: 'var(--text-secondary)',
+        }}>
+          {projectName ? (
+            <>
+              <span style={{ color: '#60a5fa', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '220px' }}>
+                {projectName}
+              </span>
+              <ChevronRight size={12} color="var(--text-muted)" />
+            </>
+          ) : (
+            <span className="badge badge-zinc" style={{ fontSize: '10px', padding: '1px 5px' }}>General</span>
+          )}
+          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '260px' }}>
+            {chatTitle}
           </span>
         </div>
       </div>
@@ -129,16 +173,19 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--border-subtle)', margin: '0 2px' }} />
 
-        {/* New Session Button */}
-        <button 
-          onClick={onNewChat}
-          className="btn btn-secondary btn-sm"
-          style={{ gap: '4px' }}
-          title="New Scene Chat"
-        >
-          <Plus size={12} />
-          <span>New Chat</span>
-        </button>
+        {/* Save the project's scene.blend */}
+        {onSaveScene && (
+          <button
+            onClick={onSaveScene}
+            disabled={isSaving}
+            className="btn btn-secondary btn-sm"
+            style={{ gap: '4px' }}
+            title="Save the project's scene in Blender"
+          >
+            {isSaving ? <Loader2 size={12} className="spin" /> : <Save size={12} />}
+            <span>Save scene</span>
+          </button>
+        )}
 
         {/* Studio Inspector Toggle */}
         <button

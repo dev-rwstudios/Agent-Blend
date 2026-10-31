@@ -302,6 +302,36 @@ def handle_delete_object(params: dict) -> dict:
         raise RuntimeError(f"Failed to delete object '{name}': {e}")
 
 
+def handle_delete_objects(params: dict) -> dict:
+    """Delete several objects at once, each together with everything parented
+    under it (an imported asset's parts follow its anchor).
+
+    params:
+      names: objects to delete
+      all:   true to delete every object in the current scene instead
+    """
+    scene_objects = list(bpy.context.scene.objects)
+    if params.get("all"):
+        targets = scene_objects
+        missing = []
+    else:
+        names = params.get("names") or []
+        if not names:
+            raise ValueError("Give 'names' to delete, or all=true to clear the scene")
+        targets = [bpy.data.objects[n] for n in names if n in bpy.data.objects]
+        missing = [n for n in names if n not in bpy.data.objects]
+
+    doomed = {}
+    for obj in targets:
+        for part in [obj, *obj.children_recursive]:
+            doomed[part.name] = part
+    deleted = sorted(doomed)
+    for obj in doomed.values():
+        bpy.data.objects.remove(obj, do_unlink=True)
+
+    return {"deleted": deleted, "count": len(deleted), "missing": missing}
+
+
 def handle_duplicate_object(params: dict) -> dict:
     """Duplicate an object."""
     name = params.get("name")
@@ -636,6 +666,7 @@ def register():
     dispatcher.register_handler("create_polygon_prism", handle_create_polygon_prism)
     dispatcher.register_handler("create_threaded_shaft", handle_create_threaded_shaft)
     dispatcher.register_handler("delete_object", handle_delete_object)
+    dispatcher.register_handler("delete_objects", handle_delete_objects)
     dispatcher.register_handler("duplicate_object", handle_duplicate_object)
     dispatcher.register_handler("rename_object", handle_rename_object)
     dispatcher.register_handler("select_objects", handle_select_objects)

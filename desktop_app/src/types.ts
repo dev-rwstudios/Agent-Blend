@@ -34,6 +34,8 @@ export interface ToolCall {
   error?: string;
   isDestructive?: boolean;
   summary?: string;
+  /** Scene saved just before this destructive tool ran — enables Undo. */
+  checkpoint?: string;
 }
 
 export interface PlanData {
@@ -101,6 +103,10 @@ export interface ChatMessage {
   plan?: PlanData;
   staging?: StagingManifest;
   suggestions?: string[];
+  /** Live state of a build-agent run started by this message. */
+  buildRun?: import('./agent/buildAgent').BuildRun;
+  /** Reference images attached to this message (downscaled JPEG data URLs). */
+  images?: string[];
 }
 
 export type LLMProvider = 
@@ -126,4 +132,57 @@ export interface AppSettings {
   apiKey: string;
   apiBaseUrl: string;
   temperature: number;
+  /** Model used to read reference images; empty = the main model (which must then be able to see). */
+  visionModel?: string;
+}
+
+/** A folder the project pulls 3D assets from (scanned for .glb/.fbx/... + metadata.json). */
+export interface AssetSource {
+  id: string;
+  path: string;
+}
+
+/** Snapshot of a project's scene, taken when it's saved — lets general chats
+ *  answer questions about a project without opening it in Blender. */
+export interface SceneSummary {
+  objectCount: number;
+  typeCounts: Record<string, number>;
+  objectNames: string[];
+  capturedAt: number;
+}
+
+/** A scene-building workspace: one .blend file plus its brief, assets and chats. */
+export interface ProjectMeta {
+  id: string;
+  name: string;
+  description: string;
+  assetSources: AssetSource[];
+  createdAt: number;
+  updatedAt: number;
+  sceneSummary?: SceneSummary;
+}
+
+export interface ChatMeta {
+  id: string;
+  title: string;
+  /** null for a general chat that isn't attached to any project. */
+  projectId: string | null;
+  createdAt: number;
+  updatedAt: number;
+  messageCount: number;
+}
+
+/** A catalog entry from scanning an asset source folder. */
+export interface CatalogAsset {
+  id: string;
+  name: string;
+  category: string;
+  subcategory: string;
+  room_types?: string[] | null;
+  style_tags?: string[] | null;
+  dimensions_m?: { width: number; depth: number; height: number } | null;
+  surface?: string;
+  model_path?: string;
+  forward_axis?: string;
+  format?: string;
 }

@@ -36,7 +36,8 @@ export const AssetBucket: React.FC<AssetBucketProps> = ({
   onBuildScene,
   isBuilding = false,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  // Starts folded when empty — an empty bucket shouldn't take a third of the chat's height.
+  const [isExpanded, setIsExpanded] = useState(assets.length > 0);
   const [showCatalogModal, setShowCatalogModal] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [catalogQuery, setCatalogQuery] = useState('');

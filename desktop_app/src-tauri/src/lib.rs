@@ -1,3 +1,5 @@
+mod storage;
+
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpStream};
@@ -21,8 +23,28 @@ pub struct BlenderRequest<'a> {
 }
 
 /// Send a command to Blender's TCP socket server and return the response.
+///
+/// Runs on a blocking worker thread, never the main thread: a slow or stuck
+/// Blender (renders, big scenes, a wedged addon server) must not freeze the
+/// window. Non-async Tauri commands run on the main thread.
 #[tauri::command]
-fn blender_send_command(
+async fn blender_send_command(
+    host: Option<String>,
+    port: Option<u16>,
+    command: String,
+    params: Option<serde_json::Value>,
+) -> Result<serde_json::Value, String> {
+    off_main_thread(move || send_command_blocking(host, port, command, params)).await?
+}
+
+/// Run blocking work (sockets, directory scans) on Tauri's blocking thread pool.
+async fn off_main_thread<T: Send + 'static>(work: impl FnOnce() -> T + Send + 'static) -> Result<T, String> {
+    tauri::async_runtime::spawn_blocking(work)
+        .await
+        .map_err(|e| format!("Background task failed: {}", e))
+}
+
+fn send_command_blocking(
     host: Option<String>,
     port: Option<u16>,
     command: String,
@@ -69,9 +91,14 @@ fn blender_send_command(
 
     // Read 4-byte response length
     let mut resp_len_bytes = [0u8; 4];
-    stream
-        .read_exact(&mut resp_len_bytes)
-        .map_err(|e| format!("Failed to read response length header: {}", e))?;
+    stream.read_exact(&mut resp_len_bytes).map_err(|e| match e.kind() {
+        std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut => format!(
+            "Blender didn't answer '{}' within 45 s — it may be busy, or its blend-ai server is stuck \
+             (in Blender: N-panel → blend-ai → Stop Server, then Start Server).",
+            command
+        ),
+        _ => format!("Failed to read response length header: {}", e),
+    })?;
     let resp_length = u32::from_be_bytes(resp_len_bytes) as usize;
 
     if resp_length > 100 * 1024 * 1024 {
@@ -91,7 +118,11 @@ fn blender_send_command(
 
 /// Check if Blender's TCP server is alive and reachable.
 #[tauri::command]
-fn blender_check_connection(host: Option<String>, port: Option<u16>) -> bool {
+async fn blender_check_connection(host: Option<String>, port: Option<u16>) -> bool {
+    off_main_thread(move || check_connection_blocking(host, port)).await.unwrap_or(false)
+}
+
+fn check_connection_blocking(host: Option<String>, port: Option<u16>) -> bool {
     let host_str = host.unwrap_or_else(|| "127.0.0.1".to_string());
     let port_num = port.unwrap_or(9876);
     let addr_str = format!("{}:{}", host_str, port_num);
@@ -151,7 +182,7 @@ fn find_blender_binary() -> Option<String> {
 }
 
 /// Launch Blender with auto-start script if not already running.
-#[tauri::command]
+#[tauri::command(async)]
 fn blender_launch(blender_path: Option<String>, script_path: Option<String>) -> Result<String, String> {
     let path = blender_path
         .filter(|p| !p.trim().is_empty())
@@ -180,7 +211,11 @@ fn blender_launch(blender_path: Option<String>, script_path: Option<String>) -> 
 
 /// Recursively scan any directory on disk for 3D model assets and optional metadata.json
 #[tauri::command]
-fn scan_asset_directory(path: String) -> Result<serde_json::Value, String> {
+async fn scan_asset_directory(path: String) -> Result<serde_json::Value, String> {
+    off_main_thread(move || scan_asset_directory_blocking(path)).await?
+}
+
+fn scan_asset_directory_blocking(path: String) -> Result<serde_json::Value, String> {
     let clean_path = path.trim().trim_matches('"').trim_matches('\'').to_string();
     let root = std::path::Path::new(&clean_path);
     if !root.exists() || !root.is_dir() {
@@ -230,6 +265,10 @@ fn scan_asset_directory(path: String) -> Result<serde_json::Value, String> {
                             // Check for metadata.json in same dir
                             let meta_path = p.parent().map(|pa| pa.join("metadata.json"));
                             let mut dims = None;
+                            let mut room_types = None;
+                            let mut style_tags = None;
+                            let mut forward_axis = None;
+                            let mut surface = None;
                             let mut asset_name = file_stem.replace('_', " ");
                             let mut asset_id = rel.to_string_lossy().replace('\\', "/");
 
@@ -243,6 +282,12 @@ fn scan_asset_directory(path: String) -> Result<serde_json::Value, String> {
                                             if let Some(id) = meta_json.get("id").and_then(|v| v.as_str()) {
                                                 asset_id = id.to_string();
                                             }
+                                            if let Some(cls) = meta_json.get("classification") {
+                                                room_types = cls.get("room_types").cloned();
+                                                style_tags = cls.get("style_tags").cloned();
+                                            }
+                                            forward_axis = meta_json.pointer("/orientation/forward_axis").cloned();
+                                            surface = meta_json.pointer("/placement/surface").cloned();
                                             if let Some(geom) = meta_json.get("geometry") {
                                                 if let (Some(w), Some(d), Some(h)) = (
                                                     geom.get("width_mm").and_then(|v| v.as_f64()),
@@ -267,6 +312,10 @@ fn scan_asset_directory(path: String) -> Result<serde_json::Value, String> {
                                 "category": category,
                                 "subcategory": parent_name,
                                 "dimensions_m": dims,
+                                "room_types": room_types,
+                                "style_tags": style_tags,
+                                "forward_axis": forward_axis,
+                                "surface": surface,
                                 "model_path": p.to_string_lossy().to_string(),
                                 "format": ext_lower.to_uppercase(),
                             }));
@@ -296,7 +345,15 @@ pub fn run() {
             blender_send_command,
             blender_check_connection,
             blender_launch,
-            scan_asset_directory
+            scan_asset_directory,
+            storage::storage_root,
+            storage::storage_abs_path,
+            storage::storage_read,
+            storage::storage_write,
+            storage::storage_exists,
+            storage::storage_list,
+            storage::storage_trash,
+            storage::default_asset_library
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
