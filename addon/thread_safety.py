@@ -17,6 +17,9 @@ _command_queue: queue.Queue = queue.Queue()
 _response_queues: dict[int, queue.Queue] = {}
 _next_id = 0
 
+# Seconds a socket request waits for the main thread before reporting an error.
+MAIN_THREAD_TIMEOUT = 40.0
+
 
 def _get_next_id() -> int:
     global _next_id
@@ -46,9 +49,17 @@ def execute_on_main_thread(func: Callable, *args: Any, **kwargs: Any) -> Any:
 
     _command_queue.put((request_id, func, args, kwargs))
 
-    # Block until the main thread processes our request
-    success, result = response_queue.get(timeout=60.0)
-    del _response_queues[request_id]
+    # Block until the main thread processes our request. Give up before the
+    # desktop app's 45 s socket timeout so it gets a clear error, not silence.
+    try:
+        success, result = response_queue.get(timeout=MAIN_THREAD_TIMEOUT)
+    except queue.Empty:
+        raise TimeoutError(
+            f"Blender's main thread did not run the command within {MAIN_THREAD_TIMEOUT:.0f}s — "
+            "it may be busy, or the blend-ai server needs restarting (N-panel → blend-ai → Stop/Start Server)."
+        ) from None
+    finally:
+        _response_queues.pop(request_id, None)
 
     if success:
         return result

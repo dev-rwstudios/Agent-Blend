@@ -1,0 +1,13 @@
+# Prompt for the app (Build mode, attach `reference.jpg`)
+
+Build a 3D scene that matches the attached reference photo exactly: a modern, warm, light-oak living room seen through a wooden portal frame. Use one coordinate frame — meters, ground z=0, room x −2.6…2.6 and y 0…6, ceiling 2.9 m, portal at y=0, TV wall at y=6. Camera at (0, −6, 1.45) looking along +Y, level, 40 mm lens. Soft warm lighting, Standard color transform.
+
+**Structure.** Herringbone parquet floor in three light-oak tones (planks 0.6×0.12 m). Warm-white walls and ceiling, oak baseboards. Portal: an oak beam across the top (5.2 m wide, 0.15 m tall, z 2.75–2.9), a narrow dark-oak pillar at the right (x 2.15–2.31), and an open oak bookcase column at the left (x −2.4…−1.7, 0.45 m deep, 5 shelves, NO back panel — you see the sofa through it) holding upright books, a teal ring and two teal orbs, a brass sphere, a statuette and a small black frame.
+
+**TV wall (y=6).** White marble panel with fine grey and gold veins (1.9 m wide, 2.05 m tall) in the center, a wall-mounted flat TV about 1.3 m wide at z≈1.1–1.9, vertical fluted oak panels (0.65 m wide each) on both sides, and a 3 m wide floating white console with an oak top and an open niche in the middle. Two windows with white horizontal shutters (0.85×1.5 m, sill 0.8 m) at x=±2.05, with a ~1 m potted plant in front of each.
+
+**Seating and center.** Two identical light-oak sofas with slatted arms and light-grey cushions, 2.2 m long, backs against the side walls (x=±2.57), facing each other, centered at y≈2.4. Grey, orange and patterned pillows on the left one; two pillows and a grey throw on the right one. Between them a light-grey diamond-patterned rug (~3×2.6 m), a low oak coffee table (1.1×0.64×0.38 m with a lower shelf) with a book and a vase, and a small grey cat lying on the rug. At the near end of the right sofa: a round dark-marble side table with brass legs and a cream table lamp.
+
+**Ceiling and walls.** A wooden ceiling panel (1.7×0.95 m) with a white three-blade fan, two small oak blocks either side, and recessed spot lights in two rows. Black-framed prints: four on the left wall, two on the right.
+
+**Assets.** Use library assets where they fit — `decor/marble_gold_panel_decor`, `electronics/simple_wall_tv`, `door_window/window`, `decor/banana_plant`, `rug/carpet_square`, the sofa/throw pillows, `soft_furnishing/blanket_01`, `decor/stack_of_books`, `decor/design_book`, `decor/art_book`, `decor/venus_de_milo_sculpture`, `decor/black_vase`. Their own textures don't match, so recolor/retexture them (marble: white with grey and gold veins; rug: grey diamonds). Build everything else from primitives. When done, render from the camera and compare with the reference.

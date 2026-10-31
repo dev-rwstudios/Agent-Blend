@@ -61,6 +61,9 @@ def _build_safe_builtins():
     return safe
 
 
+# Safe modules available without an import statement.
+PRELOADED_MODULES = ("bpy", "bmesh", "mathutils", "math")
+
 # Build once at module load
 SAFE_BUILTINS = _build_safe_builtins()
 
@@ -82,8 +85,19 @@ def handle_execute_code(params: dict) -> dict:
     old_stdout = sys.stdout
     sys.stdout = buffer = io.StringIO()
 
+    # Generated code often forgets `import bpy` — provide the safe Blender
+    # modules up front (they're importable anyway).
+    import importlib
+
+    sandbox_globals = {"__builtins__": SAFE_BUILTINS}
+    for module_name in PRELOADED_MODULES:
+        try:
+            sandbox_globals[module_name] = importlib.import_module(module_name)
+        except ImportError:
+            pass
+
     try:
-        exec(code, {"__builtins__": SAFE_BUILTINS})
+        exec(code, sandbox_globals)
         output = buffer.getvalue()
         return {
             "output": output.strip(),

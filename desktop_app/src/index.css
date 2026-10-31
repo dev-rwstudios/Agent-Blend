@@ -212,3 +212,35 @@ textarea:focus {
 .pulse-dot {
   animation: pulseDot 2s infinite ease-in-out;
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Sidebar rows: reveal per-row actions on hover / for the active row */
+.sidebar-row .row-actions {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.sidebar-row:hover .row-actions,
+.sidebar-row:focus-within .row-actions {
+  opacity: 1;
+}
+
+.sidebar-row:hover {
+  background-color: var(--bg-hover, var(--bg-secondary));
+}
+
+.sidebar-row:hover .row-meta {
+  display: none;
+}

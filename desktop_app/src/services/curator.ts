@@ -1,24 +1,42 @@
 import assetCatalog from '../assets/asset_catalog.json';
-import { StagingItem, StagingManifest } from '../types';
+import { CatalogAsset, StagingItem, StagingManifest } from '../types';
 
-interface CatalogAsset {
-  id: string;
-  name: string;
-  category: string;
-  subcategory: string;
-  room_types?: string[];
-  style_tags?: string[];
-  dimensions_m?: {
-    width: number;
-    depth: number;
-    height: number;
-  };
-  surface?: string;
-  model_path?: string;
-  forward_axis?: string;
+// Bundled snapshot of the repo's asset library — only a fallback for when no
+// project catalog has been loaded (its model paths are machine-specific).
+const bundledCatalog = assetCatalog as unknown as CatalogAsset[];
+let currentCatalog: CatalogAsset[] | null = null;
+
+/** Use this catalog (the active project's scanned asset sources) for all lookups. */
+export function setActiveCatalog(assets: CatalogAsset[] | null): void {
+  currentCatalog = assets && assets.length > 0 ? assets : null;
 }
 
-const typedCatalog = assetCatalog as unknown as CatalogAsset[];
+export function activeCatalog(): CatalogAsset[] {
+  return currentCatalog ?? bundledCatalog;
+}
+
+export function findAsset(id: string, pool: CatalogAsset[] = activeCatalog()): CatalogAsset | undefined {
+  return pool.find((a) => a.id === id);
+}
+
+/** Assets relevant to a free-form sentence: matches any of its meaningful words. */
+export function matchCatalogToText(text: string, limit = 20, pool: CatalogAsset[] = activeCatalog()): CatalogAsset[] {
+  const words = [...new Set(text.toLowerCase().match(/[a-z]{3,}/g) || [])].filter(
+    (w) => !['the', 'and', 'for', 'with', 'what', 'which', 'have', 'from', 'about', 'any', 'can', 'you', 'are', 'there', 'some', 'show', 'list', 'assets', 'asset'].includes(w)
+  );
+  const hits: CatalogAsset[] = [];
+  const seen = new Set<string>();
+  for (const w of words) {
+    const singular = w.endsWith('s') ? w.slice(0, -1) : w;
+    for (const a of searchCatalog(singular, limit, pool)) {
+      if (!seen.has(a.id)) {
+        seen.add(a.id);
+        hits.push(a);
+      }
+    }
+  }
+  return hits.slice(0, limit);
+}
 
 /**
  * Common furniture/decor keywords and their catalog mappings
@@ -111,7 +129,7 @@ export function getAlternativesForCategory(
   category: string,
   excludeId?: string,
   limit = 3,
-  pool: CatalogAsset[] = typedCatalog
+  pool: CatalogAsset[] = activeCatalog()
 ): Array<{
   id: string;
   name: string;
@@ -130,7 +148,7 @@ export function getAlternativesForCategory(
       assetId: a.id,
       category: a.category,
       subcategory: a.subcategory,
-      dimensions: a.dimensions_m,
+      dimensions: a.dimensions_m ?? undefined,
       modelPath: a.model_path,
     }));
 }
@@ -141,7 +159,7 @@ export function getAlternativesForCategory(
 export function searchCatalog(
   query: string,
   limit = 15,
-  pool: CatalogAsset[] = typedCatalog
+  pool: CatalogAsset[] = activeCatalog()
 ): CatalogAsset[] {
   const q = query.toLowerCase().trim();
   if (!q) return pool.slice(0, limit);
@@ -152,7 +170,7 @@ export function searchCatalog(
         a.name.toLowerCase().includes(q) ||
         a.category.toLowerCase().includes(q) ||
         (a.subcategory && a.subcategory.toLowerCase().includes(q)) ||
-        (a.style_tags && a.style_tags.some((s) => s.toLowerCase().includes(q)))
+        (a.style_tags?.some((s) => s.toLowerCase().includes(q)))
     )
     .slice(0, limit);
 }
@@ -192,7 +210,7 @@ export function isSceneGenerationPrompt(prompt: string): boolean {
  */
 export function curateSceneAssets(
   prompt: string,
-  pool: CatalogAsset[] = typedCatalog
+  pool: CatalogAsset[] = activeCatalog()
 ): StagingManifest {
   const text = prompt.toLowerCase();
   const items: StagingItem[] = [];
@@ -254,7 +272,7 @@ export function curateSceneAssets(
       assetId: asset.id,
       category: asset.category,
       subcategory: asset.subcategory,
-      dimensions: asset.dimensions_m,
+      dimensions: asset.dimensions_m ?? undefined,
       modelPath: asset.model_path,
       status: 'available',
       selected: true,
@@ -309,7 +327,7 @@ export function curateSceneAssets(
   requestedKnownKeywords.forEach((kw) => {
     const mapping = ASSET_KEYWORD_MAP[kw];
     if (mapping) {
-      const preferred = mapping.preferredId || typedCatalog.find((a) => a.category === mapping.category)?.id;
+      const preferred = mapping.preferredId || pool.find((a) => a.category === mapping.category)?.id;
       if (preferred) {
         addAvailableItem(kw, preferred, [
           (Math.random() - 0.5) * 2,

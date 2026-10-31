@@ -17,11 +17,17 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertTriangle,
-  Play
+  Play,
+  FolderSearch,
+  Paperclip,
+  Library,
+  MessagesSquare
 } from 'lucide-react';
 import { ChatMessage, AppSettings, StagingManifest, BucketAsset } from '../types';
 import { AssetStagingCard } from './AssetStagingCard';
+import { BuildRunCard } from './BuildRunCard';
 import { AssetBucket } from './AssetBucket';
+import { MAX_IMAGES, fileToDataUrl } from '../services/vision';
 
 interface ChatPanelProps {
   messages: ChatMessage[];
@@ -31,7 +37,7 @@ interface ChatPanelProps {
   onApproveBucketAsset: (id: string) => void;
   onClearBucketAssets: () => void;
   onBuildBucketScene: () => void;
-  onSendMessage: (text: string, mode: 'build' | 'plan' | 'ask') => void;
+  onSendMessage: (text: string, mode: 'build' | 'plan' | 'ask', images?: string[]) => void;
   onApproveTool: (messageId: string, toolId: string) => void;
   onRejectTool: (messageId: string, toolId: string) => void;
   onApproveAll: (messageId: string) => void;
@@ -40,6 +46,16 @@ interface ChatPanelProps {
   isGenerating: boolean;
   settings: AppSettings;
   onOpenSettings: () => void;
+  /** 'project' chats build in the project's scene; 'general' chats are read-only Q&A. */
+  variant: 'project' | 'general';
+  projectName?: string;
+  /** Status notice shown above the composer (e.g. project scene not open in Blender). */
+  banner?: React.ReactNode;
+  onStopBuild?: () => void;
+  onRunBuildPlan?: (messageId: string) => void;
+  onUndoBuild?: (messageId: string) => void;
+  /** Undo a message's destructive tool (restores the checkpoint saved before it ran). */
+  onUndoTools?: (messageId: string) => void;
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({
@@ -59,9 +75,22 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   isGenerating,
   settings,
   onOpenSettings,
+  variant,
+  projectName,
+  banner,
+  onStopBuild,
+  onRunBuildPlan,
+  onUndoBuild,
+  onUndoTools,
 }) => {
   const [inputText, setInputText] = useState('');
-  const [currentMode, setCurrentMode] = useState<'build' | 'plan' | 'ask'>('build');
+  const [currentMode, setCurrentMode] = useState<'build' | 'plan' | 'ask'>(variant === 'general' ? 'ask' : 'build');
+  const isGeneral = variant === 'general';
+
+  // General chats can't change a scene, so they're always in Ask mode.
+  useEffect(() => {
+    setCurrentMode(variant === 'general' ? 'ask' : 'build');
+  }, [variant]);
   const [expandedMessageTools, setExpandedMessageTools] = useState<Record<string, boolean>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -74,10 +103,35 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     setExpandedMessageTools(prev => ({ ...prev, [messageId]: !prev[messageId] }));
   };
 
+  // Reference images attached to the message being written (downscaled data URLs).
+  const [attached, setAttached] = useState<string[]>([]);
+  const [attachError, setAttachError] = useState('');
+  const [dragging, setDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const addFiles = async (files: File[]) => {
+    const images = files.filter((f) => f.type.startsWith('image/'));
+    if (images.length === 0) return;
+    setAttachError('');
+    try {
+      const room = MAX_IMAGES - attached.length;
+      if (images.length > room) setAttachError(`Up to ${MAX_IMAGES} images per message.`);
+      const urls = await Promise.all(images.slice(0, Math.max(room, 0)).map((f) => fileToDataUrl(f)));
+      setAttached((prev) => [...prev, ...urls].slice(0, MAX_IMAGES));
+    } catch (e: any) {
+      setAttachError(e?.message || 'Could not read that image.');
+    }
+  };
+
+  const canSend = (inputText.trim().length > 0 || attached.length > 0) && !isGenerating;
+
   const handleSend = () => {
-    if (!inputText.trim() || isGenerating) return;
-    onSendMessage(inputText.trim(), currentMode);
+    if (!canSend) return;
+    const text = inputText.trim() || (isGeneral ? 'Describe this image.' : 'Build a scene that looks like this image.');
+    onSendMessage(text, currentMode, attached.length ? attached : undefined);
     setInputText('');
+    setAttached([]);
+    setAttachError('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -87,7 +141,34 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     }
   };
 
-  const starters = [
+  const generalStarters = [
+    {
+      icon: FolderSearch,
+      title: 'Compare My Projects',
+      desc: 'Summarize each project and where it stands',
+      prompt: 'Give me a quick overview of each of my projects and what is in their scenes so far.',
+    },
+    {
+      icon: Library,
+      title: 'Browse the Asset Library',
+      desc: 'What categories and pieces are available',
+      prompt: 'What kinds of assets are in my asset library? Summarize the categories and highlight a few useful pieces.',
+    },
+    {
+      icon: Box,
+      title: 'Find Bedroom Furniture',
+      desc: 'Beds, nightstands and lamps with real dimensions',
+      prompt: 'Which beds, nightstands and lamps do I have in the asset library, and what are their dimensions?',
+    },
+    {
+      icon: Sun,
+      title: 'Lighting Advice',
+      desc: 'How to light a cozy interior render',
+      prompt: 'How should I light a cozy evening interior scene in Blender for a realistic render?',
+    },
+  ];
+
+  const projectStarters = [
     {
       icon: Box,
       title: 'Furnish Living Room',
@@ -163,7 +244,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 justifyContent: 'center',
                 marginBottom: '14px',
               }}>
-                <Sparkles size={18} color="var(--text-primary)" />
+                {isGeneral ? <MessagesSquare size={18} color="var(--text-primary)" /> : <Sparkles size={18} color="var(--text-primary)" />}
               </div>
 
               <h2 style={{
@@ -173,7 +254,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 letterSpacing: '-0.01em',
                 marginBottom: '6px',
               }}>
-                What would you like to build in Blender?
+                {isGeneral
+                  ? 'Ask about any project or asset'
+                  : `What would you like to build in ${projectName ?? 'this project'}?`}
               </h2>
 
               <p style={{
@@ -183,7 +266,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 lineHeight: '1.5',
                 marginBottom: '24px',
               }}>
-                Autonomous natural language 3D creation. Describe models, materials, lights, or full room sets.
+                {isGeneral
+                  ? 'This chat isn\u2019t attached to a scene — it can see all your projects and the asset library, but it won\u2019t change anything in Blender.'
+                  : 'Autonomous natural language 3D creation. Describe models, materials, lights, or full room sets.'}
               </p>
 
               {/* Starter Prompt Grid */}
@@ -193,7 +278,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 gap: '8px',
                 width: '100%',
               }}>
-                {starters.map((item, idx) => {
+                {(isGeneral ? generalStarters : projectStarters).map((item, idx) => {
                   const Icon = item.icon;
                   return (
                     <button
@@ -257,6 +342,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                       fontSize: '13px',
                       lineHeight: '1.5',
                     }}>
+                      {msg.images && msg.images.length > 0 && (
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                          {msg.images.map((src, n) => (
+                            <img key={n} src={src} alt="Reference" style={{ maxHeight: '130px', maxWidth: '100%', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border-subtle)' }} />
+                          ))}
+                        </div>
+                      )}
                       {msg.content}
                     </div>
                   ) : (
@@ -352,6 +444,28 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                             </div>
                           )}
                         </div>
+                      )}
+
+                      {msg.buildRun && (
+                        <BuildRunCard
+                          run={msg.buildRun}
+                          busy={isGenerating}
+                          onStop={onStopBuild}
+                          onRunPlan={onRunBuildPlan ? () => onRunBuildPlan(msg.id) : undefined}
+                          onUndo={onUndoBuild ? () => onUndoBuild(msg.id) : undefined}
+                        />
+                      )}
+
+                      {onUndoTools && msg.toolCalls?.some((t) => t.checkpoint && t.status === 'completed') && (
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          style={{ alignSelf: 'flex-start' }}
+                          disabled={isGenerating}
+                          onClick={() => onUndoTools(msg.id)}
+                          title="Restore the scene to how it was before this change"
+                        >
+                          ↩ Undo this change
+                        </button>
                       )}
 
                       {/* Asset Curator Interactive Staging Card */}
@@ -568,8 +682,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           flexDirection: 'column',
           gap: '8px',
         }}>
+          {banner}
+
           {/* Big Square Card: Scene Asset Bucket Workspace */}
-          <AssetBucket
+          {!isGeneral && <AssetBucket
             assets={bucketAssets}
             onAddAsset={onAddBucketAsset}
             onRemoveAsset={onRemoveBucketAsset}
@@ -577,13 +693,17 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             onClearAll={onClearBucketAssets}
             onBuildScene={onBuildBucketScene}
             isBuilding={isGenerating}
-          />
+          />}
 
           {/* Chat Composer Input Card */}
-          <div style={{
+          <div
+            onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDragging(true); } }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => { e.preventDefault(); setDragging(false); addFiles(Array.from(e.dataTransfer.files)); }}
+            style={{
             width: '100%',
             backgroundColor: 'var(--bg-primary)',
-            border: '1px solid var(--border-medium)',
+            border: dragging ? '1px dashed var(--border-focus)' : '1px solid var(--border-medium)',
             borderRadius: 'var(--radius-md)',
             padding: '8px 12px',
             boxShadow: 'var(--shadow-sm)',
@@ -594,6 +714,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             {/* Top Row: Mode Selector & Active Model */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             {/* Segmented Mode Selector */}
+            {isGeneral ? (
+              <span className="badge badge-zinc" style={{ fontSize: '10px', padding: '2px 7px' }}>
+                <HelpCircle size={10} style={{ verticalAlign: '-1px' }} /> Ask · read-only
+              </span>
+            ) : (
             <div style={{
               display: 'flex',
               backgroundColor: 'var(--bg-secondary)',
@@ -644,6 +769,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 <HelpCircle size={10} /> Ask
               </button>
             </div>
+            )}
 
             {/* Model & Execution Mode Indicator */}
             <button
@@ -665,15 +791,60 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             </button>
           </div>
 
+          {/* Attached reference images */}
+          {(attached.length > 0 || attachError) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {attached.map((src, n) => (
+                <div key={n} style={{ position: 'relative' }}>
+                  <img src={src} alt={`Attached ${n + 1}`} style={{ height: '54px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border-medium)', display: 'block' }} />
+                  <button
+                    onClick={() => setAttached((prev) => prev.filter((_, i) => i !== n))}
+                    className="btn btn-secondary"
+                    title="Remove image"
+                    style={{ position: 'absolute', top: '-6px', right: '-6px', width: '16px', height: '16px', padding: 0, borderRadius: '50%' }}
+                  >
+                    <X size={9} />
+                  </button>
+                </div>
+              ))}
+              {attachError && <span style={{ fontSize: '11px', color: '#f87171' }}>{attachError}</span>}
+            </div>
+          )}
+
           {/* Text Input Row */}
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              style={{ display: 'none' }}
+              onChange={(e) => { addFiles(Array.from(e.target.files ?? [])); e.target.value = ''; }}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={attached.length >= MAX_IMAGES}
+              className="btn btn-ghost"
+              title="Attach a reference image (or paste / drop one)"
+              style={{ width: '30px', height: '30px', padding: 0, borderRadius: 'var(--radius-xs)', color: 'var(--text-secondary)' }}
+            >
+              <Paperclip size={14} />
+            </button>
             <textarea
               ref={textareaRef}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
+              onPaste={(e) => {
+                const files = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith('image/'));
+                if (files.length) { e.preventDefault(); addFiles(files); }
+              }}
               placeholder={
-                currentMode === 'build'
+                attached.length > 0
+                  ? (isGeneral ? 'Ask about this image (e.g. "What would it take to build this?")…' : 'Say what to build from this image (e.g. "Build a scene like this")…')
+                  : isGeneral
+                  ? 'Ask about your projects, the asset library, or Blender…'
+                  : currentMode === 'build'
                   ? 'Describe 3D scene action (e.g. "Add modern sofa and 3-point lighting")...'
                   : currentMode === 'plan'
                   ? 'Request a step-by-step 3D blueprint (e.g. "Plan a cyberpunk bedroom")...'
@@ -696,14 +867,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
             <button
               onClick={handleSend}
-              disabled={!inputText.trim() || isGenerating}
+              disabled={!canSend}
               className="btn btn-primary"
               style={{
                 width: '30px',
                 height: '30px',
                 padding: 0,
                 borderRadius: 'var(--radius-xs)',
-                opacity: !inputText.trim() || isGenerating ? 0.3 : 1,
+                opacity: !canSend ? 0.3 : 1,
               }}
             >
               {isGenerating ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
@@ -718,7 +889,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           marginTop: '5px',
           margin: '5px 0 0 0',
         }}>
-          Press Enter to send, Shift+Enter for newline. Safe actions execute directly into Blender.
+          Press Enter to send, Shift+Enter for newline.{' '}
+          {isGeneral ? 'General chats never change your scenes.' : 'Safe actions execute directly into Blender.'}
         </p>
       </div>
     </div>

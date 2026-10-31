@@ -187,3 +187,22 @@ class TestSandboxConstants:
     def test_blocked_modules_is_set(self, code_exec_handler):
         """BLOCKED_MODULES is a set (for O(1) lookup)."""
         assert isinstance(code_exec_handler.BLOCKED_MODULES, (set, frozenset))
+
+
+def test_bpy_is_available_without_import():
+    """Generated code often forgets `import bpy`; the sandbox provides it."""
+    import importlib.util
+    import os
+    import sys
+    from unittest.mock import MagicMock
+
+    sys.modules.setdefault("addon", MagicMock())
+    sys.modules.setdefault("addon.dispatcher", MagicMock())
+    path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "addon", "handlers", "code_exec.py")
+    spec = importlib.util.spec_from_file_location("addon.handlers.code_exec_preload", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    result = mod.handle_execute_code({"code": "print(type(bpy).__name__, math.floor(2.7))"})
+    assert result["success"] is True
+    assert result["output"].endswith("2")

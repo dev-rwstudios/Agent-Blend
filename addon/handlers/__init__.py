@@ -24,6 +24,8 @@ from . import (
     mesh_editing,
     mesh_quality,
     gpencil,
+    scene_build,
+    step_engine,
 )
 
 _modules = [
@@ -50,6 +52,8 @@ _modules = [
     code_exec,
     booltool,
     gpencil,
+    scene_build,
+    step_engine,
 ]
 
 

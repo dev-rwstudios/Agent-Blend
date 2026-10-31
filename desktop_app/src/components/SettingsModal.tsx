@@ -6,9 +6,15 @@ import {
   Check,
   Folder,
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  Plug,
+  RefreshCw,
+  Loader2,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import { AppSettings, LLMProvider } from '../types';
+import { fetchAvailableModels, testModelConnection } from '../services/llm';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -25,6 +31,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const [formData, setFormData] = useState<AppSettings>({ ...settings });
   const [savedToast, setSavedToast] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [fetchingModels, setFetchingModels] = useState(false);
+  const [connectionResult, setConnectionResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
 
   if (!isOpen) return null;
 
@@ -40,8 +50,42 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     { id: 'custom', name: 'Custom OpenAI-Compatible', defaultModel: 'default', defaultUrl: 'http://localhost:8080/v1' },
   ];
 
+  // Any change to the connection details invalidates earlier test/fetch results.
+  const updateConnectionField = (patch: Partial<AppSettings>) => {
+    setFormData((prev) => ({ ...prev, ...patch }));
+    setConnectionResult(null);
+    if (!('model' in patch)) setAvailableModels([]);
+  };
+
+  const handleTestConnection = async () => {
+    setTesting(true);
+    setConnectionResult(null);
+    try {
+      setConnectionResult(await testModelConnection(formData));
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const handleFetchModels = async () => {
+    setFetchingModels(true);
+    setConnectionResult(null);
+    try {
+      const result = await fetchAvailableModels(formData);
+      setAvailableModels(result.models);
+      setConnectionResult({ ok: result.ok, message: result.message });
+      if (result.ok && !result.models.includes(formData.model)) {
+        setFormData((prev) => ({ ...prev, model: result.models[0] }));
+      }
+    } finally {
+      setFetchingModels(false);
+    }
+  };
+
   const handleProviderChange = (prov: LLMProvider) => {
     const found = providers.find((p) => p.id === prov);
+    setConnectionResult(null);
+    setAvailableModels([]);
     setFormData((prev) => ({
       ...prev,
       provider: prov,
@@ -220,16 +264,71 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
               Model Identifier
             </label>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {availableModels.length > 0 ? (
+                <select
+                  value={formData.model}
+                  onChange={(e) => updateConnectionField({ model: e.target.value })}
+                  style={{ flex: 1, minWidth: 0, padding: '6px 10px' }}
+                >
+                  {!availableModels.includes(formData.model) && formData.model && (
+                    <option value={formData.model}>{formData.model}</option>
+                  )}
+                  {availableModels.map((m) => (
+                    <option key={m} value={m} style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={formData.model}
+                  onChange={(e) => updateConnectionField({ model: e.target.value })}
+                  placeholder="e.g. gpt-4o, llama3.1, claude-3-5-sonnet..."
+                  style={{ flex: 1, minWidth: 0, padding: '6px 10px' }}
+                />
+              )}
+              <button
+                onClick={handleFetchModels}
+                disabled={fetchingModels || testing}
+                className="btn btn-secondary btn-sm"
+                title="Fetch the models available from this provider"
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                {fetchingModels ? <Loader2 size={13} className="spin" /> : <RefreshCw size={13} />} Fetch Models
+              </button>
+            </div>
+            {availableModels.length > 0 && (
+              <button
+                onClick={() => setAvailableModels([])}
+                className="btn btn-ghost btn-sm"
+                style={{ fontSize: '10px', padding: '2px 0', marginTop: '3px', color: 'var(--text-muted)' }}
+              >
+                Type a model name manually instead
+              </button>
+            )}
+          </div>
+
+          {/* Vision model — reads reference images */}
+          <div>
+            <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+              Vision model <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(for reference images — optional)</span>
+            </label>
             <input
               type="text"
-              value={formData.model}
-              onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-              placeholder="e.g. gpt-4o, llama3.1, claude-3-5-sonnet..."
-              style={{
-                width: '100%',
-                padding: '6px 10px',
-              }}
+              list="vision-models"
+              value={formData.visionModel || ''}
+              onChange={(e) => setFormData({ ...formData, visionModel: e.target.value })}
+              placeholder="Leave empty to use the model above (it must be able to see images)"
+              style={{ width: '100%', padding: '6px 10px' }}
             />
+            <datalist id="vision-models">
+              {availableModels.map((m) => <option key={m} value={m} />)}
+            </datalist>
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '3px', display: 'block' }}>
+              A coding model usually can't read pictures. Load a vision-capable model (e.g. a Qwen-VL or Gemma model in LM Studio, or Claude / GPT-4o) and put its name here — it is used only when you attach an image.
+            </span>
           </div>
 
           {/* API Key */}
@@ -241,7 +340,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <input
                 type="password"
                 value={formData.apiKey}
-                onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+                onChange={(e) => updateConnectionField({ apiKey: e.target.value })}
                 placeholder="sk-..."
                 style={{
                   width: '100%',
@@ -259,12 +358,46 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <input
               type="text"
               value={formData.apiBaseUrl}
-              onChange={(e) => setFormData({ ...formData, apiBaseUrl: e.target.value })}
+              onChange={(e) => updateConnectionField({ apiBaseUrl: e.target.value })}
               style={{
                 width: '100%',
                 padding: '6px 10px',
               }}
             />
+          </div>
+
+          {/* Test Connection */}
+          <div>
+            <button
+              onClick={handleTestConnection}
+              disabled={testing || fetchingModels}
+              className="btn btn-secondary btn-sm"
+              title="Send a tiny request to the configured model to check it is reachable"
+            >
+              {testing ? <Loader2 size={13} className="spin" /> : <Plug size={13} />}
+              {testing ? ' Testing…' : ' Test Connection'}
+            </button>
+            {connectionResult && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '6px',
+                marginTop: '8px',
+                padding: '7px 10px',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '11px',
+                lineHeight: '1.4',
+                wordBreak: 'break-word',
+                color: connectionResult.ok ? '#34d399' : '#f87171',
+                backgroundColor: connectionResult.ok ? 'rgba(52, 211, 153, 0.08)' : 'rgba(248, 113, 113, 0.08)',
+                border: `1px solid ${connectionResult.ok ? 'rgba(52, 211, 153, 0.3)' : 'rgba(248, 113, 113, 0.3)'}`,
+              }}>
+                {connectionResult.ok
+                  ? <CheckCircle2 size={13} style={{ flexShrink: 0, marginTop: '1px' }} />
+                  : <XCircle size={13} style={{ flexShrink: 0, marginTop: '1px' }} />}
+                <span>{connectionResult.message}</span>
+              </div>
+            )}
           </div>
 
           <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)' }} />
